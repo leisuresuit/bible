@@ -1,0 +1,114 @@
+package org.tjc.bible.data.local
+
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.Json
+import org.tjc.bible.domain.model.AppTheme
+import org.tjc.bible.domain.model.BibleVersion
+import org.tjc.bible.domain.model.Book
+import org.tjc.bible.domain.model.HistoryItem
+import org.tjc.bible.presentation.bible.DisplayMode
+
+class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
+
+    private object Keys {
+        val THEME = stringPreferencesKey("theme")
+        val DISPLAY_MODE = stringPreferencesKey("display_mode")
+        val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
+        val LAST_BOOK = stringPreferencesKey("last_book")
+        val LAST_CHAPTER = intPreferencesKey("last_chapter")
+        val HISTORY = stringPreferencesKey("history")
+        val SELECTED_VERSIONS = stringPreferencesKey("selected_versions")
+    }
+
+    val theme: Flow<AppTheme> = dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map { prefs ->
+            val name = prefs[Keys.THEME] ?: AppTheme.SYSTEM.name
+            try { AppTheme.valueOf(name) } catch (e: Exception) { AppTheme.SYSTEM }
+        }
+
+    val displayMode: Flow<DisplayMode> = dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map { prefs ->
+            val name = prefs[Keys.DISPLAY_MODE] ?: DisplayMode.SINGLE_CHAPTER.name
+            try { DisplayMode.valueOf(name) } catch (e: Exception) { DisplayMode.SINGLE_CHAPTER }
+        }
+
+    val isDynamicColor: Flow<Boolean> = dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map { prefs ->
+            prefs[Keys.DYNAMIC_COLOR] ?: true
+        }
+
+    val lastPassage: Flow<Pair<Book, Int>> = dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map { prefs ->
+            val bookName = prefs[Keys.LAST_BOOK] ?: "Genesis"
+            val chapter = prefs[Keys.LAST_CHAPTER] ?: 1
+            val book = Book.entries.find { it.name == bookName } ?: Book.Genesis
+            book to chapter
+        }
+
+    val history: Flow<List<HistoryItem>> = dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map { prefs ->
+            val json = prefs[Keys.HISTORY] ?: return@map emptyList()
+            try {
+                Json.decodeFromString<List<HistoryItem>>(json)
+            } catch (e: Exception) {
+                emptyList()
+            }
+        }
+
+    val selectedVersionIds: Flow<List<String>> = dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map { prefs ->
+            val json = prefs[Keys.SELECTED_VERSIONS] ?: return@map emptyList()
+            try {
+                Json.decodeFromString<List<String>>(json)
+            } catch (e: Exception) {
+                emptyList()
+            }
+        }
+
+    suspend fun setTheme(theme: AppTheme) {
+        dataStore.edit { it[Keys.THEME] = theme.name }
+    }
+
+    suspend fun setDisplayMode(mode: DisplayMode) {
+        dataStore.edit { it[Keys.DISPLAY_MODE] = mode.name }
+    }
+
+    suspend fun setDynamicColor(enabled: Boolean) {
+        dataStore.edit { it[Keys.DYNAMIC_COLOR] = enabled }
+    }
+
+    suspend fun setLastPassage(book: Book, chapter: Int) {
+        dataStore.edit {
+            it[Keys.LAST_BOOK] = book.name
+            it[Keys.LAST_CHAPTER] = chapter
+        }
+    }
+
+    suspend fun saveHistory(history: List<HistoryItem>) {
+        dataStore.edit {
+            it[Keys.HISTORY] = Json.encodeToString(history)
+        }
+    }
+
+    suspend fun saveSelectedVersions(versions: List<BibleVersion>) {
+        val ids = versions.map { it.id }
+        dataStore.edit {
+            it[Keys.SELECTED_VERSIONS] = Json.encodeToString(ids)
+        }
+    }
+}
