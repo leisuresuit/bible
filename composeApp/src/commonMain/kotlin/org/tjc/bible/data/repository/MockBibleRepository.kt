@@ -1,6 +1,5 @@
 package org.tjc.bible.data.repository
 
-import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.BibleVersion
 import org.tjc.bible.domain.model.Book
 import org.tjc.bible.domain.model.SearchResult
@@ -15,22 +14,22 @@ class MockBibleRepository : BibleRepository {
         BibleVersion("niv", "New International Version", "English", "NIV")
     )
 
-    override suspend fun getVersions(language: String?): List<BibleVersion> {
-        return if (language == null) versions else versions.filter { it.language == language }
-    }
+    override suspend fun getVersions(language: String?): Result<List<BibleVersion>> = Result.success(
+        if (language == null) versions else versions.filter { it.language == language }
+    )
 
-    override suspend fun getVerses(versionId: String, book: Book, chapter: Int): List<Verse> {
-        return buildList {
+    override suspend fun getVerses(versionId: String, book: Book, chapter: Int): Result<List<Verse>> = Result.success(
+        buildList {
             repeat(50) { index ->
                 val number = index + 1
                 add(Verse(number, "Mock verse $number"))
             }
         }
-    }
+    )
 
-    override suspend fun search(versionId: String, query: String): List<SearchResult> {
-        return listOf(
+    override suspend fun search(versionId: String, query: String): Result<List<SearchResult>> = Result.success(
+        listOf(
             SearchResult(versionId, Book.Genesis, 1, 1, "In the beginning God created...")
         )
-    }
+    )
 }

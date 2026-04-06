@@ -69,6 +69,7 @@ class BibleViewModel(
                 loadVerses()
             }
             is BibleIntent.UpdateSearchQuery -> handleSearch(intent.query)
+            is BibleIntent.DismissError -> dispatch(BibleAction.DismissError)
         }
     }
 
@@ -93,8 +94,14 @@ class BibleViewModel(
             val selectedVersions = _state.value.selectedVersions
             if (selectedVersions.isEmpty()) return@launch
 
-            val verses = fetchVerses(selectedVersions, book, chapter)
-            dispatch(BibleAction.ChapterVersesLoaded(globalIndex, verses))
+            fetchVerses(selectedVersions, book, chapter).fold(
+                onSuccess = { verses ->
+                    dispatch(BibleAction.ChapterVersesLoaded(globalIndex, verses))
+                },
+                onFailure = { error ->
+                    dispatch(BibleAction.ErrorOccurred(error.message ?: "Failed to load verses"))
+                }
+            )
         }
     }
 
@@ -106,8 +113,14 @@ class BibleViewModel(
         }
         viewModelScope.launch {
             val versionId = _state.value.selectedVersions.firstOrNull()?.id ?: return@launch
-            val results = searchUseCase(versionId, query)
-            dispatch(BibleAction.SearchResultsLoaded(results))
+            searchUseCase(versionId, query).fold(
+                onSuccess = { results ->
+                    dispatch(BibleAction.SearchResultsLoaded(results))
+                },
+                onFailure = { error ->
+                    dispatch(BibleAction.ErrorOccurred(error.message ?: "Search failed"))
+                }
+            )
         }
     }
 
@@ -231,6 +244,8 @@ class BibleViewModel(
                 currentChapter = action.item.chapter,
                 currentVerse = action.item.verse
             )
+            is BibleAction.ErrorOccurred -> state.copy(errorMessage = action.message)
+            BibleAction.DismissError -> state.copy(errorMessage = null)
         }
     }
 
@@ -246,30 +261,36 @@ class BibleViewModel(
     private fun handleLoadInitialData() {
         viewModelScope.launch {
             dispatch(BibleAction.Loading(true))
-            val versions = getBibleVersionsUseCase(language = "en")
+            getBibleVersionsUseCase(language = "en").fold(
+                onSuccess = { versions ->
+                    // Restore last passage
+                    val (lastBook, lastChapter) = preferenceStorage.lastPassage.first()
 
-            // Restore last passage
-            val (lastBook, lastChapter) = preferenceStorage.lastPassage.first()
-            
-            // Restore selected versions
-            val savedIds = preferenceStorage.selectedVersionIds.first()
-            val savedVersions = versions.filter { it.id in savedIds }
-            
-            val selectedVersions = savedVersions.ifEmpty {
-                versions.filter { it.abbreviation == "NKJV" }
-            }
+                    // Restore selected versions
+                    val savedIds = preferenceStorage.selectedVersionIds.first()
+                    val savedVersions = versions.filter { it.id in savedIds }
 
-            if (versions.isNotEmpty()) {
-                dispatch(BibleAction.DataLoaded(
-                    versions = versions,
-                    selectedVersions = selectedVersions,
-                    currentBook = lastBook,
-                    currentChapter = lastChapter
-                ))
-                loadVerses()
-            } else {
-                dispatch(BibleAction.Loading(false))
-            }
+                    val selectedVersions = savedVersions.ifEmpty {
+                        versions.filter { it.abbreviation == "NKJV" }
+                    }
+
+                    if (versions.isNotEmpty()) {
+                        dispatch(BibleAction.DataLoaded(
+                            versions = versions,
+                            selectedVersions = selectedVersions,
+                            currentBook = lastBook,
+                            currentChapter = lastChapter
+                        ))
+                        loadVerses()
+                    } else {
+                        dispatch(BibleAction.Loading(false))
+                    }
+                },
+                onFailure = { error ->
+                    dispatch(BibleAction.Loading(false))
+                    dispatch(BibleAction.ErrorOccurred(error.message ?: "Failed to load Bible versions"))
+                }
+            )
         }
     }
 
@@ -318,12 +339,19 @@ class BibleViewModel(
         loadVerses()
     }
 
-    private suspend fun fetchVerses(selectedVersions: List<BibleVersion>, book: Book, chapter: Int): List<Verse> {
+    private suspend fun fetchVerses(selectedVersions: List<BibleVersion>, book: Book, chapter: Int): Result<List<Verse>> {
         val allVerses = mutableListOf<Verse>()
         if (selectedVersions.size > 1) {
-            val versesByVersion = selectedVersions.map { version ->
-                getVersesUseCase(version.id, book, chapter).map { it.copy(versionAbbreviation = version.abbreviation) }
+            val results = selectedVersions.map { version ->
+                getVersesUseCase(version.id, book, chapter).map { verses ->
+                    verses.map { it.copy(versionAbbreviation = version.abbreviation) }
+                }
             }
+
+            val failure = results.find { it.isFailure }
+            if (failure != null) return Result.failure(failure.exceptionOrNull()!!)
+
+            val versesByVersion = results.map { it.getOrThrow() }
 
             if (versesByVersion.isNotEmpty()) {
                 val maxVerseCount = versesByVersion.maxOf { it.size }
@@ -336,21 +364,28 @@ class BibleViewModel(
                 }
             }
         } else if (selectedVersions.isNotEmpty()) {
-            allVerses.addAll(getVersesUseCase(selectedVersions.first().id, book, chapter))
+            val result = getVersesUseCase(selectedVersions.first().id, book, chapter)
+            if (result.isFailure) return result
+            allVerses.addAll(result.getOrThrow())
         }
-        return allVerses
+        return Result.success(allVerses)
     }
 
     private fun loadVerses() {
         viewModelScope.launch {
-            with (state.value) {
-                val selectedVersions = selectedVersions
-                val book = currentBook ?: return@launch
-                val chapter = currentChapter
+            val currentState = state.value
+            val selectedVersions = currentState.selectedVersions
+            val book = currentState.currentBook ?: return@launch
+            val chapter = currentState.currentChapter
 
-                val allVerses = fetchVerses(selectedVersions, book, chapter)
-                dispatch(BibleAction.VersesLoaded(allVerses))
-            }
+            fetchVerses(selectedVersions, book, chapter).fold(
+                onSuccess = { verses ->
+                    dispatch(BibleAction.VersesLoaded(verses))
+                },
+                onFailure = { error ->
+                    dispatch(BibleAction.ErrorOccurred(error.message ?: "Failed to load verses"))
+                }
+            )
         }
     }
 }

@@ -16,7 +16,7 @@ class AbsBibleRepository(
     private val httpClient: HttpClient
 ) : BibleRepository {
 
-    override suspend fun getVersions(language: String?): List<BibleVersion> {
+    override suspend fun getVersions(language: String?): Result<List<BibleVersion>> = runCatching {
         val response = httpClient.get("https://rest.api.bible/v1/bibles") {
             header("api-key", Config.ABS_API_KEY)
             language?.let {
@@ -24,10 +24,12 @@ class AbsBibleRepository(
             }
         }.body<AbsVersionsResponse>()
 
-        return response.data.map { it.toDomain() }
+        response.data
+            .map { it.toDomain() }
+            .distinctBy { it.abbreviation }
     }
 
-    override suspend fun getVerses(versionId: String, book: Book, chapter: Int): List<Verse> {
+    override suspend fun getVerses(versionId: String, book: Book, chapter: Int): Result<List<Verse>> = runCatching {
         val chapterId = getChapterId(book, chapter)
         val response = httpClient.get("https://rest.api.bible/v1/bibles/$versionId/chapters/$chapterId") {
             header("api-key", Config.ABS_API_KEY)
@@ -39,7 +41,7 @@ class AbsBibleRepository(
             parameter("include-verse-spans", "false")
         }.body<AbsChapterResponse>()
 
-        return response.data.toDomain()
+        response.data.toDomain()
     }
 
     private fun getChapterId(book: Book, chapter: Int): String {
@@ -114,8 +116,8 @@ class AbsBibleRepository(
         return "$bookId.$chapter"
     }
 
-    override suspend fun search(versionId: String, query: String): List<SearchResult> {
+    override suspend fun search(versionId: String, query: String): Result<List<SearchResult>> = runCatching {
         // Skeleton implementation
-        return emptyList()
+        emptyList()
     }
 }

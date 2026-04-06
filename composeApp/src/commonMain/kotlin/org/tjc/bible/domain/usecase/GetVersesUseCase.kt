@@ -5,7 +5,7 @@ import org.tjc.bible.domain.model.Verse
 import org.tjc.bible.domain.repository.BibleRepository
 
 class GetVersesUseCase(private val repository: BibleRepository) {
-    suspend operator fun invoke(versionId: String, book: Book, chapter: Int): List<Verse> {
+    suspend operator fun invoke(versionId: String, book: Book, chapter: Int): Result<List<Verse>> {
         return repository.getVerses(versionId, book, chapter)
     }
 }

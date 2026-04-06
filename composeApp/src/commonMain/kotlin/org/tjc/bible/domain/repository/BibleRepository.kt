@@ -9,7 +9,7 @@ interface BibleRepository {
     /**
      * @param language ISO 639-1 language code, e.g. "en" for English
      */
-    suspend fun getVersions(language: String? = null): List<BibleVersion>
-    suspend fun getVerses(versionId: String, book: Book, chapter: Int): List<Verse>
-    suspend fun search(versionId: String, query: String): List<SearchResult>
+    suspend fun getVersions(language: String? = null): Result<List<BibleVersion>>
+    suspend fun getVerses(versionId: String, book: Book, chapter: Int): Result<List<Verse>>
+    suspend fun search(versionId: String, query: String): Result<List<SearchResult>>
 }
