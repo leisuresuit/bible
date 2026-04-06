@@ -163,6 +163,7 @@ data class Verse(
     val number: Int,
     val text: String? = null,
     val richText: List<TextSpan> = emptyList(),
+    val headings: List<List<TextSpan>> = emptyList(),
     val versionAbbreviation: String? = null
 )
 

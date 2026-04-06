@@ -95,12 +95,13 @@ internal fun String.toIso6393(): String =
 
 fun AbsChapterContentDto.toDomain(): List<Verse> {
     val versesMap = mutableMapOf<Int, MutableList<TextSpan>>()
-    val pendingSpans = mutableListOf<TextSpan>()
+    val headingsMap = mutableMapOf<Int, MutableList<MutableList<TextSpan>>>()
+    
+    val currentHeadings = mutableListOf<MutableList<TextSpan>>()
     var pendingBreak = false
 
     fun extractVerseNumber(vId: String): Int {
         val parts = vId.split(".", " ", ":")
-        // Bible API verse IDs are usually BOOK.CHAP.VERSE (3 parts)
         if (parts.size < 3) return 0
         return parts.lastOrNull { it.any { it.isDigit() } }
             ?.takeWhile { it.isDigit() }
@@ -118,7 +119,6 @@ fun AbsChapterContentDto.toDomain(): List<Verse> {
 
         val currentVerseId = item.attrs?.verseId ?: item.attrs?.vid ?: inheritedVerseId
 
-        // Treat paragraphs, poetic lines, and headings as block-level elements for line breaks
         val isBlock = item.type == "tag" && (
             item.name == "p" || item.name == "para" ||
             item.attrs?.style?.let { s ->
@@ -130,44 +130,38 @@ fun AbsChapterContentDto.toDomain(): List<Verse> {
         }
 
         if (item.type == "text") {
-            val vId = currentVerseId
-            if (vId != null) {
-                val verseNumber = extractVerseNumber(vId)
-                if (verseNumber > 0) {
-                    val spans = versesMap.getOrPut(verseNumber) { mutableListOf() }
-
-                    // Prepend headings/titles that occurred before this verse
-                    if (pendingSpans.isNotEmpty()) {
-                        if (spans.isNotEmpty() && !spans.last().text.endsWith("\n")) {
-                            spans.add(TextSpan("\n", TextStyle.NORMAL))
-                        }
-                        spans.addAll(pendingSpans)
-                        pendingSpans.clear()
-                        pendingBreak = true // Force break after heading
+            item.text?.let { text ->
+                if (style == TextStyle.HEADING) {
+                    if (pendingBreak || currentHeadings.isEmpty()) {
+                        currentHeadings.add(mutableListOf())
+                        pendingBreak = false
                     }
+                    currentHeadings.last().add(TextSpan(text, style))
+                } else if (currentVerseId != null) {
+                    val verseNumber = extractVerseNumber(currentVerseId)
+                    if (verseNumber > 0) {
+                        val spans = versesMap.getOrPut(verseNumber) { mutableListOf() }
+                        
+                        // If we have headings accumulated before this verse, attach them
+                        if (currentHeadings.isNotEmpty()) {
+                            headingsMap.getOrPut(verseNumber) { mutableListOf() }.addAll(currentHeadings)
+                            currentHeadings.clear()
+                            pendingBreak = true // Force break after heading in text flow if needed
+                        }
 
-                    item.text?.let { text ->
                         if (pendingBreak) {
                             if (spans.isNotEmpty() && !spans.last().text.endsWith("\n")) {
                                 spans.add(TextSpan("\n", TextStyle.NORMAL))
                             }
                             pendingBreak = false
-                        } else if (spans.isNotEmpty() && !spans.last().text.let { 
-                                it.endsWith(" ") || it.endsWith("\n") 
-                            } && !text.startsWith(" ")) {
-                            spans.add(TextSpan(" ", TextStyle.NORMAL))
                         }
+//                        else if (spans.isNotEmpty() && !spans.last().text.let {
+//                                it.endsWith(" ") || it.endsWith("\n")
+//                            } && !text.startsWith(" ")) {
+//                            spans.add(TextSpan(" ", TextStyle.NORMAL))
+//                        }
                         spans.add(TextSpan(text, style))
                     }
-                }
-            } else {
-                // Collect text outside a specific verse (e.g., chapter titles)
-                item.text?.let { text ->
-                    if (pendingBreak && pendingSpans.isNotEmpty() && !pendingSpans.last().text.endsWith("\n")) {
-                        pendingSpans.add(TextSpan("\n", TextStyle.NORMAL))
-                    }
-                    pendingSpans.add(TextSpan(text, style))
-                    pendingBreak = false
                 }
             }
         }
@@ -177,7 +171,8 @@ fun AbsChapterContentDto.toDomain(): List<Verse> {
 
     content.forEach { process(it, null, TextStyle.NORMAL) }
 
-    return versesMap.map { (number, spans) ->
+    return versesMap.keys.union(headingsMap.keys).map { number ->
+        val spans = versesMap[number] ?: emptyList()
         val mergedSpans = mutableListOf<TextSpan>()
         for (span in spans) {
             if (mergedSpans.isNotEmpty() && mergedSpans.last().style == span.style) {
@@ -188,9 +183,23 @@ fun AbsChapterContentDto.toDomain(): List<Verse> {
             }
         }
 
+        val verseHeadings = headingsMap[number]?.map { headingSpans ->
+            val mergedHeading = mutableListOf<TextSpan>()
+            for (span in headingSpans) {
+                if (mergedHeading.isNotEmpty() && mergedHeading.last().style == span.style) {
+                    val last = mergedHeading.removeAt(mergedHeading.size - 1)
+                    mergedHeading.add(TextSpan(last.text + span.text, span.style))
+                } else {
+                    mergedHeading.add(span)
+                }
+            }
+            mergedHeading
+        } ?: emptyList()
+
         Verse(
             number = number,
-            richText = mergedSpans
+            richText = mergedSpans,
+            headings = verseHeadings
         )
     }.sortedBy { it.number }
 }
