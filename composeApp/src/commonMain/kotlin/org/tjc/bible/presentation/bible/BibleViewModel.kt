@@ -50,6 +50,7 @@ class BibleViewModel(
             is BibleIntent.ShowDialog -> dispatch(BibleAction.DialogChanged(intent.dialog))
             is BibleIntent.UpdateTheme -> viewModelScope.launch { preferenceStorage.setTheme(intent.theme) }
             is BibleIntent.UpdateDynamicColor -> viewModelScope.launch { preferenceStorage.setDynamicColor(intent.enabled) }
+            is BibleIntent.UpdateShowWordsOfJesus -> viewModelScope.launch { preferenceStorage.setShowWordsOfJesus(intent.enabled) }
             is BibleIntent.UpdateDisplayMode -> viewModelScope.launch { preferenceStorage.setDisplayMode(intent.mode) }
             is BibleIntent.NextChapter -> {
                 dispatch(BibleAction.NavigateChapter(1))
@@ -116,11 +117,13 @@ class BibleViewModel(
                 preferenceStorage.theme,
                 preferenceStorage.displayMode,
                 preferenceStorage.isDynamicColor,
+                preferenceStorage.showWordsOfJesus,
                 preferenceStorage.history
-            ) { theme, mode, dynamic, history ->
+            ) { theme, mode, dynamic, showWJ, history ->
                 dispatch(BibleAction.ThemeChanged(theme))
                 dispatch(BibleAction.DisplayModeChanged(mode))
                 dispatch(BibleAction.DynamicColorChanged(dynamic))
+                dispatch(BibleAction.ShowWordsOfJesusChanged(showWJ))
                 dispatch(BibleAction.HistoryLoaded(history))
             }.collectLatest { }
         }
@@ -151,6 +154,7 @@ class BibleViewModel(
             is BibleAction.DialogChanged -> state.copy(activeDialog = action.dialog)
             is BibleAction.ThemeChanged -> state.copy(theme = action.theme)
             is BibleAction.DynamicColorChanged -> state.copy(isDynamicColor = action.enabled)
+            is BibleAction.ShowWordsOfJesusChanged -> state.copy(showWordsOfJesus = action.enabled)
             is BibleAction.DisplayModeChanged -> state.copy(displayMode = action.mode)
             is BibleAction.HistoryLoaded -> state.copy(history = action.history)
             is BibleAction.BookSelected -> {

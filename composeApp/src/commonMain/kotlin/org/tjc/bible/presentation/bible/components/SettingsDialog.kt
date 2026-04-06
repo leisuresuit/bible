@@ -86,6 +86,30 @@ fun SettingsDialog(
                 }
 
                 Spacer(Modifier.height(16.dp))
+
+                HorizontalDivider(Modifier.fillMaxWidth())
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onIntent(BibleIntent.UpdateShowWordsOfJesus(!state.showWordsOfJesus)) }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = state.showWordsOfJesus,
+                        onCheckedChange = { onIntent(BibleIntent.UpdateShowWordsOfJesus(it)) }
+                    )
+                    Text(
+                        text = stringResource(Res.string.show_words_of_jesus),
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+
+                HorizontalDivider(Modifier.fillMaxWidth())
+
+                Spacer(Modifier.height(16.dp))
+
                 Text(
                     text = stringResource(Res.string.theme),
                     style = MaterialTheme.typography.titleMedium

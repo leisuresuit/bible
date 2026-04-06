@@ -26,6 +26,7 @@ data class BibleState(
     val activeDialog: ActiveDialog? = null,
     val theme: AppTheme = AppTheme.SYSTEM,
     val isDynamicColor: Boolean = true,
+    val showWordsOfJesus: Boolean = true,
     val searchQuery: String = "",
     val displayMode: DisplayMode = DisplayMode.SINGLE_CHAPTER,
     val allBooks: List<Book> = Book.entries
@@ -53,6 +54,7 @@ sealed class BibleIntent {
     object ClearHistory : BibleIntent()
     data class UpdateTheme(val theme: AppTheme) : BibleIntent()
     data class UpdateDynamicColor(val enabled: Boolean) : BibleIntent()
+    data class UpdateShowWordsOfJesus(val enabled: Boolean) : BibleIntent()
     data class ShowDialog(val dialog: ActiveDialog?) : BibleIntent()
     data class NavigateToHistoryItem(val item: HistoryItem) : BibleIntent()
     data class UpdateDisplayMode(val mode: DisplayMode) : BibleIntent()
@@ -73,6 +75,7 @@ internal sealed class BibleAction {
     data class DialogChanged(val dialog: ActiveDialog?) : BibleAction()
     data class ThemeChanged(val theme: AppTheme) : BibleAction()
     data class DynamicColorChanged(val enabled: Boolean) : BibleAction()
+    data class ShowWordsOfJesusChanged(val enabled: Boolean) : BibleAction()
     data class DisplayModeChanged(val mode: DisplayMode) : BibleAction()
     data class BookSelected(val book: Book) : BibleAction()
     data class ChapterSelected(val chapter: Int) : BibleAction()

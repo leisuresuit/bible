@@ -118,6 +118,7 @@ fun VerseList(
                     chapter = chapter,
                     verses = verses,
                     targetVerse = if (page == pagerState.currentPage) state.currentVerse else null,
+                    showWordsOfJesus = state.showWordsOfJesus,
                     onIntent = onIntent
                 )
             } else {
@@ -131,6 +132,7 @@ fun VerseList(
             chapter = state.currentChapter,
             verses = state.verses,
             targetVerse = state.currentVerse,
+            showWordsOfJesus = state.showWordsOfJesus,
             onIntent = onIntent,
             modifier = modifier
         )
@@ -143,6 +145,7 @@ private fun VerseListContent(
     chapter: Int,
     verses: List<Verse>,
     targetVerse: Int?,
+    showWordsOfJesus: Boolean,
     onIntent: (BibleIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -170,7 +173,7 @@ private fun VerseListContent(
         }
         
         items(verses, key = { "${it.number}_${it.versionAbbreviation.orEmpty()}" }) { verse ->
-            VerseItem(verse)
+            VerseItem(verse, showWordsOfJesus)
         }
     }
 }
@@ -191,7 +194,7 @@ private fun ChapterHeader(book: Book, chapter: Int, onClick: () -> Unit) {
 }
 
 @Composable
-private fun VerseItem(verse: Verse) {
+private fun VerseItem(verse: Verse, showWordsOfJesus: Boolean) {
     Column {
         if (verse.headings.isNotEmpty()) {
             val baseStyle = SpanStyle()
@@ -199,7 +202,7 @@ private fun VerseItem(verse: Verse) {
                 val headingText = buildAnnotatedString {
                     headingSpans.forEach { span ->
                         val text = if (span.style == TextStyle.SMALL_CAPS) span.text.uppercase() else span.text
-                        withStyle(span.style.toSpanStyle(baseStyle)) {
+                        withStyle(span.style.toSpanStyle(baseStyle, showWordsOfJesus)) {
                             append(text)
                         }
                     }
@@ -235,7 +238,7 @@ private fun VerseItem(verse: Verse) {
             if (verse.richText.isNotEmpty()) {
                 verse.richText.forEach { span ->
                     val text = if (span.style == TextStyle.SMALL_CAPS) span.text.uppercase() else span.text
-                    withStyle(span.style.toSpanStyle(baseStyle)) {
+                    withStyle(span.style.toSpanStyle(baseStyle, showWordsOfJesus)) {
                         append(text)
                     }
                 }
@@ -254,7 +257,7 @@ private fun VerseItem(verse: Verse) {
     }
 }
 
-private fun TextStyle.toSpanStyle(baseStyle: SpanStyle) =
+private fun TextStyle.toSpanStyle(baseStyle: SpanStyle, showWordsOfJesus: Boolean) =
     when (this) {
         TextStyle.BOLD -> baseStyle.copy(
             fontWeight = FontWeight.Bold
@@ -276,9 +279,11 @@ private fun TextStyle.toSpanStyle(baseStyle: SpanStyle) =
 
         TextStyle.SMALL_CAPS -> baseStyle
 
-        TextStyle.WORDS_OF_JESUS -> baseStyle.copy(
-            color = Color.Red
-        )
+        TextStyle.WORDS_OF_JESUS -> if (showWordsOfJesus) {
+            baseStyle.copy(color = Color.Red)
+        } else {
+            baseStyle
+        }
 
         TextStyle.NORMAL -> baseStyle
     }

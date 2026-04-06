@@ -27,6 +27,7 @@ class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
         val LAST_CHAPTER = intPreferencesKey("last_chapter")
         val HISTORY = stringPreferencesKey("history")
         val SELECTED_VERSIONS = stringPreferencesKey("selected_versions")
+        val SHOW_WORDS_OF_JESUS = booleanPreferencesKey("show_words_of_jesus")
     }
 
     val theme: Flow<AppTheme> = dataStore.data
@@ -47,6 +48,12 @@ class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
         .catch { emit(emptyPreferences()) }
         .map { prefs ->
             prefs[Keys.DYNAMIC_COLOR] ?: true
+        }
+
+    val showWordsOfJesus: Flow<Boolean> = dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map { prefs ->
+            prefs[Keys.SHOW_WORDS_OF_JESUS] ?: true
         }
 
     val lastPassage: Flow<Pair<Book, Int>> = dataStore.data
@@ -110,5 +117,9 @@ class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
         dataStore.edit {
             it[Keys.SELECTED_VERSIONS] = Json.encodeToString(ids)
         }
+    }
+
+    suspend fun setShowWordsOfJesus(enabled: Boolean) {
+        dataStore.edit { it[Keys.SHOW_WORDS_OF_JESUS] = enabled }
     }
 }
