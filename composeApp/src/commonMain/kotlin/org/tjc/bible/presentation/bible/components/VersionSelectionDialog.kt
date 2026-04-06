@@ -114,10 +114,14 @@ fun VersionSelectionDialog(
                         }
                         Spacer(Modifier.width(12.dp))
                         Column {
-                            Text(version.name, style = MaterialTheme.typography.bodyLarge)
                             Text(
                                 text = version.abbreviation,
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = version.name,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.secondary
                             )
                         }
