@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Search
@@ -48,16 +49,20 @@ fun BibleTopBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 state.currentBook?.let { currentBook ->
-                    TextButton(
-                        onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.PassageSelection(0))) }
+                    Row(
+                        Modifier.width(0.dp).weight(1f)
                     ) {
-                        AutoResizedText(
-                            text = "${stringResource(currentBook.nameResource)} ${state.currentChapter}",
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        TextButton(
+                            onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.PassageSelection(0))) }
+                        ) {
+                            AutoResizedText(
+                                text = "${stringResource(currentBook.nameResource)} ${state.currentChapter}",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                        Spacer(Modifier.weight(1f))
                     }
                 }
-                Spacer(Modifier.weight(1f))
                 TextButton(
                     onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.VersionSelection)) }
                 ) {
