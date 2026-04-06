@@ -16,9 +16,13 @@ class AbsBibleRepository(
     private val httpClient: HttpClient
 ) : BibleRepository {
 
+    private fun HttpRequestBuilder.absHeaders() {
+        header("api-key", Config.ABS_API_KEY)
+    }
+
     override suspend fun getVersions(language: String?): Result<List<BibleVersion>> = runCatching {
         val response = httpClient.get("https://rest.api.bible/v1/bibles") {
-            header("api-key", Config.ABS_API_KEY)
+            absHeaders()
             language?.let {
                 parameter("language", it.toIso6393())
             }
@@ -32,7 +36,7 @@ class AbsBibleRepository(
     override suspend fun getVerses(versionId: String, book: Book, chapter: Int): Result<List<Verse>> = runCatching {
         val chapterId = getChapterId(book, chapter)
         val response = httpClient.get("https://rest.api.bible/v1/bibles/$versionId/chapters/$chapterId") {
-            header("api-key", Config.ABS_API_KEY)
+            absHeaders()
             parameter("content-type", "json")
             parameter("include-notes", "false")
             parameter("include-titles", "false")
