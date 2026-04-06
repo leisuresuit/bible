@@ -173,7 +173,7 @@ data class TextSpan(
 )
 
 enum class TextStyle {
-    NORMAL, BOLD, ITALIC, HEADING
+    NORMAL, BOLD, ITALIC, ITALIC_BOLD, HEADING, SMALL_CAPS, WORDS_OF_JESUS
 }
 
 data class SearchResult(

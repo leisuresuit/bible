@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,9 +21,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -184,7 +184,8 @@ private fun ChapterHeader(book: Book, chapter: Int, onClick: () -> Unit) {
         Text(
             text = "${stringResource(book.nameResource)} $chapter",
             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            fontFamily = FontFamily.Serif
         )
     }
 }
@@ -193,11 +194,13 @@ private fun ChapterHeader(book: Book, chapter: Int, onClick: () -> Unit) {
 private fun VerseItem(verse: Verse) {
     Column {
         if (verse.headings.isNotEmpty()) {
+            val baseStyle = SpanStyle()
             verse.headings.forEachIndexed { index, headingSpans ->
                 val headingText = buildAnnotatedString {
                     headingSpans.forEach { span ->
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append(span.text)
+                        val text = if (span.style == TextStyle.SMALL_CAPS) span.text.uppercase() else span.text
+                        withStyle(span.style.toSpanStyle(baseStyle)) {
+                            append(text)
                         }
                     }
                 }
@@ -217,44 +220,68 @@ private fun VerseItem(verse: Verse) {
                 modifier = Modifier.padding(bottom = 2.dp)
             )
         }
-        Row {
-            Text(
-                text = verse.number.toString(),
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.padding(end = 12.dp, top = 2.dp)
+        val annotatedString = buildAnnotatedString {
+            withStyle(
+                SpanStyle(
+                    fontWeight = FontWeight.Bold
+                )
+            ) {
+                append("${verse.number} ")
+            }
+
+            val baseStyle = SpanStyle(
+                fontFamily = FontFamily.Serif
             )
-            
-            val annotatedString = if (verse.richText.isNotEmpty()) {
-                buildAnnotatedString {
-                    verse.richText.forEach { span ->
-                        val style = when (span.style) {
-                            TextStyle.BOLD -> SpanStyle(fontWeight = FontWeight.Bold)
-                            TextStyle.ITALIC -> SpanStyle(fontStyle = FontStyle.Italic)
-                            TextStyle.HEADING -> SpanStyle(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            )
-                            TextStyle.NORMAL -> SpanStyle()
-                        }
-                        withStyle(style) {
-                            append(span.text)
-                        }
+            if (verse.richText.isNotEmpty()) {
+                verse.richText.forEach { span ->
+                    val text = if (span.style == TextStyle.SMALL_CAPS) span.text.uppercase() else span.text
+                    withStyle(span.style.toSpanStyle(baseStyle)) {
+                        append(text)
                     }
                 }
             } else {
-                AnnotatedString(verse.text.orEmpty())
+                withStyle(baseStyle) {
+                    append(verse.text.orEmpty())
+                }
             }
-
-            Text(
-                text = annotatedString,
-                style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 28.sp)
-            )
         }
+
+        Text(
+            text = annotatedString,
+            style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 28.sp),
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
+
+private fun TextStyle.toSpanStyle(baseStyle: SpanStyle) =
+    when (this) {
+        TextStyle.BOLD -> baseStyle.copy(
+            fontWeight = FontWeight.Bold
+        )
+
+        TextStyle.ITALIC -> baseStyle.copy(
+            fontStyle = FontStyle.Italic
+        )
+
+        TextStyle.ITALIC_BOLD -> baseStyle.copy(
+            fontWeight = FontWeight.Bold,
+            fontStyle = FontStyle.Italic
+        )
+
+        TextStyle.HEADING -> baseStyle.copy(
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp
+        )
+
+        TextStyle.SMALL_CAPS -> baseStyle
+
+        TextStyle.WORDS_OF_JESUS -> baseStyle.copy(
+            color = Color.Red
+        )
+
+        TextStyle.NORMAL -> baseStyle
+    }
 
 @Composable
 private fun VerseListPlaceholder(book: Book, chapter: Int, onIntent: (BibleIntent) -> Unit) {
@@ -274,6 +301,7 @@ fun VerseListPreview() {
                 state = BibleState(
                     currentBook = Book.Luke,
                     currentChapter = 18,
+                    displayMode = DisplayMode.CONTIGUOUS,
                     verses = listOf(
                         Verse(
                             number = 1, 
@@ -298,6 +326,7 @@ fun VerseListParallelPreview() {
                 state = BibleState(
                     currentBook = Book.Luke,
                     currentChapter = 24,
+                    displayMode = DisplayMode.CONTIGUOUS,
                     verses = listOf(
                         Verse(1, "Now on the first day of the week, very early in the morning, they, and certain other women with them, came to the tomb bringing the spices which they had prepared.", versionAbbreviation = "NKJV"),
                         Verse(1, "七日的頭一日黎明的時候，那些婦女帶著所預備的香料，來到墳墓前。", versionAbbreviation = "CUV"),
