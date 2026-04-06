@@ -31,6 +31,7 @@ import org.tjc.bible.domain.model.Book
 import org.tjc.bible.presentation.bible.ActiveDialog
 import org.tjc.bible.presentation.bible.BibleIntent
 import org.tjc.bible.presentation.bible.BibleState
+import org.tjc.bible.presentation.ui.AutoResizedText
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
 
@@ -50,7 +51,7 @@ fun BibleTopBar(
                     TextButton(
                         onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.PassageSelection(0))) }
                     ) {
-                        Text(
+                        AutoResizedText(
                             text = "${stringResource(currentBook.nameResource)} ${state.currentChapter}",
                             style = MaterialTheme.typography.titleMedium
                         )

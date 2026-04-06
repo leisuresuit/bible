@@ -5,13 +5,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -55,6 +53,7 @@ import org.tjc.bible.domain.model.Book
 import org.tjc.bible.domain.model.Verse
 import org.tjc.bible.presentation.bible.BibleIntent
 import org.tjc.bible.presentation.bible.BibleState
+import org.tjc.bible.presentation.ui.AutoResizedText
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
 
@@ -115,23 +114,17 @@ fun PassageSelectionDialog(
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Stationary Header
-                val currentBookName = selectedBook?.let { stringResource(it.nameResource) }
                 val title = when (pagerState.currentPage) {
                     0 -> stringResource(Res.string.book)
-                    1 -> currentBookName ?: stringResource(Res.string.chapter)
-                    else -> "$currentBookName $selectedChapter"
-                }
-                
-                val searchHint = when (pagerState.currentPage) {
-                    0 -> stringResource(Res.string.search)
                     1 -> stringResource(Res.string.chapter)
                     else -> stringResource(Res.string.verse)
                 }
+                
                 val keyboardType = if (pagerState.currentPage == 0) KeyboardType.Text else KeyboardType.Number
                 
                 SelectionDialogHeader(
                     title = title,
-                    searchHint = searchHint,
+                    searchHint = stringResource(Res.string.search),
                     searchQuery = searchQuery,
                     onSearchQueryChange = { searchQuery = it },
                     showSortButton = pagerState.currentPage == 0,
@@ -225,7 +218,7 @@ fun BookSelectionPage(
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
+                AutoResizedText(
                     text = name,
                     style = MaterialTheme.typography.bodyLarge,
                     color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
@@ -339,7 +332,6 @@ fun SelectionDialogHeader(
                     )
                 }
             }
-            Spacer(Modifier.width(16.dp))
             TextField(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
@@ -349,7 +341,7 @@ fun SelectionDialogHeader(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent
                 ),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.padding(start = 8.dp).weight(1f)
             )
         }
     }

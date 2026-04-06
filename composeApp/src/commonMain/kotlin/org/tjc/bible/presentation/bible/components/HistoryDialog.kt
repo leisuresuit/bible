@@ -40,6 +40,7 @@ import bible.composeapp.generated.resources.previous
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.Book
 import org.tjc.bible.domain.model.HistoryItem
+import org.tjc.bible.presentation.ui.AutoResizedText
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
 
@@ -126,7 +127,7 @@ fun HistoryDialog(
                             item.chapter == currentChapter &&
                             item.verse == currentVerse
 
-                    Text(
+                    AutoResizedText(
                         text = "${stringResource(item.book.nameResource)} ${item.chapter}${if (item.verse != null) ":${item.verse}" else ""}",
                         modifier = Modifier
                             .fillMaxWidth()
