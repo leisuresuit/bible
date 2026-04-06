@@ -23,11 +23,23 @@ fun BibleScreen(viewModel: BibleViewModel) {
 
     Scaffold(
         topBar = {
-            BibleTopBar(state, viewModel::onIntent)
+            BibleTopBar(
+                currentBook = state.currentBook,
+                currentChapter = state.currentChapter,
+                selectedVersions = state.selectedVersions,
+                onIntent = viewModel::onIntent
+            )
         }
     ) { padding ->
         VerseList(
-            state = state,
+            currentBook = state.currentBook,
+            currentChapter = state.currentChapter,
+            currentVerse = state.currentVerse,
+            verses = state.verses,
+            chaptersVerses = state.chaptersVerses,
+            displayMode = state.displayMode,
+            showWordsOfJesus = state.showWordsOfJesus,
+            isLoading = state.isLoading,
             onIntent = viewModel::onIntent,
             modifier = Modifier.padding(padding)
         )
@@ -36,7 +48,9 @@ fun BibleScreen(viewModel: BibleViewModel) {
         when (val dialog = state.activeDialog) {
             is ActiveDialog.PassageSelection -> {
                 PassageSelectionDialog(
-                    state = state,
+                    currentBook = state.currentBook,
+                    currentChapter = state.currentChapter,
+                    currentVerse = state.currentVerse,
                     initialPage = dialog.initialPage,
                     onDismiss = { viewModel.onIntent(BibleIntent.ShowDialog(null)) },
                     onIntent = viewModel::onIntent
@@ -52,7 +66,10 @@ fun BibleScreen(viewModel: BibleViewModel) {
             }
             is ActiveDialog.Settings -> {
                 SettingsDialog(
-                    state = state,
+                    displayMode = state.displayMode,
+                    showWordsOfJesus = state.showWordsOfJesus,
+                    theme = state.theme,
+                    isDynamicColor = state.isDynamicColor,
                     supportsDynamicColor = supportsDynamicColor,
                     onDismiss = { viewModel.onIntent(BibleIntent.ShowDialog(null)) },
                     onIntent = viewModel::onIntent

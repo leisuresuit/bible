@@ -43,16 +43,16 @@ import bible.composeapp.generated.resources.verse
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.Book
-import org.tjc.bible.domain.model.Verse
 import org.tjc.bible.presentation.bible.BibleIntent
-import org.tjc.bible.presentation.bible.BibleState
 import org.tjc.bible.presentation.ui.AutoResizedText
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
 
 @Composable
 fun PassageSelectionDialog(
-    state: BibleState,
+    currentBook: Book?,
+    currentChapter: Int,
+    currentVerse: Int?,
     initialPage: Int,
     onDismiss: () -> Unit,
     onIntent: (BibleIntent) -> Unit
@@ -63,9 +63,9 @@ fun PassageSelectionDialog(
     var searchQuery by remember { mutableStateOf("") }
     var isAlphabeticalOrder by remember { mutableStateOf(false) }
 
-    var selectedBook by remember { mutableStateOf(state.currentBook) }
-    var selectedChapter by remember { mutableStateOf(state.currentChapter) }
-    var selectedVerse by remember { mutableStateOf(state.currentVerse) }
+    var selectedBook by remember { mutableStateOf(currentBook) }
+    var selectedChapter by remember { mutableStateOf(currentChapter) }
+    var selectedVerse by remember { mutableStateOf(currentVerse) }
 
     // Reset search query when page changes
     LaunchedEffect(pagerState.currentPage) {
@@ -309,11 +309,9 @@ fun VerseSelectionPage(
 fun PassageSelectionDialogPreview() {
     BibleTheme {
         PassageSelectionDialog(
-            state = BibleState(
-                currentBook = Book.Luke,
-                currentChapter = 18,
-                verses = List(20) { Verse(it + 1, "Verse text $it") }
-            ),
+            currentBook = Book.Luke,
+            currentChapter = 18,
+            currentVerse = null,
             initialPage = 0,
             onDismiss = {},
             onIntent = {}

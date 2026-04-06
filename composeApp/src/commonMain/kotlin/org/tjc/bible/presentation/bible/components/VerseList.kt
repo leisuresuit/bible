@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -43,7 +42,6 @@ import org.tjc.bible.domain.model.TextStyle
 import org.tjc.bible.domain.model.Verse
 import org.tjc.bible.presentation.bible.ActiveDialog
 import org.tjc.bible.presentation.bible.BibleIntent
-import org.tjc.bible.presentation.bible.BibleState
 import org.tjc.bible.presentation.bible.DisplayMode
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
@@ -51,12 +49,19 @@ import org.tjc.bible.presentation.ui.ThemePreviews
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun VerseList(
-    state: BibleState,
+    currentBook: Book?,
+    currentChapter: Int,
+    currentVerse: Int?,
+    verses: List<Verse>,
+    chaptersVerses: Map<Int, List<Verse>>,
+    displayMode: DisplayMode,
+    showWordsOfJesus: Boolean,
+    isLoading: Boolean,
     onIntent: (BibleIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (state.currentBook == null) {
-        if (state.isLoading) {
+    if (currentBook == null) {
+        if (isLoading) {
             Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 LoadingIndicator()
             }
@@ -86,13 +91,13 @@ fun VerseList(
         return book to chapter
     }
 
-    if (state.displayMode == DisplayMode.SINGLE_CHAPTER) {
-        val initialPage = remember { getGlobalIndex(state.currentBook, state.currentChapter) }
+    if (displayMode == DisplayMode.SINGLE_CHAPTER) {
+        val initialPage = remember { getGlobalIndex(currentBook, currentChapter) }
         val pagerState = rememberPagerState(initialPage = initialPage) { totalChapters }
 
         // Sync pager with state changes (e.g. from dialog selection)
-        LaunchedEffect(state.currentBook, state.currentChapter) {
-            val targetPage = getGlobalIndex(state.currentBook, state.currentChapter)
+        LaunchedEffect(currentBook, currentChapter) {
+            val targetPage = getGlobalIndex(currentBook, currentChapter)
             if (pagerState.currentPage != targetPage) {
                 pagerState.scrollToPage(targetPage)
             }
@@ -104,7 +109,7 @@ fun VerseList(
                 .distinctUntilChanged()
                 .collect { page ->
                     val (book, chapter) = getPassageFromGlobalIndex(page)
-                    if (book != state.currentBook || chapter != state.currentChapter) {
+                    if (book != currentBook || chapter != currentChapter) {
                         onIntent(BibleIntent.UpdateVisiblePassage(book, chapter))
                     }
                 }
@@ -116,19 +121,19 @@ fun VerseList(
             beyondViewportPageCount = 1
         ) { page ->
             val (book, chapter) = getPassageFromGlobalIndex(page)
-            val verses = state.chaptersVerses[page]
+            val chapterVerses = chaptersVerses[page]
             
             LaunchedEffect(book, chapter) {
                 onIntent(BibleIntent.LoadChapterVerses(book, chapter, page))
             }
 
-            if (verses != null) {
+            if (chapterVerses != null) {
                 VerseListContent(
                     book = book,
                     chapter = chapter,
-                    verses = verses,
-                    targetVerse = if (page == pagerState.currentPage) state.currentVerse else null,
-                    showWordsOfJesus = state.showWordsOfJesus,
+                    verses = chapterVerses,
+                    targetVerse = if (page == pagerState.currentPage) currentVerse else null,
+                    showWordsOfJesus = showWordsOfJesus,
                     onIntent = onIntent
                 )
             } else {
@@ -138,11 +143,11 @@ fun VerseList(
     } else {
         // Contiguous mode
         VerseListContent(
-            book = state.currentBook,
-            chapter = state.currentChapter,
-            verses = state.verses,
-            targetVerse = state.currentVerse,
-            showWordsOfJesus = state.showWordsOfJesus,
+            book = currentBook,
+            chapter = currentChapter,
+            verses = verses,
+            targetVerse = currentVerse,
+            showWordsOfJesus = showWordsOfJesus,
             onIntent = onIntent,
             modifier = modifier
         )
@@ -322,19 +327,21 @@ fun VerseListPreview() {
     BibleTheme {
         Surface {
             VerseList(
-                state = BibleState(
-                    currentBook = Book.Luke,
-                    currentChapter = 18,
-                    displayMode = DisplayMode.CONTIGUOUS,
-                    verses = listOf(
-                        Verse(
-                            number = 1, 
-                            text = "Then He spoke a parable to them, that men always ought to pray and not lose heart,",
-                            headings = listOf(listOf(TextSpan("The Parable of the Persistent Widow", TextStyle.HEADING)))
-                        ),
-                        Verse(number = 2, text = "saying: \"There was in a certain city a judge who did not fear God nor regard man.")
-                    )
+                currentBook = Book.Luke,
+                currentChapter = 18,
+                currentVerse = null,
+                verses = listOf(
+                    Verse(
+                        number = 1, 
+                        text = "Then He spoke a parable to them, that men always ought to pray and not lose heart,",
+                        headings = listOf(listOf(TextSpan("The Parable of the Persistent Widow", TextStyle.HEADING)))
+                    ),
+                    Verse(number = 2, text = "saying: \"There was in a certain city a judge who did not fear God nor regard man.")
                 ),
+                chaptersVerses = emptyMap(),
+                displayMode = DisplayMode.CONTIGUOUS,
+                showWordsOfJesus = true,
+                isLoading = false,
                 onIntent = {}
             )
         }
@@ -347,19 +354,21 @@ fun VerseListParallelPreview() {
     BibleTheme {
         Surface {
             VerseList(
-                state = BibleState(
-                    currentBook = Book.Luke,
-                    currentChapter = 24,
-                    displayMode = DisplayMode.CONTIGUOUS,
-                    verses = listOf(
-                        Verse(1, "Now on the first day of the week, very early in the morning, they, and certain other women with them, came to the tomb bringing the spices which they had prepared.", versionAbbreviation = "NKJV"),
-                        Verse(1, "七日的頭一日黎明的時候，那些婦女帶著所預備的香料，來到墳墓前。", versionAbbreviation = "CUV"),
-                        Verse(2, "But they found the stone rolled away from the tomb.", versionAbbreviation = "NKJV"),
-                        Verse(2, "看見石頭已經從墳墓輥開了；", versionAbbreviation = "CUV"),
-                        Verse(3, "Then they went in and did not find the body of the Lord Jesus.", versionAbbreviation = "NKJV"),
-                        Verse(3, "他們就進去，只是不見主耶穌的身體。", versionAbbreviation = "CUV")
-                    )
+                currentBook = Book.Luke,
+                currentChapter = 24,
+                currentVerse = null,
+                verses = listOf(
+                    Verse(1, "Now on the first day of the week, very early in the morning, they, and certain other women with them, came to the tomb bringing the spices which they had prepared.", versionAbbreviation = "NKJV"),
+                    Verse(1, "七日的頭一日黎明的時候，那些婦女帶著所預備的香料，來到墳墓前。", versionAbbreviation = "CUV"),
+                    Verse(2, "But they found the stone rolled away from the tomb.", versionAbbreviation = "NKJV"),
+                    Verse(2, "看見石頭已經從墳墓輥開了；", versionAbbreviation = "CUV"),
+                    Verse(3, "Then they went in and did not find the body of the Lord Jesus.", versionAbbreviation = "NKJV"),
+                    Verse(3, "他們就進去，只是不見主耶穌的身體。", versionAbbreviation = "CUV")
                 ),
+                chaptersVerses = emptyMap(),
+                displayMode = DisplayMode.CONTIGUOUS,
+                showWordsOfJesus = true,
+                isLoading = false,
                 onIntent = {}
             )
         }
@@ -372,12 +381,14 @@ fun VerseListLoadingPreview() {
     BibleTheme {
         Surface {
             VerseList(
-                state = BibleState(
-                    currentBook = Book.Genesis,
-                    currentChapter = 1,
-                    displayMode = DisplayMode.SINGLE_CHAPTER,
-                    chaptersVerses = emptyMap()
-                ),
+                currentBook = Book.Genesis,
+                currentChapter = 1,
+                currentVerse = null,
+                verses = emptyList(),
+                chaptersVerses = emptyMap(),
+                displayMode = DisplayMode.SINGLE_CHAPTER,
+                showWordsOfJesus = true,
+                isLoading = true,
                 onIntent = {}
             )
         }

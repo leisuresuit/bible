@@ -19,14 +19,16 @@ import bible.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.AppTheme
 import org.tjc.bible.presentation.bible.BibleIntent
-import org.tjc.bible.presentation.bible.BibleState
 import org.tjc.bible.presentation.bible.DisplayMode
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
 
 @Composable
 fun SettingsDialog(
-    state: BibleState,
+    displayMode: DisplayMode,
+    showWordsOfJesus: Boolean,
+    theme: AppTheme,
+    isDynamicColor: Boolean,
     supportsDynamicColor: Boolean,
     onDismiss: () -> Unit,
     onIntent: (BibleIntent) -> Unit
@@ -63,7 +65,7 @@ fun SettingsDialog(
                 )
                 Column(Modifier.selectableGroup()) {
                     DisplayMode.entries.forEach { mode ->
-                        val selected = state.displayMode == mode
+                        val selected = displayMode == mode
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -98,12 +100,12 @@ fun SettingsDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onIntent(BibleIntent.UpdateShowWordsOfJesus(!state.showWordsOfJesus)) }
+                        .clickable { onIntent(BibleIntent.UpdateShowWordsOfJesus(!showWordsOfJesus)) }
                         .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
-                        checked = state.showWordsOfJesus,
+                        checked = showWordsOfJesus,
                         onCheckedChange = { onIntent(BibleIntent.UpdateShowWordsOfJesus(it)) }
                     )
                     Text(
@@ -121,14 +123,14 @@ fun SettingsDialog(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Column(Modifier.selectableGroup()) {
-                    AppTheme.entries.forEach { theme ->
-                        val selected = state.theme == theme
+                    AppTheme.entries.forEach { themeEntry ->
+                        val selected = theme == themeEntry
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .selectable(
                                     selected = selected,
-                                    onClick = { onIntent(BibleIntent.UpdateTheme(theme)) },
+                                    onClick = { onIntent(BibleIntent.UpdateTheme(themeEntry)) },
                                     role = Role.RadioButton
                                 )
                                 .padding(start = 12.dp, top = 8.dp, bottom = 8.dp),
@@ -138,7 +140,7 @@ fun SettingsDialog(
                                 selected = selected,
                                 onClick = null
                             )
-                            val label = when (theme) {
+                            val label = when (themeEntry) {
                                 AppTheme.SYSTEM -> stringResource(Res.string.theme_system)
                                 AppTheme.LIGHT -> stringResource(Res.string.theme_light)
                                 AppTheme.DARK -> stringResource(Res.string.theme_dark)
@@ -155,12 +157,12 @@ fun SettingsDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onIntent(BibleIntent.UpdateDynamicColor(!state.isDynamicColor)) }
+                            .clickable { onIntent(BibleIntent.UpdateDynamicColor(!isDynamicColor)) }
                             .padding(vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
-                            checked = state.isDynamicColor,
+                            checked = isDynamicColor,
                             onCheckedChange = { onIntent(BibleIntent.UpdateDynamicColor(it)) }
                         )
                         Text(
@@ -179,7 +181,10 @@ fun SettingsDialog(
 fun SettingsDialogPreview() {
     BibleTheme {
         SettingsDialog(
-            state = BibleState(),
+            displayMode = DisplayMode.SINGLE_CHAPTER,
+            showWordsOfJesus = true,
+            theme = AppTheme.SYSTEM,
+            isDynamicColor = true,
             supportsDynamicColor = true,
             onDismiss = {},
             onIntent = {}

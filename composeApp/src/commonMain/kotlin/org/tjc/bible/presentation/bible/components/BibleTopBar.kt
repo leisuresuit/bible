@@ -31,7 +31,6 @@ import org.tjc.bible.domain.model.BibleVersion
 import org.tjc.bible.domain.model.Book
 import org.tjc.bible.presentation.bible.ActiveDialog
 import org.tjc.bible.presentation.bible.BibleIntent
-import org.tjc.bible.presentation.bible.BibleState
 import org.tjc.bible.presentation.ui.AutoResizedText
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
@@ -39,7 +38,9 @@ import org.tjc.bible.presentation.ui.ThemePreviews
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BibleTopBar(
-    state: BibleState,
+    currentBook: Book?,
+    currentChapter: Int,
+    selectedVersions: List<BibleVersion>,
     onIntent: (BibleIntent) -> Unit
 ) {
     TopAppBar(
@@ -48,7 +49,7 @@ fun BibleTopBar(
                 Modifier.fillMaxWidth().padding(end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                state.currentBook?.let { currentBook ->
+                currentBook?.let { book ->
                     Row(
                         Modifier.width(0.dp).weight(1f)
                     ) {
@@ -56,7 +57,7 @@ fun BibleTopBar(
                             onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.PassageSelection(0))) }
                         ) {
                             AutoResizedText(
-                                text = "${stringResource(currentBook.nameResource)} ${state.currentChapter}",
+                                text = "${stringResource(book.nameResource)} $currentChapter",
                                 style = MaterialTheme.typography.titleMedium
                             )
                         }
@@ -66,10 +67,10 @@ fun BibleTopBar(
                 TextButton(
                     onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.VersionSelection)) }
                 ) {
-                    val versionText = if (state.selectedVersions.size > 1) {
+                    val versionText = if (selectedVersions.size > 1) {
                         stringResource(Res.string.versions)
                     } else {
-                        state.selectedVersions.firstOrNull()?.abbreviation ?: stringResource(Res.string.versions)
+                        selectedVersions.firstOrNull()?.abbreviation ?: stringResource(Res.string.versions)
                     }
                     Text(
                         text = versionText,
@@ -98,11 +99,9 @@ fun BibleTopBarPreview() {
     BibleTheme {
         Surface {
             BibleTopBar(
-                state = BibleState(
-                    currentBook = Book.Luke,
-                    currentChapter = 18,
-                    selectedVersions = listOf(BibleVersion("nkjv", "New King James Version", "English", "NKJV"))
-                ),
+                currentBook = Book.Luke,
+                currentChapter = 18,
+                selectedVersions = listOf(BibleVersion("nkjv", "New King James Version", "English", "NKJV")),
                 onIntent = {}
             )
         }
