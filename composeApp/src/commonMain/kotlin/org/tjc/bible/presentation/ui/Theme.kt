@@ -1,20 +1,20 @@
 package org.tjc.bible.presentation.ui
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
-private val DarkColorScheme = darkColorScheme()
-private val LightColorScheme = lightColorScheme()
+@Composable
+expect fun platformColorScheme(darkTheme: Boolean, dynamicColor: Boolean): ColorScheme
 
 @Composable
 fun BibleTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val colorScheme = platformColorScheme(darkTheme, dynamicColor)
 
     MaterialTheme(
         colorScheme = colorScheme,

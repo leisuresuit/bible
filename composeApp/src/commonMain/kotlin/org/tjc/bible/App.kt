@@ -21,7 +21,10 @@ fun App() {
         AppTheme.DARK -> true
     }
 
-    BibleTheme(darkTheme = darkTheme) {
+    BibleTheme(
+        darkTheme = darkTheme,
+        dynamicColor = state.isDynamicColor
+    ) {
         BibleScreen(viewModel)
     }
 }
