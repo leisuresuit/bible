@@ -16,17 +16,10 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -310,42 +303,6 @@ fun VerseSelectionPage(
     }
 }
 
-@Composable
-fun SelectionDialogHeader(
-    title: String,
-    searchHint: String,
-    searchQuery: String,
-    onSearchQueryChange: (String) -> Unit,
-    showSortButton: Boolean,
-    onSortClick: () -> Unit,
-    keyboardType: KeyboardType
-) {
-    Column(modifier = Modifier.padding(bottom = 16.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(title, style = MaterialTheme.typography.headlineSmall)
-            if (showSortButton) {
-                IconButton(onClick = onSortClick) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Sort,
-                        contentDescription = "Toggle sort order",
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
-            }
-            TextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                placeholder = { Text(searchHint) },
-                keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
-                ),
-                modifier = Modifier.padding(start = 8.dp).weight(1f)
-            )
-        }
-    }
-}
 
 @ThemePreviews
 @Composable

@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.cancel
 import bible.composeapp.generated.resources.ok
+import bible.composeapp.generated.resources.search
 import bible.composeapp.generated.resources.versions
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.BibleVersion
@@ -44,6 +46,20 @@ fun VersionSelectionDialog(
     onVersionsSelected: (List<BibleVersion>) -> Unit
 ) {
     var tempSelectedVersions by remember { mutableStateOf(initialSelectedVersions) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredVersions by remember(versions, searchQuery) {
+        derivedStateOf {
+            if (searchQuery.isEmpty()) {
+                versions
+            } else {
+                versions.filter {
+                    it.name.contains(searchQuery, ignoreCase = true) ||
+                            it.abbreviation.contains(searchQuery, ignoreCase = true)
+                }
+            }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -63,11 +79,16 @@ fun VersionSelectionDialog(
             }
         },
         title = {
-            Text(stringResource(Res.string.versions))
+            SelectionDialogHeader(
+                title = stringResource(Res.string.versions),
+                searchHint = stringResource(Res.string.search),
+                searchQuery = searchQuery,
+                onSearchQueryChange = { searchQuery = it }
+            )
         },
         text = {
             LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
-                items(versions) { version ->
+                items(filteredVersions) { version ->
                     val isSelected = tempSelectedVersions.any { it.id == version.id }
                     Row(
                         modifier = Modifier
