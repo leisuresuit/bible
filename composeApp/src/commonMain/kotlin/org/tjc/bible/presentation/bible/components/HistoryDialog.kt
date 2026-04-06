@@ -16,7 +16,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -83,7 +83,7 @@ fun HistoryDialog(
                 Modifier.wrapContentHeight().fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.DateRange, contentDescription = null)
+                Icon(Icons.Outlined.DateRange, contentDescription = null)
                 Text(
                     text = stringResource(Res.string.history),
                     Modifier.padding(start = 8.dp),
