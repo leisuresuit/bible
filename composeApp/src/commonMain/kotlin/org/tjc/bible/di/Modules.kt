@@ -3,8 +3,11 @@ package org.tjc.bible.di
 import io.github.santimattius.persistent.cache.CacheConfig
 import io.github.santimattius.persistent.cache.installPersistentCache
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.cache.HttpCache
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.header
+import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.core.context.startKoin
@@ -35,8 +38,8 @@ val appModule = module {
                 CacheConfig(
                     enabled = true,
                     cacheDirectory = "http_cache",
-                    maxCacheSize = 10L * 1024 * 1024, // 10 MB
-                    cacheTtl = 30.days.inWholeMilliseconds,
+                    maxCacheSize = 50L * 1024 * 1024, // 50 MB
+                    cacheTtl = Long.MAX_VALUE,
                     isShared = true,
                     isPublic = false
                 )
@@ -47,6 +50,9 @@ val appModule = module {
                     prettyPrint = true
                     isLenient = true
                 })
+            }
+            install(DefaultRequest) {
+                header(HttpHeaders.CacheControl, "max-stale=315360000") // 10 years (effectively forever)
             }
         }
     }
