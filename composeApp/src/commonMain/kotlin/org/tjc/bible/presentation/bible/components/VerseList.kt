@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.Book
+import org.tjc.bible.domain.model.TextSpan
 import org.tjc.bible.domain.model.TextStyle
 import org.tjc.bible.domain.model.Verse
 import org.tjc.bible.presentation.bible.ActiveDialog
@@ -191,6 +192,23 @@ private fun ChapterHeader(book: Book, chapter: Int, onClick: () -> Unit) {
 @Composable
 private fun VerseItem(verse: Verse) {
     Column {
+        if (verse.headings.isNotEmpty()) {
+            verse.headings.forEachIndexed { index, headingSpans ->
+                val headingText = buildAnnotatedString {
+                    headingSpans.forEach { span ->
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(span.text)
+                        }
+                    }
+                }
+                Text(
+                    text = headingText,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(top = if (index == 0) 16.dp else 0.dp, bottom = 8.dp)
+                )
+            }
+        }
+        
         if (verse.versionAbbreviation != null) {
             Text(
                 text = verse.versionAbbreviation,
@@ -257,8 +275,12 @@ fun VerseListPreview() {
                     currentBook = Book.Luke,
                     currentChapter = 18,
                     verses = listOf(
-                        Verse(1, "Then He spoke a parable to them, that men always ought to pray and not lose heart,"),
-                        Verse(2, "saying: \"There was in a certain city a judge who did not fear God nor regard man.")
+                        Verse(
+                            number = 1, 
+                            text = "Then He spoke a parable to them, that men always ought to pray and not lose heart,",
+                            headings = listOf(listOf(TextSpan("The Parable of the Persistent Widow", TextStyle.HEADING)))
+                        ),
+                        Verse(number = 2, text = "saying: \"There was in a certain city a judge who did not fear God nor regard man.")
                     )
                 ),
                 onIntent = {}
