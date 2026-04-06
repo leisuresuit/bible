@@ -1,15 +1,11 @@
 package org.tjc.bible.presentation.bible
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.tjc.bible.presentation.bible.components.BibleTopBar
 import org.tjc.bible.presentation.bible.components.HistoryDialog
@@ -32,13 +28,11 @@ fun BibleScreen(viewModel: BibleViewModel) {
             BibleTopBar(state, viewModel::onIntent)
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            if (state.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else {
-                VerseList(state, viewModel::onIntent)
-            }
-        }
+        VerseList(
+            state = state,
+            onIntent = viewModel::onIntent,
+            modifier = Modifier.padding(padding)
+        )
 
         // Dialogs
         when (val dialog = state.activeDialog) {
