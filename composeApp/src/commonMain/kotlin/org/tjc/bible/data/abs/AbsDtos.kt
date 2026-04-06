@@ -4,6 +4,8 @@ import kotlinx.serialization.Serializable
 import org.tjc.bible.domain.model.BibleVersion
 import org.tjc.bible.domain.model.Book
 import org.tjc.bible.domain.model.SearchResult
+import org.tjc.bible.domain.model.TextSpan
+import org.tjc.bible.domain.model.TextStyle
 import org.tjc.bible.domain.model.Verse
 
 @Serializable
@@ -92,31 +94,103 @@ internal fun String.toIso6393(): String =
     }
 
 fun AbsChapterContentDto.toDomain(): List<Verse> {
-    val versesMap = mutableMapOf<Int, StringBuilder>()
+    val versesMap = mutableMapOf<Int, MutableList<TextSpan>>()
+    val pendingSpans = mutableListOf<TextSpan>()
+    var pendingBreak = false
 
-    fun process(item: AbsContentItemDto, inheritedVerseId: String?) {
-        val currentVerseId = item.attrs?.verseId ?: inheritedVerseId
+    fun extractVerseNumber(vId: String): Int {
+        val parts = vId.split(".", " ", ":")
+        // Bible API verse IDs are usually BOOK.CHAP.VERSE (3 parts)
+        if (parts.size < 3) return 0
+        return parts.lastOrNull { it.any { it.isDigit() } }
+            ?.takeWhile { it.isDigit() }
+            ?.toIntOrNull() ?: 0
+    }
+
+    fun process(item: AbsContentItemDto, inheritedVerseId: String?, inheritedStyle: TextStyle) {
+        val style = when (val s = item.attrs?.style) {
+            "bd", "itbd", "nd" -> TextStyle.BOLD
+            "it" -> TextStyle.ITALIC
+            "wj" -> TextStyle.BOLD // Words of Jesus
+            "s", "s1", "s2", "s3", "ms", "ms1", "d", "sp", "qa" -> TextStyle.HEADING
+            else -> inheritedStyle
+        }
+
+        val currentVerseId = item.attrs?.verseId ?: item.attrs?.vid ?: inheritedVerseId
+
+        // Treat paragraphs, poetic lines, and headings as block-level elements for line breaks
+        val isBlock = item.type == "tag" && (
+            item.name == "p" || item.name == "para" ||
+            item.attrs?.style?.let { s ->
+                s.startsWith("p") || s.startsWith("q") || s.startsWith("s") || s == "m" || s == "nb"
+            } == true
+        )
+        if (isBlock) {
+            pendingBreak = true
+        }
+
         if (item.type == "text") {
-            val vId = currentVerseId ?: item.attrs?.vid
+            val vId = currentVerseId
             if (vId != null) {
-                val verseNumber = vId.split(".", " ", ":")
-                    .lastOrNull { it.any { it.isDigit() } }
-                    ?.takeWhile { it.isDigit() }
-                    ?.toIntOrNull() ?: 0
+                val verseNumber = extractVerseNumber(vId)
                 if (verseNumber > 0) {
-                    versesMap.getOrPut(verseNumber) { StringBuilder() }.append(item.text ?: "")
+                    val spans = versesMap.getOrPut(verseNumber) { mutableListOf() }
+
+                    // Prepend headings/titles that occurred before this verse
+                    if (pendingSpans.isNotEmpty()) {
+                        if (spans.isNotEmpty() && !spans.last().text.endsWith("\n")) {
+                            spans.add(TextSpan("\n", TextStyle.NORMAL))
+                        }
+                        spans.addAll(pendingSpans)
+                        pendingSpans.clear()
+                        pendingBreak = true // Force break after heading
+                    }
+
+                    item.text?.let { text ->
+                        if (pendingBreak) {
+                            if (spans.isNotEmpty() && !spans.last().text.endsWith("\n")) {
+                                spans.add(TextSpan("\n", TextStyle.NORMAL))
+                            }
+                            pendingBreak = false
+                        } else if (spans.isNotEmpty() && !spans.last().text.let { 
+                                it.endsWith(" ") || it.endsWith("\n") 
+                            } && !text.startsWith(" ")) {
+                            spans.add(TextSpan(" ", TextStyle.NORMAL))
+                        }
+                        spans.add(TextSpan(text, style))
+                    }
+                }
+            } else {
+                // Collect text outside a specific verse (e.g., chapter titles)
+                item.text?.let { text ->
+                    if (pendingBreak && pendingSpans.isNotEmpty() && !pendingSpans.last().text.endsWith("\n")) {
+                        pendingSpans.add(TextSpan("\n", TextStyle.NORMAL))
+                    }
+                    pendingSpans.add(TextSpan(text, style))
+                    pendingBreak = false
                 }
             }
         }
-        item.items?.forEach { process(it, currentVerseId) }
+
+        item.items?.forEach { process(it, currentVerseId, style) }
     }
 
-    content.forEach { process(it, null) }
+    content.forEach { process(it, null, TextStyle.NORMAL) }
 
-    return versesMap.map { (number, text) ->
+    return versesMap.map { (number, spans) ->
+        val mergedSpans = mutableListOf<TextSpan>()
+        for (span in spans) {
+            if (mergedSpans.isNotEmpty() && mergedSpans.last().style == span.style) {
+                val last = mergedSpans.removeAt(mergedSpans.size - 1)
+                mergedSpans.add(TextSpan(last.text + span.text, span.style))
+            } else {
+                mergedSpans.add(span)
+            }
+        }
+
         Verse(
             number = number,
-            text = text.toString().trim().replace(Regex("\\s+"), " ")
+            richText = mergedSpans
         )
     }.sortedBy { it.number }
 }

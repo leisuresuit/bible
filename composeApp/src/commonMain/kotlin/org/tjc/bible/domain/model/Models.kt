@@ -161,7 +161,7 @@ enum class Book(
 
 data class Verse(
     val number: Int,
-    val text: String,
+    val text: String? = null,
     val richText: List<TextSpan> = emptyList(),
     val versionAbbreviation: String? = null
 )

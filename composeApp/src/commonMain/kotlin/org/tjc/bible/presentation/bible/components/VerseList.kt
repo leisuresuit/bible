@@ -22,13 +22,19 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.Book
+import org.tjc.bible.domain.model.TextStyle
 import org.tjc.bible.domain.model.Verse
 import org.tjc.bible.presentation.bible.ActiveDialog
 import org.tjc.bible.presentation.bible.BibleIntent
@@ -196,11 +202,36 @@ private fun VerseItem(verse: Verse) {
         Row {
             Text(
                 text = verse.number.toString(),
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                ),
                 modifier = Modifier.padding(end = 12.dp, top = 2.dp)
             )
+            
+            val annotatedString = if (verse.richText.isNotEmpty()) {
+                buildAnnotatedString {
+                    verse.richText.forEach { span ->
+                        val style = when (span.style) {
+                            TextStyle.BOLD -> SpanStyle(fontWeight = FontWeight.Bold)
+                            TextStyle.ITALIC -> SpanStyle(fontStyle = FontStyle.Italic)
+                            TextStyle.HEADING -> SpanStyle(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                            TextStyle.NORMAL -> SpanStyle()
+                        }
+                        withStyle(style) {
+                            append(span.text)
+                        }
+                    }
+                }
+            } else {
+                AnnotatedString(verse.text.orEmpty())
+            }
+
             Text(
-                text = verse.text,
+                text = annotatedString,
                 style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 28.sp)
             )
         }
