@@ -50,14 +50,13 @@ fun VersionSelectionDialog(
 
     val filteredVersions by remember(versions, searchQuery) {
         derivedStateOf {
-            if (searchQuery.isEmpty()) {
-                versions
-            } else {
-                versions.filter {
-                    it.name.contains(searchQuery, ignoreCase = true) ||
+            versions
+                .filter {
+                    searchQuery.isEmpty() ||
+                            it.name.contains(searchQuery, ignoreCase = true) ||
                             it.abbreviation.contains(searchQuery, ignoreCase = true)
                 }
-            }
+                .sortedBy { it.abbreviation }
         }
     }
 
