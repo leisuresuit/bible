@@ -6,8 +6,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,6 +14,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.AppTheme
 import org.tjc.bible.presentation.bible.BibleIntent
@@ -45,7 +44,7 @@ fun SettingsDialog(
                 Modifier.wrapContentHeight().fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Outlined.Settings, contentDescription = null)
+                Icon(painterResource(Res.drawable.settings), contentDescription = null)
                 Text(
                     text = stringResource(Res.string.settings),
                     Modifier.padding(start = 8.dp),

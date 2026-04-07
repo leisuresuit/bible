@@ -5,10 +5,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DateRange
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,6 +22,7 @@ import bible.composeapp.generated.resources.history
 import bible.composeapp.generated.resources.search
 import bible.composeapp.generated.resources.settings
 import bible.composeapp.generated.resources.versions
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.BibleVersion
 import org.tjc.bible.domain.model.Book
@@ -81,13 +78,22 @@ fun BibleTopBar(
         },
         actions = {
             IconButton(onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.Search)) }) {
-                Icon(Icons.Outlined.Search, contentDescription = stringResource(Res.string.search))
+                Icon(
+                    painter = painterResource(Res.drawable.search),
+                    contentDescription = stringResource(Res.string.search)
+                )
             }
             IconButton(onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.History)) }) {
-                Icon(Icons.Outlined.DateRange, contentDescription = stringResource(Res.string.history))
+                Icon(
+                    painter = painterResource(Res.drawable.history),
+                    contentDescription = stringResource(Res.string.history)
+                )
             }
             IconButton(onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.Settings)) }) {
-                Icon(Icons.Outlined.Settings, contentDescription = stringResource(Res.string.settings))
+                Icon(
+                    painter = painterResource(Res.drawable.settings),
+                    contentDescription = stringResource(Res.string.settings)
+                )
             }
         }
     )

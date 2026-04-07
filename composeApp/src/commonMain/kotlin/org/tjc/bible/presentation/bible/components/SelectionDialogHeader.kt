@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import bible.composeapp.generated.resources.Res
+import bible.composeapp.generated.resources.sort
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun SelectionDialogHeader(
@@ -35,7 +36,7 @@ fun SelectionDialogHeader(
             if (showSortButton) {
                 IconButton(onClick = onSortClick) {
                     Icon(
-                        Icons.AutoMirrored.Filled.Sort,
+                        painter = painterResource(Res.drawable.sort),
                         contentDescription = "Toggle sort order",
                         modifier = Modifier.padding(start = 4.dp)
                     )

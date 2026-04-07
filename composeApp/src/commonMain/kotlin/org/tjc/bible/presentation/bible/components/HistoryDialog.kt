@@ -13,10 +13,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,11 +28,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
+import bible.composeapp.generated.resources.arrow_back
+import bible.composeapp.generated.resources.arrow_forward
 import bible.composeapp.generated.resources.clear
 import bible.composeapp.generated.resources.close
 import bible.composeapp.generated.resources.history
 import bible.composeapp.generated.resources.next
 import bible.composeapp.generated.resources.previous
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.Book
 import org.tjc.bible.domain.model.HistoryItem
@@ -83,7 +82,7 @@ fun HistoryDialog(
                 Modifier.wrapContentHeight().fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Outlined.DateRange, contentDescription = null)
+                Icon(painterResource(Res.drawable.history), contentDescription = null)
                 Text(
                     text = stringResource(Res.string.history),
                     Modifier.padding(start = 8.dp),
@@ -99,7 +98,7 @@ fun HistoryDialog(
                         enabled = currentIndex != -1 && currentIndex < history.size - 1
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                            painter = painterResource(Res.drawable.arrow_back),
                             contentDescription = stringResource(Res.string.previous)
                         )
                     }
@@ -109,7 +108,7 @@ fun HistoryDialog(
                         enabled = currentIndex > 0
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            painter = painterResource(Res.drawable.arrow_forward),
                             contentDescription = stringResource(Res.string.next)
                         )
                     }

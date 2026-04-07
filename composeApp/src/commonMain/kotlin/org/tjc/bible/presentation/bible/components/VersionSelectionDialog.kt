@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,9 +28,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.cancel
+import bible.composeapp.generated.resources.check
 import bible.composeapp.generated.resources.ok
 import bible.composeapp.generated.resources.search
 import bible.composeapp.generated.resources.versions
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.BibleVersion
 import org.tjc.bible.presentation.ui.BibleTheme
@@ -108,7 +108,7 @@ fun VersionSelectionDialog(
                     ) {
                         Box(modifier = Modifier.size(24.dp)) {
                             if (isSelected) {
-                                Icon(Icons.Default.Check, contentDescription = null)
+                                Icon(painterResource(Res.drawable.check), contentDescription = null)
                             }
                         }
                         Spacer(Modifier.width(12.dp))
