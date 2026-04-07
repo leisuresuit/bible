@@ -15,6 +15,8 @@ import org.tjc.bible.domain.model.*
 import org.tjc.bible.domain.usecase.GetBibleVersionsUseCase
 import org.tjc.bible.domain.usecase.GetVersesUseCase
 import org.tjc.bible.domain.usecase.SearchUseCase
+import org.tjc.bible.presentation.bible.ActiveDialog.Error
+import org.tjc.bible.presentation.bible.ActiveDialog.PassageSelection
 
 class BibleViewModel(
     private val getBibleVersionsUseCase: GetBibleVersionsUseCase,
@@ -70,6 +72,13 @@ class BibleViewModel(
             }
             is BibleIntent.UpdateSearchQuery -> handleSearch(intent.query)
             is BibleIntent.DismissError -> dispatch(BibleAction.DismissError)
+            is BibleIntent.RetryOperation -> {
+                when (intent.operation) {
+                    Operation.LOAD_VERSIONS -> handleLoadInitialData()
+                    Operation.LOAD_VERSES -> loadVerses()
+                    Operation.SEARCH -> handleSearch(state.value.searchQuery)
+                }
+            }
         }
     }
 
@@ -99,7 +108,7 @@ class BibleViewModel(
                     dispatch(BibleAction.ChapterVersesLoaded(globalIndex, verses))
                 },
                 onFailure = { error ->
-                    dispatch(BibleAction.ErrorOccurred(error.message ?: "Failed to load verses"))
+                    dispatch(BibleAction.ErrorOccurred(Operation.LOAD_VERSES, error.message ?: "Failed to load verses"))
                 }
             )
         }
@@ -118,7 +127,10 @@ class BibleViewModel(
                     dispatch(BibleAction.SearchResultsLoaded(results))
                 },
                 onFailure = { error ->
-                    dispatch(BibleAction.ErrorOccurred(error.message ?: "Search failed"))
+                    dispatch(BibleAction.ErrorOccurred(
+                        Operation.SEARCH,
+                        error.message ?: "Search failed")
+                    )
                 }
             )
         }
@@ -176,10 +188,10 @@ class BibleViewModel(
                         currentBook = action.book,
                         currentChapter = 1,
                         currentVerse = 1,
-                        activeDialog = ActiveDialog.PassageSelection(1)
+                        activeDialog = PassageSelection(1)
                     )
                 } else {
-                    state.copy(activeDialog = ActiveDialog.PassageSelection(1))
+                    state.copy(activeDialog = PassageSelection(1))
                 }
             }
             is BibleAction.ChapterSelected -> {
@@ -187,10 +199,10 @@ class BibleViewModel(
                     state.copy(
                         currentChapter = action.chapter,
                         currentVerse = 1,
-                        activeDialog = ActiveDialog.PassageSelection(2)
+                        activeDialog = PassageSelection(2)
                     )
                 } else {
-                    state.copy(activeDialog = ActiveDialog.PassageSelection(2))
+                    state.copy(activeDialog = PassageSelection(2))
                 }
             }
             is BibleAction.VerseSelected -> state.copy(
@@ -244,8 +256,10 @@ class BibleViewModel(
                 currentChapter = action.item.chapter,
                 currentVerse = action.item.verse
             )
-            is BibleAction.ErrorOccurred -> state.copy(errorMessage = action.message)
-            BibleAction.DismissError -> state.copy(errorMessage = null)
+            is BibleAction.ErrorOccurred -> state.copy(
+                activeDialog = Error(action.message, action.operation)
+            )
+            BibleAction.DismissError -> state.copy(activeDialog = null)
         }
     }
 
@@ -288,7 +302,12 @@ class BibleViewModel(
                 },
                 onFailure = { error ->
                     dispatch(BibleAction.Loading(false))
-                    dispatch(BibleAction.ErrorOccurred(error.message ?: "Failed to load Bible versions"))
+                    dispatch(
+                        BibleAction.ErrorOccurred(
+                            Operation.LOAD_VERSIONS,
+                            error.message ?: "Failed to load Bible versions"
+                        )
+                    )
                 }
             )
         }
@@ -383,7 +402,11 @@ class BibleViewModel(
                     dispatch(BibleAction.VersesLoaded(verses))
                 },
                 onFailure = { error ->
-                    dispatch(BibleAction.ErrorOccurred(error.message ?: "Failed to load verses"))
+                    dispatch(
+                        BibleAction.ErrorOccurred(
+                            Operation.LOAD_VERSES,
+                            error.message ?: "Failed to load verses")
+                    )
                 }
             )
         }

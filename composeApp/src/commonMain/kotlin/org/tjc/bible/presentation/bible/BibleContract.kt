@@ -29,9 +29,12 @@ data class BibleState(
     val showWordsOfJesus: Boolean = true,
     val searchQuery: String = "",
     val displayMode: DisplayMode = DisplayMode.SINGLE_CHAPTER,
-    val allBooks: List<Book> = Book.entries,
-    val errorMessage: String? = null
+    val allBooks: List<Book> = Book.entries
 )
+
+enum class Operation {
+    LOAD_VERSIONS, LOAD_VERSES, SEARCH
+}
 
 sealed class ActiveDialog {
     object VersionSelection : ActiveDialog()
@@ -39,6 +42,7 @@ sealed class ActiveDialog {
     object Settings : ActiveDialog()
     object History : ActiveDialog()
     object Search : ActiveDialog()
+    data class Error(val message: String, val operation: Operation) : ActiveDialog()
 }
 
 sealed class BibleIntent {
@@ -62,6 +66,7 @@ sealed class BibleIntent {
     object NextChapter : BibleIntent()
     object PreviousChapter : BibleIntent()
     object DismissError : BibleIntent()
+    data class RetryOperation(val operation: Operation) : BibleIntent()
 }
 
 internal sealed class BibleAction {
@@ -90,6 +95,6 @@ internal sealed class BibleAction {
     data class SearchQueryChanged(val query: String) : BibleAction()
     data class SearchResultsLoaded(val results: List<SearchResult>) : BibleAction()
     data class HistoryItemNavigated(val item: HistoryItem) : BibleAction()
-    data class ErrorOccurred(val message: String?) : BibleAction()
+    data class ErrorOccurred(val operation: Operation, val message: String) : BibleAction()
     object DismissError : BibleAction()
 }
