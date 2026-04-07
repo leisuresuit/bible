@@ -1,13 +1,8 @@
 package org.tjc.bible.di
 
-import io.github.santimattius.persistent.cache.CacheConfig
-import io.github.santimattius.persistent.cache.installPersistentCache
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.cache.HttpCache
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.header
-import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.core.context.startKoin
@@ -25,7 +20,6 @@ import org.tjc.bible.domain.usecase.GetBibleVersionsUseCase
 import org.tjc.bible.domain.usecase.GetVersesUseCase
 import org.tjc.bible.domain.usecase.SearchUseCase
 import org.tjc.bible.presentation.bible.BibleViewModel
-import kotlin.time.Duration.Companion.days
 
 expect val platformModule: Module
 
@@ -34,26 +28,16 @@ val appModule = module {
     
     single {
         HttpClient {
-            installPersistentCache(
-                CacheConfig(
-                    enabled = true,
-                    cacheDirectory = "http_cache",
-                    maxCacheSize = 50L * 1024 * 1024, // 50 MB
-                    cacheTtl = Long.MAX_VALUE,
-                    isShared = true,
-                    isPublic = false
-                )
-            )
             install(ContentNegotiation) {
-                json(Json {
-                    ignoreUnknownKeys = true
-                    prettyPrint = true
-                    isLenient = true
-                })
+                json(
+                    Json {
+                        ignoreUnknownKeys = true
+                        prettyPrint = true
+                        isLenient = true
+                    }
+                )
             }
-            install(DefaultRequest) {
-                header(HttpHeaders.CacheControl, "max-stale=315360000") // 10 years (effectively forever)
-            }
+            install(HttpCache)
         }
     }
 
