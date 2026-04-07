@@ -10,7 +10,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import bible.composeapp.generated.resources.*
+import bible.composeapp.generated.resources.Res
+import bible.composeapp.generated.resources.error
+import bible.composeapp.generated.resources.ok
+import bible.composeapp.generated.resources.retry
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.presentation.bible.components.*
 import org.tjc.bible.presentation.ui.supportsDynamicColor
@@ -29,7 +32,11 @@ fun BibleScreen(viewModel: BibleViewModel) {
                 currentBook = state.currentBook,
                 currentChapter = state.currentChapter,
                 selectedVersions = state.selectedVersions,
-                onIntent = viewModel::onIntent
+                onShowPassageSelection = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.PassageSelection(it))) },
+                onShowVersionSelection = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.VersionSelection)) },
+                onShowSearch = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.Search)) },
+                onShowHistory = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.History)) },
+                onShowSettings = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.Settings)) }
             )
         }
     ) { padding ->
@@ -42,7 +49,9 @@ fun BibleScreen(viewModel: BibleViewModel) {
             displayMode = state.displayMode,
             showWordsOfJesus = state.showWordsOfJesus,
             isLoading = state.isLoading,
-            onIntent = viewModel::onIntent,
+            onShowPassageSelection = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.PassageSelection(it))) },
+            onUpdateVisiblePassage = { book, chapter -> viewModel.onIntent(BibleIntent.UpdateVisiblePassage(book, chapter)) },
+            onLoadChapterVerses = { book, chapter, page -> viewModel.onIntent(BibleIntent.LoadChapterVerses(book, chapter, page)) },
             modifier = Modifier.padding(padding)
         )
 
@@ -55,17 +64,19 @@ fun BibleScreen(viewModel: BibleViewModel) {
                         currentChapter = state.currentChapter,
                         currentVerse = state.currentVerse,
                         initialPage = dialog.initialPage,
-                        onDismiss = { viewModel.onIntent(BibleIntent.ShowDialog(null)) },
-                        onIntent = viewModel::onIntent
+                        onPassageSelected = { book, chapter, verse ->
+                            viewModel.onIntent(BibleIntent.SelectPassage(book, chapter, verse))
+                        },
+                        onDismiss = { viewModel.onIntent(BibleIntent.ShowDialog(null)) }
                     )
                 }
 
                 is ActiveDialog.VersionSelection -> {
                     VersionSelectionDialog(
                         versions = state.versions,
-                        initialSelectedVersions = state.selectedVersions,
-                        onDismiss = { viewModel.onIntent(BibleIntent.ShowDialog(null)) },
-                        onVersionsSelected = { viewModel.onIntent(BibleIntent.SelectVersions(it)) }
+                        selectedVersions = state.selectedVersions,
+                        onVersionToggle = { viewModel.onIntent(BibleIntent.ToggleParallelVersion(it)) },
+                        onDismiss = { viewModel.onIntent(BibleIntent.ShowDialog(null)) }
                     )
                 }
 
@@ -76,8 +87,11 @@ fun BibleScreen(viewModel: BibleViewModel) {
                         theme = state.theme,
                         isDynamicColor = state.isDynamicColor,
                         supportsDynamicColor = supportsDynamicColor,
-                        onDismiss = { viewModel.onIntent(BibleIntent.ShowDialog(null)) },
-                        onIntent = viewModel::onIntent
+                        onDisplayModeChange = { viewModel.onIntent(BibleIntent.UpdateDisplayMode(it)) },
+                        onShowWordsOfJesusChange = { viewModel.onIntent(BibleIntent.UpdateShowWordsOfJesus(it)) },
+                        onThemeChange = { viewModel.onIntent(BibleIntent.UpdateTheme(it)) },
+                        onDynamicColorChange = { viewModel.onIntent(BibleIntent.UpdateDynamicColor(it)) },
+                        onDismiss = { viewModel.onIntent(BibleIntent.ShowDialog(null)) }
                     )
                 }
 

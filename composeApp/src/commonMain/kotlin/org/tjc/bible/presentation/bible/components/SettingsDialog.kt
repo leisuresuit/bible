@@ -17,7 +17,6 @@ import bible.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.AppTheme
-import org.tjc.bible.presentation.bible.BibleIntent
 import org.tjc.bible.presentation.bible.DisplayMode
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
@@ -29,8 +28,11 @@ fun SettingsDialog(
     theme: AppTheme,
     isDynamicColor: Boolean,
     supportsDynamicColor: Boolean,
+    onDisplayModeChange: (DisplayMode) -> Unit,
+    onShowWordsOfJesusChange: (Boolean) -> Unit,
+    onThemeChange: (AppTheme) -> Unit,
+    onDynamicColorChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
-    onIntent: (BibleIntent) -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -70,7 +72,7 @@ fun SettingsDialog(
                                 .fillMaxWidth()
                                 .selectable(
                                     selected = selected,
-                                    onClick = { onIntent(BibleIntent.UpdateDisplayMode(mode)) },
+                                    onClick = { onDisplayModeChange(mode) },
                                     role = Role.RadioButton
                                 )
                                 .padding(start = 12.dp, top = 8.dp, bottom = 8.dp),
@@ -99,13 +101,13 @@ fun SettingsDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onIntent(BibleIntent.UpdateShowWordsOfJesus(!showWordsOfJesus)) }
+                        .clickable { onShowWordsOfJesusChange(!showWordsOfJesus) }
                         .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
                         checked = showWordsOfJesus,
-                        onCheckedChange = { onIntent(BibleIntent.UpdateShowWordsOfJesus(it)) }
+                        onCheckedChange = { onShowWordsOfJesusChange(it) }
                     )
                     Text(
                         text = stringResource(Res.string.show_words_of_jesus),
@@ -129,7 +131,7 @@ fun SettingsDialog(
                                 .fillMaxWidth()
                                 .selectable(
                                     selected = selected,
-                                    onClick = { onIntent(BibleIntent.UpdateTheme(themeEntry)) },
+                                    onClick = { onThemeChange(themeEntry) },
                                     role = Role.RadioButton
                                 )
                                 .padding(start = 12.dp, top = 8.dp, bottom = 8.dp),
@@ -156,13 +158,13 @@ fun SettingsDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onIntent(BibleIntent.UpdateDynamicColor(!isDynamicColor)) }
+                            .clickable { onDynamicColorChange(!isDynamicColor) }
                             .padding(vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
                             checked = isDynamicColor,
-                            onCheckedChange = { onIntent(BibleIntent.UpdateDynamicColor(it)) }
+                            onCheckedChange = { onDynamicColorChange(it) }
                         )
                         Text(
                             text = stringResource(Res.string.dynamic_color),
@@ -185,8 +187,11 @@ fun SettingsDialogPreview() {
             theme = AppTheme.SYSTEM,
             isDynamicColor = true,
             supportsDynamicColor = true,
-            onDismiss = {},
-            onIntent = {}
+            onDisplayModeChange = {},
+            onShowWordsOfJesusChange = {},
+            onThemeChange = {},
+            onDynamicColorChange = {},
+            onDismiss = {}
         )
     }
 }

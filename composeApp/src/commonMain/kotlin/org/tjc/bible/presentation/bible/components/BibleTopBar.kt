@@ -26,8 +26,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.BibleVersion
 import org.tjc.bible.domain.model.Book
-import org.tjc.bible.presentation.bible.ActiveDialog
-import org.tjc.bible.presentation.bible.BibleIntent
 import org.tjc.bible.presentation.ui.AutoResizedText
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
@@ -38,7 +36,11 @@ fun BibleTopBar(
     currentBook: Book?,
     currentChapter: Int,
     selectedVersions: List<BibleVersion>,
-    onIntent: (BibleIntent) -> Unit
+    onShowPassageSelection: (initialPage: Int) -> Unit,
+    onShowVersionSelection: () -> Unit,
+    onShowSearch: () -> Unit,
+    onShowHistory: () -> Unit,
+    onShowSettings: () -> Unit
 ) {
     TopAppBar(
         title = {
@@ -51,7 +53,7 @@ fun BibleTopBar(
                         Modifier.width(0.dp).weight(1f)
                     ) {
                         TextButton(
-                            onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.PassageSelection(0))) }
+                            onClick = { onShowPassageSelection(0) }
                         ) {
                             AutoResizedText(
                                 text = "${stringResource(book.nameResource)} $currentChapter",
@@ -62,7 +64,7 @@ fun BibleTopBar(
                     }
                 }
                 TextButton(
-                    onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.VersionSelection)) }
+                    onClick = onShowVersionSelection
                 ) {
                     val versionText = if (selectedVersions.size > 1) {
                         stringResource(Res.string.versions)
@@ -77,19 +79,19 @@ fun BibleTopBar(
             }
         },
         actions = {
-            IconButton(onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.Search)) }) {
+            IconButton(onClick = onShowSearch) {
                 Icon(
                     painter = painterResource(Res.drawable.search),
                     contentDescription = stringResource(Res.string.search)
                 )
             }
-            IconButton(onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.History)) }) {
+            IconButton(onClick = onShowHistory) {
                 Icon(
                     painter = painterResource(Res.drawable.history),
                     contentDescription = stringResource(Res.string.history)
                 )
             }
-            IconButton(onClick = { onIntent(BibleIntent.ShowDialog(ActiveDialog.Settings)) }) {
+            IconButton(onClick = onShowSettings) {
                 Icon(
                     painter = painterResource(Res.drawable.settings),
                     contentDescription = stringResource(Res.string.settings)
@@ -108,7 +110,11 @@ fun BibleTopBarPreview() {
                 currentBook = Book.Luke,
                 currentChapter = 18,
                 selectedVersions = listOf(BibleVersion("nkjv", "New King James Version", "English", "NKJV")),
-                onIntent = {}
+                onShowPassageSelection = {},
+                onShowVersionSelection = {},
+                onShowSearch = {},
+                onShowHistory = {},
+                onShowSettings = {}
             )
         }
     }

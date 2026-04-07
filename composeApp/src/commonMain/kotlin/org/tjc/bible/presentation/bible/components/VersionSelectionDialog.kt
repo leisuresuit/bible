@@ -27,9 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
-import bible.composeapp.generated.resources.cancel
 import bible.composeapp.generated.resources.check
-import bible.composeapp.generated.resources.ok
+import bible.composeapp.generated.resources.close
 import bible.composeapp.generated.resources.search
 import bible.composeapp.generated.resources.versions
 import org.jetbrains.compose.resources.painterResource
@@ -41,13 +40,11 @@ import org.tjc.bible.presentation.ui.ThemePreviews
 @Composable
 fun VersionSelectionDialog(
     versions: List<BibleVersion>,
-    initialSelectedVersions: List<BibleVersion>,
-    onDismiss: () -> Unit,
-    onVersionsSelected: (List<BibleVersion>) -> Unit
+    selectedVersions: List<BibleVersion>,
+    onVersionToggle: (BibleVersion) -> Unit,
+    onDismiss: () -> Unit
 ) {
-    var tempSelectedVersions by remember { mutableStateOf(initialSelectedVersions) }
     var searchQuery by remember { mutableStateOf("") }
-
     val filteredVersions by remember(versions, searchQuery) {
         derivedStateOf {
             versions
@@ -64,17 +61,9 @@ fun VersionSelectionDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(
-                onClick = {
-                    onVersionsSelected(tempSelectedVersions)
-                    onDismiss()
-                }
+                onClick = onDismiss
             ) {
-                Text(stringResource(Res.string.ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(Res.string.cancel))
+                Text(stringResource(Res.string.close))
             }
         },
         title = {
@@ -88,21 +77,11 @@ fun VersionSelectionDialog(
         text = {
             LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
                 items(filteredVersions) { version ->
-                    val isSelected = tempSelectedVersions.any { it.id == version.id }
+                    val isSelected = selectedVersions.any { it.id == version.id }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                tempSelectedVersions = if (isSelected) {
-                                    if (tempSelectedVersions.size > 1) {
-                                        tempSelectedVersions.filter { it.id != version.id }
-                                    } else {
-                                        tempSelectedVersions
-                                    }
-                                } else {
-                                    tempSelectedVersions + version
-                                }
-                            }
+                            .clickable { onVersionToggle(version) }
                             .padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -138,12 +117,12 @@ fun VersionSelectionDialogPreview() {
         VersionSelectionDialog(
             versions = listOf(
                 BibleVersion("nkjv", "New King James Version", "English", "NKJV"),
-                BibleVersion("kjv", "King James Version", "English", "KJV"),
+                BibleVersion("kjv", "King King James Version", "English", "KJV"),
                 BibleVersion("niv", "New International Version", "English", "NIV")
             ),
-            initialSelectedVersions = listOf(BibleVersion("nkjv", "New King James Version", "English", "NKJV")),
-            onDismiss = {},
-            onVersionsSelected = {}
+            selectedVersions = listOf(BibleVersion("nkjv", "New King James Version", "English", "NKJV")),
+            onVersionToggle = {},
+            onDismiss = {}
         )
     }
 }

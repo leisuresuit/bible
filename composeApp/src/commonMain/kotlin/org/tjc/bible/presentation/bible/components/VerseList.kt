@@ -40,8 +40,6 @@ import org.tjc.bible.domain.model.Book
 import org.tjc.bible.domain.model.TextSpan
 import org.tjc.bible.domain.model.TextStyle
 import org.tjc.bible.domain.model.Verse
-import org.tjc.bible.presentation.bible.ActiveDialog
-import org.tjc.bible.presentation.bible.BibleIntent
 import org.tjc.bible.presentation.bible.DisplayMode
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
@@ -57,7 +55,9 @@ fun VerseList(
     displayMode: DisplayMode,
     showWordsOfJesus: Boolean,
     isLoading: Boolean,
-    onIntent: (BibleIntent) -> Unit,
+    onShowPassageSelection: (initialPage: Int) -> Unit,
+    onUpdateVisiblePassage: (Book, Int) -> Unit,
+    onLoadChapterVerses: (Book, Int, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (currentBook == null) {
@@ -110,7 +110,7 @@ fun VerseList(
                 .collect { page ->
                     val (book, chapter) = getPassageFromGlobalIndex(page)
                     if (book != currentBook || chapter != currentChapter) {
-                        onIntent(BibleIntent.UpdateVisiblePassage(book, chapter))
+                        onUpdateVisiblePassage(book, chapter)
                     }
                 }
         }
@@ -124,7 +124,7 @@ fun VerseList(
             val chapterVerses = chaptersVerses[page]
             
             LaunchedEffect(book, chapter) {
-                onIntent(BibleIntent.LoadChapterVerses(book, chapter, page))
+                onLoadChapterVerses(book, chapter, page)
             }
 
             if (chapterVerses != null) {
@@ -134,10 +134,10 @@ fun VerseList(
                     verses = chapterVerses,
                     targetVerse = if (page == pagerState.currentPage) currentVerse else null,
                     showWordsOfJesus = showWordsOfJesus,
-                    onIntent = onIntent
+                    onShowPassageSelection = onShowPassageSelection
                 )
             } else {
-                VerseListPlaceholder(book, chapter, onIntent)
+                VerseListPlaceholder(book, chapter, onShowPassageSelection)
             }
         }
     } else {
@@ -148,7 +148,7 @@ fun VerseList(
             verses = verses,
             targetVerse = currentVerse,
             showWordsOfJesus = showWordsOfJesus,
-            onIntent = onIntent,
+            onShowPassageSelection = onShowPassageSelection,
             modifier = modifier
         )
     }
@@ -161,7 +161,7 @@ private fun VerseListContent(
     verses: List<Verse>,
     targetVerse: Int?,
     showWordsOfJesus: Boolean,
-    onIntent: (BibleIntent) -> Unit,
+    onShowPassageSelection: (initialPage: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val lazyListState = rememberLazyListState()
@@ -183,7 +183,7 @@ private fun VerseListContent(
     ) {
         item {
             ChapterHeader(book, chapter) {
-                onIntent(BibleIntent.ShowDialog(ActiveDialog.PassageSelection(0)))
+                onShowPassageSelection(0)
             }
         }
         
@@ -305,13 +305,13 @@ private fun TextStyle.toSpanStyle(baseStyle: SpanStyle, showWordsOfJesus: Boolea
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun VerseListPlaceholder(book: Book, chapter: Int, onIntent: (BibleIntent) -> Unit) {
+private fun VerseListPlaceholder(book: Book, chapter: Int, onShowPassageSelection: (initialPage: Int) -> Unit) {
     Box(Modifier.fillMaxSize()) {
         ChapterHeader(
             book = book,
             chapter = chapter,
             onClick = {
-                onIntent(BibleIntent.ShowDialog(ActiveDialog.PassageSelection(0)))
+                onShowPassageSelection(0)
             }
         )
         LoadingIndicator(
@@ -342,7 +342,9 @@ fun VerseListPreview() {
                 displayMode = DisplayMode.CONTIGUOUS,
                 showWordsOfJesus = true,
                 isLoading = false,
-                onIntent = {}
+                onShowPassageSelection = {},
+                onUpdateVisiblePassage = { _, _ -> },
+                onLoadChapterVerses = { _, _, _ -> }
             )
         }
     }
@@ -369,7 +371,9 @@ fun VerseListParallelPreview() {
                 displayMode = DisplayMode.CONTIGUOUS,
                 showWordsOfJesus = true,
                 isLoading = false,
-                onIntent = {}
+                onShowPassageSelection = {},
+                onUpdateVisiblePassage = { _, _ -> },
+                onLoadChapterVerses = { _, _, _ -> }
             )
         }
     }
@@ -389,7 +393,9 @@ fun VerseListLoadingPreview() {
                 displayMode = DisplayMode.SINGLE_CHAPTER,
                 showWordsOfJesus = true,
                 isLoading = true,
-                onIntent = {}
+                onShowPassageSelection = {},
+                onUpdateVisiblePassage = { _, _ -> },
+                onLoadChapterVerses = { _, _, _ -> }
             )
         }
     }

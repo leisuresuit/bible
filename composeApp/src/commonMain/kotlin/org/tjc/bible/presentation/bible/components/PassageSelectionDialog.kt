@@ -43,7 +43,6 @@ import bible.composeapp.generated.resources.verse
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.Book
-import org.tjc.bible.presentation.bible.BibleIntent
 import org.tjc.bible.presentation.ui.AutoResizedText
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
@@ -54,8 +53,8 @@ fun PassageSelectionDialog(
     currentChapter: Int,
     currentVerse: Int?,
     initialPage: Int,
-    onDismiss: () -> Unit,
-    onIntent: (BibleIntent) -> Unit
+    onPassageSelected: (Book, Int, Int?) -> Unit,
+    onDismiss: () -> Unit
 ) {
     val pagerState = rememberPagerState(initialPage = initialPage) { 3 }
     val scope = rememberCoroutineScope()
@@ -78,7 +77,7 @@ fun PassageSelectionDialog(
             TextButton(
                 onClick = {
                     selectedBook?.let { book ->
-                        onIntent(BibleIntent.SelectPassage(book, selectedChapter, selectedVerse))
+                        onPassageSelected(book, selectedChapter, selectedVerse)
                     }
                     onDismiss()
                 }
@@ -177,7 +176,7 @@ fun PassageSelectionDialog(
                                 onVerseSelected = { verse ->
                                     selectedVerse = verse
                                     selectedBook?.let { book ->
-                                        onIntent(BibleIntent.SelectPassage(book, selectedChapter, selectedVerse))
+                                        onPassageSelected(book, selectedChapter, selectedVerse)
                                     }
                                 }
                             )
@@ -314,7 +313,7 @@ fun PassageSelectionDialogPreview() {
             currentVerse = null,
             initialPage = 0,
             onDismiss = {},
-            onIntent = {}
+            onPassageSelected = { _, _, _ -> }
         )
     }
 }
