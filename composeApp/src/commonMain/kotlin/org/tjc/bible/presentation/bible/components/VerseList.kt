@@ -40,6 +40,7 @@ import org.tjc.bible.domain.model.Book
 import org.tjc.bible.domain.model.TextSpan
 import org.tjc.bible.domain.model.TextStyle
 import org.tjc.bible.domain.model.Verse
+import org.tjc.bible.domain.model.VerseElement
 import org.tjc.bible.presentation.bible.DisplayMode
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
@@ -211,25 +212,6 @@ private fun ChapterHeader(book: Book, chapter: Int, onClick: () -> Unit) {
 @Composable
 private fun VerseItem(verse: Verse, showWordsOfJesus: Boolean) {
     Column {
-        if (verse.headings.isNotEmpty()) {
-            val baseStyle = SpanStyle()
-            verse.headings.forEachIndexed { index, headingSpans ->
-                val headingText = buildAnnotatedString {
-                    headingSpans.forEach { span ->
-                        val text = if (span.style == TextStyle.SMALL_CAPS) span.text.uppercase() else span.text
-                        withStyle(span.style.toSpanStyle(baseStyle, showWordsOfJesus)) {
-                            append(text)
-                        }
-                    }
-                }
-                Text(
-                    text = headingText,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(top = if (index == 0) 16.dp else 0.dp, bottom = 8.dp)
-                )
-            }
-        }
-        
         if (verse.versionAbbreviation != null) {
             Text(
                 text = verse.versionAbbreviation,
@@ -238,37 +220,49 @@ private fun VerseItem(verse: Verse, showWordsOfJesus: Boolean) {
                 modifier = Modifier.padding(bottom = 2.dp)
             )
         }
-        val annotatedString = buildAnnotatedString {
-            withStyle(
-                SpanStyle(
-                    fontWeight = FontWeight.Bold
-                )
-            ) {
-                append("${verse.number} ")
-            }
 
-            val baseStyle = SpanStyle(
-                fontFamily = FontFamily.Serif
-            )
-            if (verse.richText.isNotEmpty()) {
-                verse.richText.forEach { span ->
-                    val text = if (span.style == TextStyle.SMALL_CAPS) span.text.uppercase() else span.text
-                    withStyle(span.style.toSpanStyle(baseStyle, showWordsOfJesus)) {
-                        append(text)
+        verse.elements.forEach { element ->
+            when (element) {
+                is VerseElement.Heading -> {
+                    val headingText = buildAnnotatedString {
+                        element.spans.forEach { span ->
+                            val text = if (span.style == TextStyle.SMALL_CAPS) span.text.uppercase() else span.text
+                            withStyle(span.style.toSpanStyle(SpanStyle(), showWordsOfJesus)) {
+                                append(text)
+                            }
+                        }
                     }
+                    Text(
+                        text = headingText,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(top = 16.dp, bottom = 0.dp)
+                    )
                 }
-            } else {
-                withStyle(baseStyle) {
-                    append(verse.text.orEmpty())
+                is VerseElement.Text -> {
+                    val annotatedString = buildAnnotatedString {
+                        // Only show verse number on the first text element of the verse
+                        if (element == verse.elements.firstOrNull { it is VerseElement.Text }) {
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("${verse.number} ")
+                            }
+                        }
+
+                        val baseStyle = SpanStyle(fontFamily = FontFamily.Serif)
+                        element.spans.forEach { span ->
+                            val text = if (span.style == TextStyle.SMALL_CAPS) span.text.uppercase() else span.text
+                            withStyle(span.style.toSpanStyle(baseStyle, showWordsOfJesus)) {
+                                append(text)
+                            }
+                        }
+                    }
+                    Text(
+                        text = annotatedString,
+                        style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 28.sp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }
-
-        Text(
-            text = annotatedString,
-            style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 28.sp),
-            modifier = Modifier.fillMaxWidth()
-        )
     }
 }
 
@@ -333,10 +327,17 @@ fun VerseListPreview() {
                 verses = listOf(
                     Verse(
                         number = 1, 
-                        text = "Then He spoke a parable to them, that men always ought to pray and not lose heart,",
-                        headings = listOf(listOf(TextSpan("The Parable of the Persistent Widow", TextStyle.HEADING)))
+                        elements = listOf(
+                            VerseElement.Heading(listOf(TextSpan("The Parable of the Persistent Widow", TextStyle.HEADING))),
+                            VerseElement.Text(listOf(TextSpan("Then He spoke a parable to them, that men always ought to pray and not lose heart,", TextStyle.NORMAL)))
+                        )
                     ),
-                    Verse(number = 2, text = "saying: \"There was in a certain city a judge who did not fear God nor regard man.")
+                    Verse(
+                        number = 2,
+                        elements = listOf(
+                            VerseElement.Text(listOf(TextSpan("saying: \"There was in a certain city a judge who did not fear God nor regard man.", TextStyle.NORMAL)))
+                        )
+                    )
                 ),
                 chaptersVerses = emptyMap(),
                 displayMode = DisplayMode.CONTIGUOUS,
@@ -360,12 +361,12 @@ fun VerseListParallelPreview() {
                 currentChapter = 24,
                 currentVerse = null,
                 verses = listOf(
-                    Verse(1, "Now on the first day of the week, very early in the morning, they, and certain other women with them, came to the tomb bringing the spices which they had prepared.", versionAbbreviation = "NKJV"),
-                    Verse(1, "七日的頭一日黎明的時候，那些婦女帶著所預備的香料，來到墳墓前。", versionAbbreviation = "CUV"),
-                    Verse(2, "But they found the stone rolled away from the tomb.", versionAbbreviation = "NKJV"),
-                    Verse(2, "看見石頭已經從墳墓輥開了；", versionAbbreviation = "CUV"),
-                    Verse(3, "Then they went in and did not find the body of the Lord Jesus.", versionAbbreviation = "NKJV"),
-                    Verse(3, "他們就進去，只是不見主耶穌的身體。", versionAbbreviation = "CUV")
+                    Verse(1, elements = listOf(VerseElement.Text(listOf(TextSpan("Now on the first day of the week, very early in the morning, they, and certain other women with them, came to the tomb bringing the spices which they had prepared.", TextStyle.NORMAL)))), versionAbbreviation = "NKJV"),
+                    Verse(1, elements = listOf(VerseElement.Text(listOf(TextSpan("七日的頭一日黎明的時候，那些婦女帶著所預備的香料，來到墳墓前。", TextStyle.NORMAL)))), versionAbbreviation = "CUV"),
+                    Verse(2, elements = listOf(VerseElement.Text(listOf(TextSpan("But they found the stone rolled away from the tomb.", TextStyle.NORMAL)))), versionAbbreviation = "NKJV"),
+                    Verse(2, elements = listOf(VerseElement.Text(listOf(TextSpan("看見石頭已經從墳墓輥開了；", TextStyle.NORMAL)))), versionAbbreviation = "CUV"),
+                    Verse(3, elements = listOf(VerseElement.Text(listOf(TextSpan("Then they went in and did not find the body of the Lord Jesus.", TextStyle.NORMAL)))), versionAbbreviation = "NKJV"),
+                    Verse(3, elements = listOf(VerseElement.Text(listOf(TextSpan("他們就進去，只是不見主耶穌的身體。", TextStyle.NORMAL)))), versionAbbreviation = "CUV")
                 ),
                 chaptersVerses = emptyMap(),
                 displayMode = DisplayMode.CONTIGUOUS,

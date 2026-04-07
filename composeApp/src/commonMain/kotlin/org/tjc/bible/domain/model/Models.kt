@@ -161,11 +161,14 @@ enum class Book(
 
 data class Verse(
     val number: Int,
-    val text: String? = null,
-    val richText: List<TextSpan> = emptyList(),
-    val headings: List<List<TextSpan>> = emptyList(),
+    val elements: List<VerseElement> = emptyList(),
     val versionAbbreviation: String? = null
 )
+
+sealed interface VerseElement {
+    data class Text(val spans: List<TextSpan>) : VerseElement
+    data class Heading(val spans: List<TextSpan>) : VerseElement
+}
 
 data class TextSpan(
     val text: String,

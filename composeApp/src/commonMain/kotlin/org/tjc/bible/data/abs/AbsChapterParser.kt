@@ -3,13 +3,13 @@ package org.tjc.bible.data.abs
 import org.tjc.bible.domain.model.TextSpan
 import org.tjc.bible.domain.model.TextStyle
 import org.tjc.bible.domain.model.Verse
+import org.tjc.bible.domain.model.VerseElement
 
 /**
  * Parser for API.Bible (from American Bible Society)
  */
 internal class AbsChapterParser {
-    private val versesMap = mutableMapOf<Int, MutableList<TextSpan>>()
-    private val headingsMap = mutableMapOf<Int, MutableList<MutableList<TextSpan>>>()
+    private val verseElementsMap = mutableMapOf<Int, MutableList<VerseElement>>()
     private val currentHeadings = mutableListOf<MutableList<TextSpan>>()
     private var pendingBreak = false
 
@@ -39,50 +39,66 @@ internal class AbsChapterParser {
     }
 
     private fun handleText(text: String, style: TextStyle, verseId: String?, inHeading: Boolean) {
+        val verseNumber = verseId?.let { extractVerseNumber(it) } ?: 0
         if (inHeading) {
-            handleHeadingText(text, style)
-        } else if (verseId != null) {
-            handleVerseText(text, style, verseId)
+            handleHeadingText(text, style, verseNumber)
+        } else if (verseNumber > 0) {
+            handleVerseText(text, style, verseNumber)
         }
     }
 
-    private fun handleHeadingText(text: String, style: TextStyle) {
+    private fun handleHeadingText(text: String, style: TextStyle, verseNumber: Int) {
         if (pendingBreak || currentHeadings.isEmpty()) {
             currentHeadings.add(mutableListOf())
             pendingBreak = false
         }
         val headingStyle = if (style == TextStyle.NORMAL) TextStyle.HEADING else style
         currentHeadings.last().add(TextSpan(text, headingStyle))
-    }
 
-    private fun handleVerseText(text: String, style: TextStyle, verseId: String?) {
-        val verseNumber = verseId?.let { extractVerseNumber(it) } ?: 0
+        // If the heading is associated with a verse, attach it immediately to support interleaving.
         if (verseNumber > 0) {
             attachPendingHeadings(verseNumber)
-            val verseSpans = versesMap.getOrPut(verseNumber) { mutableListOf() }
-            if (pendingBreak && verseSpans.isNotEmpty()) {
-                verseSpans.add(TextSpan("\n", TextStyle.NORMAL))
-            }
-            pendingBreak = false
-            verseSpans.add(TextSpan(text, style))
+        }
+    }
+
+    private fun handleVerseText(text: String, style: TextStyle, verseNumber: Int) {
+        // If we have any pending headings (without a verseId), they should be attached to the first verse that follows.
+        attachPendingHeadings(verseNumber)
+
+        val elements = verseElementsMap.getOrPut(verseNumber) { mutableListOf() }
+        val lastElement = elements.lastOrNull() as? VerseElement.Text
+        val lastSpans = lastElement?.spans?.toMutableList() ?: mutableListOf()
+
+        if (pendingBreak && lastSpans.isNotEmpty()) {
+            lastSpans.add(TextSpan("\n", TextStyle.NORMAL))
+        }
+        pendingBreak = false
+        lastSpans.add(TextSpan(text, style))
+
+        val newElement = VerseElement.Text(lastSpans.mergeAdjacent())
+        if (lastElement != null) {
+            elements[elements.size - 1] = newElement
+        } else {
+            elements.add(newElement)
         }
     }
 
     private fun attachPendingHeadings(verseNumber: Int) {
         if (currentHeadings.isNotEmpty()) {
-            headingsMap.getOrPut(verseNumber) { mutableListOf() }.addAll(currentHeadings)
+            val elements = verseElementsMap.getOrPut(verseNumber) { mutableListOf() }
+            currentHeadings.forEach { spans ->
+                elements.add(VerseElement.Heading(spans.mergeAdjacent()))
+            }
             currentHeadings.clear()
-            pendingBreak = true
+            pendingBreak = false // Reset pendingBreak after a heading block
         }
     }
 
     private fun buildVerses(): List<Verse> {
-        val allVerseNumbers = (versesMap.keys + headingsMap.keys).distinct().sorted()
-        return allVerseNumbers.map { number ->
+        return verseElementsMap.keys.sorted().map { number ->
             Verse(
                 number = number,
-                richText = (versesMap[number] ?: emptyList()).mergeAdjacent(),
-                headings = (headingsMap[number] ?: emptyList()).map { it.mergeAdjacent() }
+                elements = verseElementsMap[number] ?: emptyList()
             )
         }
     }
@@ -108,7 +124,6 @@ internal class AbsChapterParser {
 
     private fun extractVerseNumber(vId: String): Int {
         val parts = vId.split(".", " ", ":")
-        if (parts.size < 3) return 0
         return parts.lastOrNull { it.any { c -> c.isDigit() } }
             ?.takeWhile { it.isDigit() }
             ?.toIntOrNull() ?: 0

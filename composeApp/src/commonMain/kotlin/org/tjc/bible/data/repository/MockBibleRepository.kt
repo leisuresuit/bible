@@ -3,7 +3,10 @@ package org.tjc.bible.data.repository
 import org.tjc.bible.domain.model.BibleVersion
 import org.tjc.bible.domain.model.Book
 import org.tjc.bible.domain.model.SearchResult
+import org.tjc.bible.domain.model.TextSpan
+import org.tjc.bible.domain.model.TextStyle
 import org.tjc.bible.domain.model.Verse
+import org.tjc.bible.domain.model.VerseElement
 import org.tjc.bible.domain.repository.BibleRepository
 
 class MockBibleRepository : BibleRepository {
@@ -22,7 +25,16 @@ class MockBibleRepository : BibleRepository {
         buildList {
             repeat(50) { index ->
                 val number = index + 1
-                add(Verse(number, "Mock verse $number"))
+                add(
+                    Verse(
+                        number = number,
+                        elements = listOf(
+                            VerseElement.Text(
+                                listOf(TextSpan("Mock verse $number", TextStyle.NORMAL))
+                            )
+                        )
+                    )
+                )
             }
         }
     )
