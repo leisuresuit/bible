@@ -39,11 +39,14 @@ internal class AbsChapterParser {
     }
 
     private fun handleText(text: String, style: TextStyle, verseId: String?, inHeading: Boolean) {
+        val cleanedText = text.replace("\u00B6", "").replace("\r", "")
+        if (cleanedText.isEmpty()) return
+
         val verseNumber = verseId?.let { extractVerseNumber(it) } ?: 0
         if (inHeading) {
-            handleHeadingText(text, style, verseNumber)
+            handleHeadingText(cleanedText, style, verseNumber)
         } else if (verseNumber > 0) {
-            handleVerseText(text, style, verseNumber)
+            handleVerseText(cleanedText, style, verseNumber)
         }
     }
 
