@@ -27,6 +27,7 @@
     <string name="previous">上</string>
     <string name="next">下</string>
     <string name="toggle_sort_order">切換排序</string>
+    <string name="no_results_found">未找到結果</string>
 
     <!-- Bible Books -->
     <string name="book_genesis">創世記</string>

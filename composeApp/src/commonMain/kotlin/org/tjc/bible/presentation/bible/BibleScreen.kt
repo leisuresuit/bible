@@ -19,7 +19,10 @@ import org.tjc.bible.presentation.bible.components.*
 import org.tjc.bible.presentation.ui.supportsDynamicColor
 
 @Composable
-fun BibleScreen(viewModel: BibleViewModel) {
+fun BibleScreen(
+    viewModel: BibleViewModel,
+    onNavigateToSearch: () -> Unit
+) {
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -34,7 +37,7 @@ fun BibleScreen(viewModel: BibleViewModel) {
                 selectedVersions = state.selectedVersions,
                 onShowPassageSelection = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.PassageSelection(it))) },
                 onShowVersionSelection = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.VersionSelection)) },
-                onShowSearch = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.Search)) },
+                onShowSearch = onNavigateToSearch,
                 onShowHistory = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.History)) },
                 onShowSettings = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.Settings)) }
             )
@@ -129,7 +132,6 @@ fun BibleScreen(viewModel: BibleViewModel) {
                         }
                     )
                 }
-                ActiveDialog.Search -> TODO()
             }
         }
     }

@@ -70,6 +70,7 @@ import bible.composeapp.generated.resources.book_zephaniah
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.StringResource
 
+@Serializable
 data class BibleVersion(
     val id: String,
     val name: String,
@@ -77,10 +78,12 @@ data class BibleVersion(
     val abbreviation: String
 )
 
+@Serializable
 enum class Testament {
     OLD, NEW
 }
 
+@Serializable
 enum class Book(
     val nameResource: StringResource,
     val testament: Testament,
@@ -159,26 +162,33 @@ enum class Book(
     val chaptersCount: Int get() = versesInChapters.size
 }
 
+@Serializable
 data class Verse(
     val number: Int,
     val elements: List<VerseElement> = emptyList(),
     val versionAbbreviation: String? = null
 )
 
+@Serializable
 sealed interface VerseElement {
+    @Serializable
     data class Text(val spans: List<TextSpan>) : VerseElement
+    @Serializable
     data class Heading(val spans: List<TextSpan>) : VerseElement
 }
 
+@Serializable
 data class TextSpan(
     val text: String,
     val style: TextStyle
 )
 
+@Serializable
 enum class TextStyle {
     NORMAL, BOLD, ITALIC, ITALIC_BOLD, HEADING, SMALL_CAPS, WORDS_OF_JESUS
 }
 
+@Serializable
 data class SearchResult(
     val versionId: String,
     val book: Book,

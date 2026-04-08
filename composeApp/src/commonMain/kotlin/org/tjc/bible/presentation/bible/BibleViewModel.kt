@@ -76,7 +76,7 @@ class BibleViewModel(
                 when (intent.operation) {
                     Operation.LOAD_VERSIONS -> handleLoadInitialData()
                     Operation.LOAD_VERSES -> loadVerses()
-                    Operation.SEARCH -> handleSearch(state.value.searchQuery)
+                    Operation.SEARCH -> handleSearch(_state.value.searchQuery)
                 }
             }
         }
@@ -122,6 +122,7 @@ class BibleViewModel(
         }
         viewModelScope.launch {
             val versionId = _state.value.selectedVersions.firstOrNull()?.id ?: return@launch
+
             searchUseCase(versionId, query).fold(
                 onSuccess = { results ->
                     dispatch(BibleAction.SearchResultsLoaded(results))

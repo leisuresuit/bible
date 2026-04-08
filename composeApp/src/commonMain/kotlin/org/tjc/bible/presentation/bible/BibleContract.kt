@@ -41,7 +41,6 @@ sealed class ActiveDialog {
     data class PassageSelection(val initialPage: Int = 0) : ActiveDialog()
     object Settings : ActiveDialog()
     object History : ActiveDialog()
-    object Search : ActiveDialog()
     data class Error(val message: String, val operation: Operation) : ActiveDialog()
 }
 

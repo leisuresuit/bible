@@ -2,6 +2,7 @@ package org.tjc.bible.data.abs
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -34,7 +35,7 @@ class AbsBibleRepository(
     }
 
     override suspend fun getVerses(versionId: String, book: Book, chapter: Int): Result<List<Verse>> = runCatching {
-        val chapterId = getChapterId(book, chapter)
+        val chapterId = "${book.absId}.$chapter"
         val response = httpClient.get("https://rest.api.bible/v1/bibles/$versionId/chapters/$chapterId") {
             absHeaders()
             parameter("content-type", "json")
@@ -48,80 +49,13 @@ class AbsBibleRepository(
         response.data.toDomain()
     }
 
-    private fun getChapterId(book: Book, chapter: Int): String {
-        val bookId = when (book) {
-            Book.Genesis -> "GEN"
-            Book.Exodus -> "EXO"
-            Book.Leviticus -> "LEV"
-            Book.Numbers -> "NUM"
-            Book.Deuteronomy -> "DEU"
-            Book.Joshua -> "JOS"
-            Book.Judges -> "JDG"
-            Book.Ruth -> "RUT"
-            Book.Samuel1 -> "1SA"
-            Book.Samuel2 -> "2SA"
-            Book.Kings1 -> "1KI"
-            Book.Kings2 -> "2KI"
-            Book.Chronicles1 -> "1CH"
-            Book.Chronicles2 -> "2CH"
-            Book.Ezra -> "EZR"
-            Book.Nehemiah -> "NEH"
-            Book.Esther -> "EST"
-            Book.Job -> "JOB"
-            Book.Psalms -> "PSA"
-            Book.Proverbs -> "PRO"
-            Book.Ecclesiastes -> "ECC"
-            Book.SongOfSolomon -> "SNG"
-            Book.Isaiah -> "ISA"
-            Book.Jeremiah -> "JER"
-            Book.Lamentations -> "LAM"
-            Book.Ezekiel -> "EZK"
-            Book.Daniel -> "DAN"
-            Book.Hosea -> "HOS"
-            Book.Joel -> "JOL"
-            Book.Amos -> "AMO"
-            Book.Obadiah -> "OBA"
-            Book.Jonah -> "JON"
-            Book.Micah -> "MIC"
-            Book.Nahum -> "NAM"
-            Book.Habakkuk -> "HAB"
-            Book.Zephaniah -> "ZEP"
-            Book.Haggai -> "HAG"
-            Book.Zechariah -> "ZEC"
-            Book.Malachi -> "MAL"
-            Book.Matthew -> "MAT"
-            Book.Mark -> "MRK"
-            Book.Luke -> "LUK"
-            Book.John -> "JHN"
-            Book.Acts -> "ACT"
-            Book.Romans -> "ROM"
-            Book.Corinthians1 -> "1CO"
-            Book.Corinthians2 -> "2CO"
-            Book.Galatians -> "GAL"
-            Book.Ephesians -> "EPH"
-            Book.Philippians -> "PHP"
-            Book.Colossians -> "COL"
-            Book.Thessalonians1 -> "1TH"
-            Book.Thessalonians2 -> "2TH"
-            Book.Timothy1 -> "1TI"
-            Book.Timothy2 -> "2TI"
-            Book.Titus -> "TIT"
-            Book.Philemon -> "PHM"
-            Book.Hebrews -> "HEB"
-            Book.James -> "JAS"
-            Book.Peter1 -> "1PE"
-            Book.Peter2 -> "2PE"
-            Book.John1 -> "1JN"
-            Book.John2 -> "2JN"
-            Book.John3 -> "3JN"
-            Book.Jude -> "JUD"
-            Book.Revelation -> "REV"
-        }
-        return "$bookId.$chapter"
-    }
-
     override suspend fun search(versionId: String, query: String): Result<List<SearchResult>> = runCatching {
-        // Skeleton implementation
-        emptyList()
+        val response = httpClient.get("https://rest.api.bible/v1/bibles/$versionId/search") {
+            absHeaders()
+            parameter("query", query)
+            parameter("limit", 20)
+        }.body<AbsSearchResponse>()
+
+        response.data.verses?.map { it.toDomain(versionId) } ?: emptyList()
     }
 }

@@ -95,19 +95,37 @@ internal fun AbsChapterContentDto.toDomain(): List<Verse> = AbsChapterParser().p
 
 @Serializable
 internal data class AbsSearchResultDto(
-    val versionId: String,
+    val id: String,
+    val bibleId: String,
     val bookId: String,
-    val chapter: Int,
-    val verse: Int,
+    val chapterId: String,
+    val reference: String,
     val text: String
 )
 
-internal fun AbsSearchResultDto.toDomain(): SearchResult {
-    val book = try {
-        Book.entries.find { it.name.equals(bookId, ignoreCase = true) } ?: Book.Genesis
-    } catch (e: Exception) {
-        Book.Genesis
-    }
+@Serializable
+internal data class AbsSearchDataDto(
+    val query: String,
+    val total: Int,
+    val limit: Int,
+    val offset: Int,
+    val verses: List<AbsSearchResultDto>? = null
+)
+
+@Serializable
+internal data class AbsSearchResponse(
+    val data: AbsSearchDataDto
+)
+
+internal fun AbsSearchResultDto.toDomain(versionId: String): SearchResult {
+    val book = Book.entries.find { it.absId == bookId } ?: Book.Genesis
+
+    // Reference typically has format "Genesis 1:1"
+    // ID typically has format "GEN.1.1" or "GEN.1.1-GEN.1.2"
+    val parts = id.split(".")
+    val chapter = parts.getOrNull(1)?.toIntOrNull() ?: 1
+    val verse = parts.getOrNull(2)?.toIntOrNull() ?: 1
+
     return SearchResult(
         versionId = versionId,
         book = book,
@@ -116,3 +134,73 @@ internal fun AbsSearchResultDto.toDomain(): SearchResult {
         text = text
     )
 }
+
+internal val Book.absId: String
+    get() = when (this) {
+        Book.Genesis -> "GEN"
+        Book.Exodus -> "EXO"
+        Book.Leviticus -> "LEV"
+        Book.Numbers -> "NUM"
+        Book.Deuteronomy -> "DEU"
+        Book.Joshua -> "JOS"
+        Book.Judges -> "JDG"
+        Book.Ruth -> "RUT"
+        Book.Samuel1 -> "1SA"
+        Book.Samuel2 -> "2SA"
+        Book.Kings1 -> "1KI"
+        Book.Kings2 -> "2KI"
+        Book.Chronicles1 -> "1CH"
+        Book.Chronicles2 -> "2CH"
+        Book.Ezra -> "EZR"
+        Book.Nehemiah -> "NEH"
+        Book.Esther -> "EST"
+        Book.Job -> "JOB"
+        Book.Psalms -> "PSA"
+        Book.Proverbs -> "PRO"
+        Book.Ecclesiastes -> "ECC"
+        Book.SongOfSolomon -> "SNG"
+        Book.Isaiah -> "ISA"
+        Book.Jeremiah -> "JER"
+        Book.Lamentations -> "LAM"
+        Book.Ezekiel -> "EZK"
+        Book.Daniel -> "DAN"
+        Book.Hosea -> "HOS"
+        Book.Joel -> "JOL"
+        Book.Amos -> "AMO"
+        Book.Obadiah -> "OBA"
+        Book.Jonah -> "JON"
+        Book.Micah -> "MIC"
+        Book.Nahum -> "NAM"
+        Book.Habakkuk -> "HAB"
+        Book.Zephaniah -> "ZEP"
+        Book.Haggai -> "HAG"
+        Book.Zechariah -> "ZEC"
+        Book.Malachi -> "MAL"
+        Book.Matthew -> "MAT"
+        Book.Mark -> "MRK"
+        Book.Luke -> "LUK"
+        Book.John -> "JHN"
+        Book.Acts -> "ACT"
+        Book.Romans -> "ROM"
+        Book.Corinthians1 -> "1CO"
+        Book.Corinthians2 -> "2CO"
+        Book.Galatians -> "GAL"
+        Book.Ephesians -> "EPH"
+        Book.Philippians -> "PHP"
+        Book.Colossians -> "COL"
+        Book.Thessalonians1 -> "1TH"
+        Book.Thessalonians2 -> "2TH"
+        Book.Timothy1 -> "1TI"
+        Book.Timothy2 -> "2TI"
+        Book.Titus -> "TIT"
+        Book.Philemon -> "PHM"
+        Book.Hebrews -> "HEB"
+        Book.James -> "JAS"
+        Book.Peter1 -> "1PE"
+        Book.Peter2 -> "2PE"
+        Book.John1 -> "1JN"
+        Book.John2 -> "2JN"
+        Book.John3 -> "3JN"
+        Book.Jude -> "JUD"
+        Book.Revelation -> "REV"
+    }
