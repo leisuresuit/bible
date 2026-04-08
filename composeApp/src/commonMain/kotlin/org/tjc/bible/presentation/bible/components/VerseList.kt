@@ -1,6 +1,5 @@
 package org.tjc.bible.presentation.bible.components
 
-import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
@@ -30,6 +30,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -73,13 +74,13 @@ fun VerseList(
     val totalChapters = remember { Book.entries.sumOf { it.chaptersCount } }
     val cumulativeChapters = remember {
         var sum = 0
-        Book.entries.map { 
+        Book.entries.map {
             val start = sum
             sum += it.chaptersCount
             start
         }
     }
-    
+
     fun getGlobalIndex(book: Book, chapter: Int): Int {
         val bookIndex = Book.entries.indexOf(book)
         return if (bookIndex != -1) cumulativeChapters[bookIndex] + (chapter - 1) else 0
@@ -123,7 +124,7 @@ fun VerseList(
         ) { page ->
             val (book, chapter) = getPassageFromGlobalIndex(page)
             val chapterVerses = chaptersVerses[page]
-            
+
             LaunchedEffect(book, chapter) {
                 onLoadChapterVerses(book, chapter, page)
             }
@@ -187,7 +188,7 @@ private fun VerseListContent(
                 onShowPassageSelection(0)
             }
         }
-        
+
         items(verses, key = { "${it.number}_${it.versionAbbreviation.orEmpty()}" }) { verse ->
             VerseItem(verse, showWordsOfJesus)
         }
@@ -221,7 +222,7 @@ private fun VerseItem(verse: Verse, showWordsOfJesus: Boolean) {
             )
         }
 
-        verse.elements.forEach { element ->
+        verse.elements.forEachIndexed { index, element ->
             when (element) {
                 is VerseElement.Heading -> {
                     val headingText = buildAnnotatedString {
@@ -234,8 +235,17 @@ private fun VerseItem(verse: Verse, showWordsOfJesus: Boolean) {
                     }
                     Text(
                         text = headingText,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(top = 16.dp, bottom = 0.dp)
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            lineHeight = 24.sp,
+                            lineHeightStyle = LineHeightStyle(
+                                alignment = LineHeightStyle.Alignment.Center,
+                                trim = LineHeightStyle.Trim.Both
+                            )
+                        ),
+                        // For the first heading (above the verse), set the top margin to 4.dp
+                        // so that the gap between it and verse before it is
+                        // 12.dp (verticalArrangement) + 4.dp = 16.dp
+                        modifier = Modifier.padding(top = if (index == 0) 4.dp else 16.dp, bottom = 6.dp)
                     )
                 }
                 is VerseElement.Text -> {
@@ -257,7 +267,13 @@ private fun VerseItem(verse: Verse, showWordsOfJesus: Boolean) {
                     }
                     Text(
                         text = annotatedString,
-                        style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 28.sp),
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            lineHeight = 28.sp,
+                            lineHeightStyle = LineHeightStyle(
+                                alignment = LineHeightStyle.Alignment.Center,
+                                trim = LineHeightStyle.Trim.Both
+                            )
+                        ),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }

@@ -69,8 +69,6 @@ internal class AbsChapterParser {
 
         val headingStyle = if (style == TextStyle.NORMAL) TextStyle.HEADING else style
         appendTextToSpans(currentHeadings.last(), text, headingStyle, addNewline = false)
-
-        if (verseNumber > 0) attachPendingHeadings(verseNumber)
     }
 
     /**
@@ -156,6 +154,13 @@ internal class AbsChapterParser {
      * Finalizes the parsed data into a sorted list of [Verse] objects.
      */
     private fun buildVerses(): List<Verse> {
+        // Attach any trailing headings to the last verse found
+        if (currentHeadings.isNotEmpty()) {
+            verseElementsMap.keys.maxOrNull()?.let { lastVerse ->
+                attachPendingHeadings(lastVerse)
+            }
+        }
+
         return verseElementsMap.keys.sorted().map { number ->
             Verse(
                 number = number,
