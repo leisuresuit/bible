@@ -1,0 +1,51 @@
+CREATE TABLE CachedVersions (
+    language TEXT NOT NULL PRIMARY KEY,
+    versionsJson TEXT NOT NULL,
+    lastUpdated INTEGER NOT NULL
+);
+
+insertVersions:
+INSERT OR REPLACE INTO CachedVersions(language, versionsJson, lastUpdated)
+VALUES (?, ?, ?);
+
+getVersions:
+SELECT * FROM CachedVersions
+WHERE language = ?;
+
+CREATE TABLE CachedChapter (
+    bibleId TEXT NOT NULL,
+    bookId TEXT NOT NULL,
+    chapterNumber INTEGER NOT NULL,
+    contentJson TEXT NOT NULL,
+    lastUpdated INTEGER NOT NULL,
+    PRIMARY KEY (bibleId, bookId, chapterNumber)
+);
+
+insertChapter:
+INSERT OR REPLACE INTO CachedChapter(bibleId, bookId, chapterNumber, contentJson, lastUpdated)
+VALUES (?, ?, ?, ?, ?);
+
+getChapter:
+SELECT * FROM CachedChapter
+WHERE bibleId = ? AND bookId = ? AND chapterNumber = ?;
+
+CREATE TABLE CachedSearch (
+    bibleId TEXT NOT NULL,
+    query TEXT NOT NULL,
+    resultsJson TEXT NOT NULL,
+    lastUpdated INTEGER NOT NULL,
+    PRIMARY KEY (bibleId, query)
+);
+
+insertSearch:
+INSERT OR REPLACE INTO CachedSearch(bibleId, query, resultsJson, lastUpdated)
+VALUES (?, ?, ?, ?);
+
+getSearch:
+SELECT * FROM CachedSearch
+WHERE bibleId = ? AND query = ?;
+
+clearCache:
+DELETE FROM CachedVersions;
+DELETE FROM CachedChapter;
+DELETE FROM CachedSearch;

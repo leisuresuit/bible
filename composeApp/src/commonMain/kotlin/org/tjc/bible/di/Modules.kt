@@ -13,8 +13,11 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import org.tjc.bible.cache.BibleDatabase
 import org.tjc.bible.data.abs.AbsBibleRepository
+import org.tjc.bible.data.cache.DriverFactory
 import org.tjc.bible.data.local.PreferenceStorage
+import org.tjc.bible.data.repository.CachedBibleRepository
 import org.tjc.bible.domain.repository.BibleRepository
 import org.tjc.bible.domain.usecase.GetBibleVersionsUseCase
 import org.tjc.bible.domain.usecase.GetVersesUseCase
@@ -26,6 +29,11 @@ expect val platformModule: Module
 val appModule = module {
     includes(platformModule)
     
+    single {
+        val driver = get<DriverFactory>().createDriver()
+        BibleDatabase(driver)
+    }
+
     single {
         HttpClient {
             install(ContentNegotiation) {
@@ -42,7 +50,9 @@ val appModule = module {
     }
 
     singleOf(::PreferenceStorage)
-    singleOf(::AbsBibleRepository) bind BibleRepository::class
+    
+    single { AbsBibleRepository(get()) }
+    single { CachedBibleRepository(get<AbsBibleRepository>(), get()) } bind BibleRepository::class
     
     factoryOf(::GetBibleVersionsUseCase)
     factoryOf(::GetVersesUseCase)
