@@ -13,11 +13,17 @@ internal class AbsChapterParser {
     private val currentHeadings = mutableListOf<MutableList<TextSpan>>()
     private var pendingBreak = false
 
+    /**
+     * Parses the ABS chapter content DTO into a list of domain [Verse] objects.
+     */
     fun parse(dto: AbsChapterContentDto): List<Verse> {
         dto.content.forEach { process(it, null, TextStyle.NORMAL, false) }
         return buildVerses()
     }
 
+    /**
+     * Recursively processes each content item, maintaining state for verse IDs, styles, and heading status.
+     */
     private fun process(item: AbsContentItemDto, inheritedVerseId: String?, inheritedStyle: TextStyle, inHeading: Boolean) {
         val style = item.getStyle(inheritedStyle)
         val currentVerseId = item.attrs?.verseId ?: item.attrs?.vid ?: inheritedVerseId
@@ -38,6 +44,9 @@ internal class AbsChapterParser {
         item.items?.forEach { process(it, currentVerseId, style, currentlyInHeading) }
     }
 
+    /**
+     * Cleans raw text and routes it to either heading or verse text handlers.
+     */
     private fun handleText(text: String, style: TextStyle, verseId: String?, inHeading: Boolean) {
         val cleanedText = text.replace("\u00B6", "").replace("\r", "")
         if (cleanedText.isEmpty()) return
@@ -50,33 +59,31 @@ internal class AbsChapterParser {
         }
     }
 
+    /**
+     * Collects text belonging to a heading, creating new heading blocks as needed.
+     */
     private fun handleHeadingText(text: String, style: TextStyle, verseNumber: Int) {
         if (pendingBreak || currentHeadings.isEmpty()) {
             currentHeadings.add(mutableListOf())
-            pendingBreak = false
         }
-        val headingStyle = if (style == TextStyle.NORMAL) TextStyle.HEADING else style
-        currentHeadings.last().add(TextSpan(text, headingStyle))
 
-        // If the heading is associated with a verse, attach it immediately to support interleaving.
-        if (verseNumber > 0) {
-            attachPendingHeadings(verseNumber)
-        }
+        val headingStyle = if (style == TextStyle.NORMAL) TextStyle.HEADING else style
+        appendTextToSpans(currentHeadings.last(), text, headingStyle, addNewline = false)
+
+        if (verseNumber > 0) attachPendingHeadings(verseNumber)
     }
 
+    /**
+     * Appends text to the current verse, ensuring pending headings are attached first.
+     */
     private fun handleVerseText(text: String, style: TextStyle, verseNumber: Int) {
-        // If we have any pending headings (without a verseId), they should be attached to the first verse that follows.
         attachPendingHeadings(verseNumber)
 
         val elements = verseElementsMap.getOrPut(verseNumber) { mutableListOf() }
         val lastElement = elements.lastOrNull() as? VerseElement.Text
         val lastSpans = lastElement?.spans?.toMutableList() ?: mutableListOf()
 
-        if (pendingBreak && lastSpans.isNotEmpty()) {
-            lastSpans.add(TextSpan("\n", TextStyle.NORMAL))
-        }
-        pendingBreak = false
-        lastSpans.add(TextSpan(text, style))
+        appendTextToSpans(lastSpans, text, style, addNewline = true)
 
         val newElement = VerseElement.Text(lastSpans.mergeAdjacent())
         if (lastElement != null) {
@@ -86,6 +93,54 @@ internal class AbsChapterParser {
         }
     }
 
+    /**
+     * Core logic for appending text to a list of spans, handling smart spacing and structural breaks.
+     */
+    private fun appendTextToSpans(spans: MutableList<TextSpan>, text: String, style: TextStyle, addNewline: Boolean) {
+        val textToAdd = if (!pendingBreak && spans.isNotEmpty() && shouldAddSpace(spans.last().text, text)) {
+            " $text"
+        } else {
+            text
+        }
+
+        if (pendingBreak && spans.isNotEmpty() && addNewline) {
+            spans.add(TextSpan("\n", TextStyle.NORMAL))
+        }
+
+        pendingBreak = false
+        spans.add(TextSpan(textToAdd, style))
+    }
+
+    /**
+     * Determines if a space should be inserted between two text segments based on punctuation and language.
+     */
+    private fun shouldAddSpace(prev: String, next: String): Boolean {
+        if (prev.isEmpty() || next.isEmpty()) return false
+        val lastChar = prev.last()
+        val firstChar = next.first()
+
+        if (lastChar.isWhitespace() || firstChar.isWhitespace()) return false
+        if (",.?!:;)]}\"".contains(lastChar)) return false
+        if ("([{".contains(firstChar)) return false
+
+        // Only add space for "character-based" (alphabetical) languages, not ideographic ones.
+        return !isIdeographic(lastChar) && !isIdeographic(firstChar)
+    }
+
+    /**
+     * Checks if a character belongs to a CJK (Chinese, Japanese, Korean) ideographic range.
+     */
+    private fun isIdeographic(c: Char): Boolean {
+        val i = c.code
+        return i in 0x4E00..0x9FFF || // CJK Unified Ideographs
+               i in 0x3400..0x4DBF || // CJK Unified Ideographs Extension A
+               i in 0x3040..0x30FF || // Japanese Hiragana and Katakana
+               i in 0xAC00..0xD7AF    // Korean Hangul Syllables
+    }
+
+    /**
+     * Moves any headings collected since the last verse and attaches them to the specified verse number.
+     */
     private fun attachPendingHeadings(verseNumber: Int) {
         if (currentHeadings.isNotEmpty()) {
             val elements = verseElementsMap.getOrPut(verseNumber) { mutableListOf() }
@@ -97,6 +152,9 @@ internal class AbsChapterParser {
         }
     }
 
+    /**
+     * Finalizes the parsed data into a sorted list of [Verse] objects.
+     */
     private fun buildVerses(): List<Verse> {
         return verseElementsMap.keys.sorted().map { number ->
             Verse(
@@ -106,6 +164,9 @@ internal class AbsChapterParser {
         }
     }
 
+    /**
+     * Maps ABS style attributes to domain [TextStyle] constants.
+     */
     private fun AbsContentItemDto.getStyle(inherited: TextStyle): TextStyle = when {
         attrs?.style == "bd" || attrs?.style == "nd" || attrs?.style == "d" -> TextStyle.BOLD
         attrs?.style == "it" -> TextStyle.ITALIC
@@ -118,6 +179,9 @@ internal class AbsChapterParser {
         else -> inherited
     }
 
+    /**
+     * Identifies if a content item represents a structural block (like a paragraph or heading).
+     */
     private fun AbsContentItemDto.isBlock(): Boolean = type == "tag" && attrs?.style?.let { s ->
         // Blocks trigger a structural break (pendingBreak = true).
         // Headings (s, ms, d, sp, qa) and paragraphs (p, q, m, nb) are blocks.
@@ -125,6 +189,9 @@ internal class AbsChapterParser {
         s.startsWith("p") || s.startsWith("q") || (s.startsWith("s") && !s.startsWith("sc")) || s == "m" || s == "nb" || s == "d" || s == "sp" || s == "qa"
     } == true
 
+    /**
+     * Extracts the numeric verse number from a standard ABS verse ID string (e.g., "GEN.1.1").
+     */
     private fun extractVerseNumber(vId: String): Int {
         val parts = vId.split(".", " ", ":")
         return parts.lastOrNull { it.any { c -> c.isDigit() } }
@@ -132,6 +199,9 @@ internal class AbsChapterParser {
             ?.toIntOrNull() ?: 0
     }
 
+    /**
+     * Merges adjacent [TextSpan] objects that share the same style to simplify the domain model.
+     */
     private fun List<TextSpan>.mergeAdjacent(): List<TextSpan> {
         val merged = mutableListOf<TextSpan>()
         for (span in this) {
