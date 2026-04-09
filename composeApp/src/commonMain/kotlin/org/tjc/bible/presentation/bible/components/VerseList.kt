@@ -172,7 +172,11 @@ private fun VerseListContent(
         if (targetVerse != null && verses.isNotEmpty()) {
             val index = verses.indexOfFirst { it.number == targetVerse }
             if (index != -1) {
-                lazyListState.scrollToItem(index + 1)
+                val itemIndex = if (targetVerse == 1) 0 else index + 1
+                val isVisible = lazyListState.layoutInfo.visibleItemsInfo.any { it.index == itemIndex }
+                if (!isVisible) {
+                    lazyListState.scrollToItem(itemIndex)
+                }
             }
         }
     }
