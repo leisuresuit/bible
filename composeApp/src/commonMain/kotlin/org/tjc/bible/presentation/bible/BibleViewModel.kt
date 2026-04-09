@@ -84,7 +84,7 @@ class BibleViewModel(
 
     private fun handleSelectPassage(book: Book, chapter: Int, verse: Int) {
         dispatch(BibleAction.PassageSelected(book, chapter, verse))
-        saveLastPassage(chapter)
+        saveLastPassage(chapter, verse)
         addToHistory(verse)
         loadVerses()
     }
@@ -165,6 +165,7 @@ class BibleViewModel(
                 selectedVersions = action.selectedVersions,
                 currentBook = action.currentBook,
                 currentChapter = action.currentChapter,
+                currentVerse = action.currentVerse,
                 isLoading = false
             )
             is BibleAction.VersesLoaded -> state.copy(
@@ -277,7 +278,7 @@ class BibleViewModel(
             getBibleVersionsUseCase(language = "en").fold(
                 onSuccess = { versions ->
                     // Restore last passage
-                    val (lastBook, lastChapter) = preferenceStorage.lastPassage.first()
+                    val (lastBook, lastChapter, lastVerse) = preferenceStorage.lastPassage.first()
 
                     // Restore selected versions
                     val savedIds = preferenceStorage.selectedVersionIds.first()
@@ -292,7 +293,8 @@ class BibleViewModel(
                             versions = versions,
                             selectedVersions = selectedVersions,
                             currentBook = lastBook,
-                            currentChapter = lastChapter
+                            currentChapter = lastChapter,
+                            currentVerse = lastVerse
                         ))
                         loadVerses()
                     } else {
@@ -312,11 +314,13 @@ class BibleViewModel(
         }
     }
 
-    private fun saveLastPassage(chapter: Int? = null) {
+    private fun saveLastPassage(chapter: Int? = null, verse: Int? = null) {
         viewModelScope.launch {
-            val book = _state.value.currentBook ?: return@launch
-            val ch = chapter ?: _state.value.currentChapter
-            preferenceStorage.setLastPassage(book, ch)
+            val currentState = _state.value
+            val book = currentState.currentBook ?: return@launch
+            val ch = chapter ?: currentState.currentChapter
+            val v = verse ?: currentState.currentVerse
+            preferenceStorage.setLastPassage(book, ch, v)
         }
     }
 

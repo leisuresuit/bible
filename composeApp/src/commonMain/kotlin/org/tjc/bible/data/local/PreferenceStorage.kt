@@ -25,6 +25,7 @@ class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
         val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         val LAST_BOOK = stringPreferencesKey("last_book")
         val LAST_CHAPTER = intPreferencesKey("last_chapter")
+        val LAST_VERSE = intPreferencesKey("last_verse")
         val HISTORY = stringPreferencesKey("history")
         val SELECTED_VERSIONS = stringPreferencesKey("selected_versions")
         val SHOW_WORDS_OF_JESUS = booleanPreferencesKey("show_words_of_jesus")
@@ -56,13 +57,14 @@ class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
             prefs[Keys.SHOW_WORDS_OF_JESUS] ?: true
         }
 
-    val lastPassage: Flow<Pair<Book, Int>> = dataStore.data
+    val lastPassage: Flow<Triple<Book, Int, Int>> = dataStore.data
         .catch { emit(emptyPreferences()) }
         .map { prefs ->
             val bookName = prefs[Keys.LAST_BOOK] ?: "Genesis"
             val chapter = prefs[Keys.LAST_CHAPTER] ?: 1
+            val verse = prefs[Keys.LAST_VERSE] ?: 1
             val book = Book.entries.find { it.name == bookName } ?: Book.Genesis
-            book to chapter
+            Triple(book, chapter, verse)
         }
 
     val history: Flow<List<HistoryItem>> = dataStore.data
@@ -99,10 +101,11 @@ class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
         dataStore.edit { it[Keys.DYNAMIC_COLOR] = enabled }
     }
 
-    suspend fun setLastPassage(book: Book, chapter: Int) {
+    suspend fun setLastPassage(book: Book, chapter: Int, verse: Int) {
         dataStore.edit {
             it[Keys.LAST_BOOK] = book.name
             it[Keys.LAST_CHAPTER] = chapter
+            it[Keys.LAST_VERSE] = verse
         }
     }
 

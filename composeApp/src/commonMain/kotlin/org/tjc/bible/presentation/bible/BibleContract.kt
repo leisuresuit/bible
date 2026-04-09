@@ -73,7 +73,8 @@ internal sealed class BibleAction {
         val versions: List<BibleVersion>,
         val selectedVersions: List<BibleVersion>,
         val currentBook: Book?,
-        val currentChapter: Int
+        val currentChapter: Int,
+        val currentVerse: Int
     ) : BibleAction()
     data class VersesLoaded(val verses: List<Verse>) : BibleAction()
     data class ChapterVersesLoaded(val globalIndex: Int, val verses: List<Verse>) : BibleAction()
