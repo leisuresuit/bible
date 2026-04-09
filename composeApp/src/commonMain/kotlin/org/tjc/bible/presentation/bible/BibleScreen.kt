@@ -1,8 +1,15 @@
 package org.tjc.bible.presentation.bible
 
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,7 +43,9 @@ fun BibleScreen(
     }
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             BibleTopBar(
                 currentBook = state.currentBook,
@@ -48,6 +57,14 @@ fun BibleScreen(
                 onShowHistory = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.History)) },
                 onShowSettings = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.Settings)) },
                 scrollBehavior = scrollBehavior
+            )
+        },
+        bottomBar = {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                    .windowInsetsBottomHeight(WindowInsets.navigationBars)
             )
         }
     ) { padding ->

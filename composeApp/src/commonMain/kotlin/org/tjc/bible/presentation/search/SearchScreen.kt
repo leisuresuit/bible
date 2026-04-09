@@ -49,6 +49,10 @@ fun SearchScreen(
         modifier = Modifier.fillMaxSize().imePadding(),
         topBar = {
             TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+                ),
                 title = {
                     TextField(
                         value = searchQuery,
@@ -90,19 +94,27 @@ fun SearchScreen(
                     }
                 }
             )
+        },
+        bottomBar = {
+            Surface(
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
+            ) {
+                Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+            }
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+        Box(modifier = Modifier.fillMaxSize()) {
             if (isLoading && searchResults.isEmpty()) {
                 LoadingIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (searchResults.isEmpty() && searchQuery.length >= 3 && !isLoading) {
                 Text(
                     text = stringResource(Res.string.no_results_found),
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier.align(Alignment.Center).padding(padding)
                 )
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = padding
                 ) {
                     items(searchResults) { result ->
                         SearchItem(
