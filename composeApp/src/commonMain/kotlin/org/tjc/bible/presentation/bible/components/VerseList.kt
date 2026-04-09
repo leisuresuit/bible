@@ -136,7 +136,8 @@ fun VerseList(
                     verses = chapterVerses,
                     targetVerse = if (page == pagerState.currentPage) currentVerse else null,
                     showWordsOfJesus = showWordsOfJesus,
-                    onShowPassageSelection = onShowPassageSelection
+                    onShowPassageSelection = onShowPassageSelection,
+                    modifier = Modifier.padding(horizontal = 8.dp)
                 )
             } else {
                 VerseListPlaceholder(book, chapter, onShowPassageSelection)
