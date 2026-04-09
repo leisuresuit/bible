@@ -13,6 +13,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,7 +41,8 @@ fun BibleTopBar(
     onShowVersionSelection: () -> Unit,
     onShowSearch: () -> Unit,
     onShowHistory: () -> Unit,
-    onShowSettings: () -> Unit
+    onShowSettings: () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
     TopAppBar(
         title = {
@@ -97,10 +99,12 @@ fun BibleTopBar(
                     contentDescription = stringResource(Res.string.settings)
                 )
             }
-        }
+        },
+        scrollBehavior = scrollBehavior
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ThemePreviews
 @Composable
 fun BibleTopBarPreview() {

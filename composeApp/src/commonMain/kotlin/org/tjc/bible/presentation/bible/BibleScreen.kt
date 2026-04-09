@@ -2,14 +2,18 @@ package org.tjc.bible.presentation.bible
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.error
 import bible.composeapp.generated.resources.ok
@@ -18,18 +22,21 @@ import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.presentation.bible.components.*
 import org.tjc.bible.presentation.ui.supportsDynamicColor
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BibleScreen(
     viewModel: BibleViewModel,
     onNavigateToSearch: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(Unit) {
         viewModel.onIntent(BibleIntent.LoadInitialData)
     }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             BibleTopBar(
                 currentBook = state.currentBook,
@@ -39,7 +46,8 @@ fun BibleScreen(
                 onShowVersionSelection = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.VersionSelection)) },
                 onShowSearch = onNavigateToSearch,
                 onShowHistory = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.History)) },
-                onShowSettings = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.Settings)) }
+                onShowSettings = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.Settings)) },
+                scrollBehavior = scrollBehavior
             )
         }
     ) { padding ->
@@ -55,7 +63,8 @@ fun BibleScreen(
             onShowPassageSelection = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.PassageSelection(it))) },
             onUpdateVisiblePassage = { book, chapter -> viewModel.onIntent(BibleIntent.UpdateVisiblePassage(book, chapter)) },
             onLoadChapterVerses = { book, chapter, page -> viewModel.onIntent(BibleIntent.LoadChapterVerses(book, chapter, page)) },
-            modifier = Modifier.padding(padding)
+            contentPadding = padding,
+            nestedScrollConnection = scrollBehavior.nestedScrollConnection
         )
 
         // Dialogs

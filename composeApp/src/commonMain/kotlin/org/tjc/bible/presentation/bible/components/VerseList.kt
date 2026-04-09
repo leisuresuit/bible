@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,6 +27,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -33,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -60,7 +65,9 @@ fun VerseList(
     onShowPassageSelection: (initialPage: Int) -> Unit,
     onUpdateVisiblePassage: (Book, Int) -> Unit,
     onLoadChapterVerses: (Book, Int, Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nestedScrollConnection: NestedScrollConnection? = null,
+    contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     if (currentBook == null) {
         if (isLoading) {
@@ -137,7 +144,9 @@ fun VerseList(
                     targetVerse = if (page == pagerState.currentPage) currentVerse else null,
                     showWordsOfJesus = showWordsOfJesus,
                     onShowPassageSelection = onShowPassageSelection,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    nestedScrollConnection = nestedScrollConnection,
+                    contentPadding = contentPadding
                 )
             } else {
                 VerseListPlaceholder(book, chapter, onShowPassageSelection)
@@ -152,7 +161,9 @@ fun VerseList(
             targetVerse = currentVerse,
             showWordsOfJesus = showWordsOfJesus,
             onShowPassageSelection = onShowPassageSelection,
-            modifier = modifier
+            modifier = modifier,
+            nestedScrollConnection = nestedScrollConnection,
+            contentPadding = contentPadding
         )
     }
 }
@@ -165,7 +176,9 @@ private fun VerseListContent(
     targetVerse: Int?,
     showWordsOfJesus: Boolean,
     onShowPassageSelection: (initialPage: Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nestedScrollConnection: NestedScrollConnection? = null,
+    contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val lazyListState = rememberLazyListState()
 
@@ -184,8 +197,15 @@ private fun VerseListContent(
 
     LazyColumn(
         state = lazyListState,
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .then(if (nestedScrollConnection != null) Modifier.nestedScroll(nestedScrollConnection) else Modifier),
+        contentPadding = PaddingValues(
+            start = 16.dp + contentPadding.calculateStartPadding(LayoutDirection.Ltr),
+            top = 16.dp + contentPadding.calculateTopPadding(),
+            end = 16.dp + contentPadding.calculateEndPadding(LayoutDirection.Ltr),
+            bottom = 16.dp + contentPadding.calculateBottomPadding()
+        ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
