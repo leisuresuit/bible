@@ -201,7 +201,7 @@ data class SearchResult(
 data class HistoryItem(
     val book: Book,
     val chapter: Int,
-    val verse: Int? = null,
+    val verse: Int,
     val timestamp: Long = 0L
 )
 

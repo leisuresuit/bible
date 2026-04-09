@@ -51,9 +51,9 @@ import org.tjc.bible.presentation.ui.ThemePreviews
 fun PassageSelectionDialog(
     currentBook: Book?,
     currentChapter: Int,
-    currentVerse: Int?,
+    currentVerse: Int,
     initialPage: Int,
-    onPassageSelected: (Book, Int, Int?) -> Unit,
+    onPassageSelected: (Book, Int, Int) -> Unit,
     onDismiss: () -> Unit
 ) {
     val pagerState = rememberPagerState(initialPage = initialPage) { 3 }

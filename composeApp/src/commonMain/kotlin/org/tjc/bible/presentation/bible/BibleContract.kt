@@ -16,7 +16,7 @@ data class BibleState(
     val selectedVersions: List<BibleVersion> = emptyList(),
     val currentBook: Book? = null,
     val currentChapter: Int = 1,
-    val currentVerse: Int? = null,
+    val currentVerse: Int = 1,
     val verses: List<Verse> = emptyList(),
     val chaptersVerses: Map<Int, List<Verse>> = emptyMap(),
     val history: List<HistoryItem> = emptyList(),
@@ -51,7 +51,7 @@ sealed class BibleIntent {
     data class SelectBook(val book: Book) : BibleIntent()
     data class SelectChapter(val chapter: Int) : BibleIntent()
     data class SelectVerse(val verse: Int) : BibleIntent()
-    data class SelectPassage(val book: Book, val chapter: Int, val verse: Int? = null) : BibleIntent()
+    data class SelectPassage(val book: Book, val chapter: Int, val verse: Int) : BibleIntent()
     data class UpdateVisiblePassage(val book: Book, val chapter: Int) : BibleIntent()
     data class LoadChapterVerses(val book: Book, val chapter: Int, val globalIndex: Int) : BibleIntent()
     data class UpdateSearchQuery(val query: String) : BibleIntent()
@@ -85,8 +85,8 @@ internal sealed class BibleAction {
     data class DisplayModeChanged(val mode: DisplayMode) : BibleAction()
     data class BookSelected(val book: Book) : BibleAction()
     data class ChapterSelected(val chapter: Int) : BibleAction()
-    data class VerseSelected(val verse: Int?) : BibleAction()
-    data class PassageSelected(val book: Book, val chapter: Int, val verse: Int?) : BibleAction()
+    data class VerseSelected(val verse: Int) : BibleAction()
+    data class PassageSelected(val book: Book, val chapter: Int, val verse: Int) : BibleAction()
     data class VisiblePassageChanged(val book: Book, val chapter: Int) : BibleAction()
     data class VersionsChanged(val selected: List<BibleVersion>) : BibleAction()
     data class NavigateChapter(val delta: Int) : BibleAction()

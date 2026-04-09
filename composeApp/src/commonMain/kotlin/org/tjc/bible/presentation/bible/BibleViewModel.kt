@@ -82,12 +82,10 @@ class BibleViewModel(
         }
     }
 
-    private fun handleSelectPassage(book: Book, chapter: Int, verse: Int?) {
+    private fun handleSelectPassage(book: Book, chapter: Int, verse: Int) {
         dispatch(BibleAction.PassageSelected(book, chapter, verse))
         saveLastPassage(chapter)
-        if (verse != null) {
-            addToHistory(verse)
-        }
+        addToHistory(verse)
         loadVerses()
     }
 
@@ -219,7 +217,7 @@ class BibleViewModel(
             is BibleAction.VisiblePassageChanged -> state.copy(
                 currentBook = action.book,
                 currentChapter = action.chapter,
-                currentVerse = null // Reset verse when swiping to new chapter
+                currentVerse = 1 // Reset verse when swiping to new chapter
             )
             is BibleAction.VersionsChanged -> state.copy(
                 selectedVersions = action.selected,
