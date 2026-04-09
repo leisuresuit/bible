@@ -12,12 +12,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +59,17 @@ fun VersionSelectionDialog(
         }
     }
 
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(Unit) {
+        val firstSelectedIndex = filteredVersions.indexOfFirst { version ->
+            selectedVersions.any { it.id == version.id }
+        }
+        if (firstSelectedIndex != -1) {
+            listState.scrollToItem(firstSelectedIndex)
+        }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
@@ -75,7 +88,10 @@ fun VersionSelectionDialog(
             )
         },
         text = {
-            LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp),
+                state = listState
+            ) {
                 items(filteredVersions) { version ->
                     val isSelected = selectedVersions.any { it.id == version.id }
                     Row(
