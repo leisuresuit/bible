@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.AlertDialog
@@ -156,6 +158,7 @@ fun PassageSelectionDialog(
                             )
                         }
                         1 -> ChapterSelectionPage(
+                            selectedBook = selectedBook,
                             chaptersCount = selectedBook?.chaptersCount ?: 0,
                             selectedChapter = selectedChapter,
                             searchQuery = searchQuery,
@@ -170,6 +173,8 @@ fun PassageSelectionDialog(
                         2 -> {
                             val versesCount = selectedBook?.versesInChapters?.getOrNull(selectedChapter - 1) ?: 0
                             VerseSelectionPage(
+                                selectedBook = selectedBook,
+                                selectedChapter = selectedChapter,
                                 versesCount = versesCount,
                                 selectedVerse = selectedVerse,
                                 searchQuery = searchQuery,
@@ -199,7 +204,18 @@ fun BookSelectionPage(
         booksWithNames.filter { it.second.contains(searchQuery, ignoreCase = true) }
     }
 
-    LazyColumn(modifier = Modifier.height(350.dp)) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(selectedBook) {
+        val index = filteredBooks.indexOfFirst { it.first == selectedBook }
+        if (index != -1) {
+            listState.scrollToItem(index)
+        }
+    }
+
+    LazyColumn(
+        modifier = Modifier.height(350.dp),
+        state = listState
+    ) {
         items(filteredBooks) { (book, name) ->
             val isSelected = book == selectedBook
             Box(
@@ -222,6 +238,7 @@ fun BookSelectionPage(
 
 @Composable
 fun ChapterSelectionPage(
+    selectedBook: Book?,
     chaptersCount: Int,
     selectedChapter: Int,
     searchQuery: String,
@@ -233,9 +250,18 @@ fun ChapterSelectionPage(
         else chapters.filter { it.toString().contains(searchQuery) }
     }
 
+    val gridState = rememberLazyGridState()
+    LaunchedEffect(selectedBook, selectedChapter) {
+        val index = filteredChapters.indexOf(selectedChapter)
+        if (index != -1) {
+            gridState.scrollToItem(index)
+        }
+    }
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier.height(350.dp)
+        modifier = Modifier.height(350.dp),
+        state = gridState
     ) {
         items(filteredChapters.size) { index ->
             val chapter = filteredChapters[index]
@@ -263,6 +289,8 @@ fun ChapterSelectionPage(
 
 @Composable
 fun VerseSelectionPage(
+    selectedBook: Book?,
+    selectedChapter: Int,
     versesCount: Int,
     selectedVerse: Int?,
     searchQuery: String,
@@ -274,9 +302,18 @@ fun VerseSelectionPage(
         else verses.filter { it.toString().contains(searchQuery) }
     }
 
+    val gridState = rememberLazyGridState()
+    LaunchedEffect(selectedBook, selectedChapter, selectedVerse) {
+        val index = filteredVerses.indexOf(selectedVerse)
+        if (index != -1) {
+            gridState.scrollToItem(index)
+        }
+    }
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier.height(350.dp)
+        modifier = Modifier.height(350.dp),
+        state = gridState
     ) {
         items(filteredVerses.size) { index ->
             val verse = filteredVerses[index]
@@ -310,7 +347,7 @@ fun PassageSelectionDialogPreview() {
         PassageSelectionDialog(
             currentBook = Book.Luke,
             currentChapter = 18,
-            currentVerse = null,
+            currentVerse = 1,
             initialPage = 0,
             onDismiss = {},
             onPassageSelected = { _, _, _ -> }
