@@ -7,15 +7,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -25,11 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import bible.composeapp.generated.resources.Res
-import bible.composeapp.generated.resources.error
-import bible.composeapp.generated.resources.ok
-import bible.composeapp.generated.resources.retry
-import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.presentation.bible.components.*
 import org.tjc.bible.presentation.search.SearchScreen
 import org.tjc.bible.presentation.ui.supportsDynamicColor
@@ -98,6 +90,8 @@ fun BibleScreen(
                 searchQuery = state.searchQuery,
                 searchResults = state.searchResults,
                 isLoading = state.isLoading,
+                showTopBar = false,
+                contentPadding = padding,
                 onSearchQueryChange = { viewModel.onIntent(BibleIntent.UpdateSearchQuery(it)) },
                 onResultClick = { result ->
                     viewModel.onIntent(
@@ -108,9 +102,7 @@ fun BibleScreen(
                         )
                     )
                 },
-                onBack = { viewModel.onIntent(BibleIntent.SetSearchMode(false)) },
-                showTopBar = false,
-                contentPadding = padding
+                onBack = { viewModel.onIntent(BibleIntent.SetSearchMode(false)) }
             )
         } else {
             VerseList(

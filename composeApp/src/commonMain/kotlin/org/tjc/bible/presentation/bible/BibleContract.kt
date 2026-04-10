@@ -21,7 +21,6 @@ data class BibleState(
     val chaptersVerses: Map<Int, List<Verse>> = emptyMap(),
     val history: List<HistoryItem> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null,
     val searchResults: List<SearchResult> = emptyList(),
     val activeDialog: ActiveDialog? = null,
     val theme: AppTheme = AppTheme.SYSTEM,
