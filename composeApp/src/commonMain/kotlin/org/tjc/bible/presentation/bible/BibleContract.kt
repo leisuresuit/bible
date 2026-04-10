@@ -43,7 +43,6 @@ sealed class ActiveDialog {
     data class PassageSelection(val initialPage: Int = 0) : ActiveDialog()
     object Settings : ActiveDialog()
     object History : ActiveDialog()
-    data class Error(val message: String, val operation: Operation) : ActiveDialog()
 }
 
 sealed class BibleIntent {
@@ -67,7 +66,6 @@ sealed class BibleIntent {
     data class UpdateDisplayMode(val mode: DisplayMode) : BibleIntent()
     object NextChapter : BibleIntent()
     object PreviousChapter : BibleIntent()
-    object DismissError : BibleIntent()
     data class RetryOperation(val operation: Operation) : BibleIntent()
 }
 
@@ -99,6 +97,8 @@ internal sealed class BibleAction {
     data class SearchQueryChanged(val query: String) : BibleAction()
     data class SearchResultsLoaded(val results: List<SearchResult>) : BibleAction()
     data class HistoryItemNavigated(val item: HistoryItem, val eventId: Long) : BibleAction()
-    data class ErrorOccurred(val operation: Operation, val message: String) : BibleAction()
-    object DismissError : BibleAction()
+}
+
+sealed class BibleEffect {
+    data class ShowSnackbar(val message: String, val actionLabel: String? = null, val onAction: (() -> Unit)? = null) : BibleEffect()
 }

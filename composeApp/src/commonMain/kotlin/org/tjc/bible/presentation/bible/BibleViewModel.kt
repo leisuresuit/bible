@@ -2,8 +2,11 @@ package org.tjc.bible.presentation.bible
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -15,7 +18,6 @@ import org.tjc.bible.domain.model.*
 import org.tjc.bible.domain.usecase.GetBibleVersionsUseCase
 import org.tjc.bible.domain.usecase.GetVersesUseCase
 import org.tjc.bible.domain.usecase.SearchUseCase
-import org.tjc.bible.presentation.bible.ActiveDialog.Error
 import org.tjc.bible.presentation.bible.ActiveDialog.PassageSelection
 
 class BibleViewModel(
@@ -26,6 +28,9 @@ class BibleViewModel(
 ) : ViewModel() {
     private val _state = MutableStateFlow(BibleState())
     val state: StateFlow<BibleState> = _state.asStateFlow()
+
+    private val _effects = MutableSharedFlow<BibleEffect>()
+    val effects: SharedFlow<BibleEffect> = _effects.asSharedFlow()
 
     private var nextEventId = 1L
 
@@ -79,7 +84,6 @@ class BibleViewModel(
             }
             is BibleIntent.UpdateSearchQuery -> handleSearch(intent.query)
             is BibleIntent.SetSearchMode -> dispatch(BibleAction.SearchModeChanged(intent.enabled))
-            is BibleIntent.DismissError -> dispatch(BibleAction.DismissError)
             is BibleIntent.RetryOperation -> {
                 when (intent.operation) {
                     Operation.LOAD_VERSIONS -> handleLoadInitialData()
@@ -116,7 +120,13 @@ class BibleViewModel(
                     dispatch(BibleAction.ChapterVersesLoaded(globalIndex, verses))
                 },
                 onFailure = { error ->
-                    dispatch(BibleAction.ErrorOccurred(Operation.LOAD_VERSES, error.message ?: "Failed to load verses"))
+                    viewModelScope.launch {
+                        _effects.emit(BibleEffect.ShowSnackbar(
+                            message = error.message ?: "Failed to load verses",
+                            actionLabel = "Retry",
+                            onAction = { onIntent(BibleIntent.LoadChapterVerses(book, chapter, globalIndex)) }
+                        ))
+                    }
                 }
             )
         }
@@ -140,10 +150,13 @@ class BibleViewModel(
                 },
                 onFailure = { error ->
                     dispatch(BibleAction.Loading(false))
-                    dispatch(BibleAction.ErrorOccurred(
-                        Operation.SEARCH,
-                        error.message ?: "Search failed")
-                    )
+                    viewModelScope.launch {
+                        _effects.emit(BibleEffect.ShowSnackbar(
+                            message = error.message ?: "Search failed",
+                            actionLabel = "Retry",
+                            onAction = { onIntent(BibleIntent.RetryOperation(Operation.SEARCH)) }
+                        ))
+                    }
                 }
             )
         }
@@ -274,10 +287,6 @@ class BibleViewModel(
                 selectionEventId = action.eventId,
                 isSearchMode = false
             )
-            is BibleAction.ErrorOccurred -> state.copy(
-                activeDialog = Error(action.message, action.operation)
-            )
-            BibleAction.DismissError -> state.copy(activeDialog = null)
         }
     }
 
@@ -321,12 +330,13 @@ class BibleViewModel(
                 },
                 onFailure = { error ->
                     dispatch(BibleAction.Loading(false))
-                    dispatch(
-                        BibleAction.ErrorOccurred(
-                            Operation.LOAD_VERSIONS,
-                            error.message ?: "Failed to load Bible versions"
-                        )
-                    )
+                    viewModelScope.launch {
+                        _effects.emit(BibleEffect.ShowSnackbar(
+                            message = error.message ?: "Failed to load Bible versions",
+                            actionLabel = "Retry",
+                            onAction = { onIntent(BibleIntent.RetryOperation(Operation.LOAD_VERSIONS)) }
+                        ))
+                    }
                 }
             )
         }
@@ -423,11 +433,13 @@ class BibleViewModel(
                     dispatch(BibleAction.VersesLoaded(verses))
                 },
                 onFailure = { error ->
-                    dispatch(
-                        BibleAction.ErrorOccurred(
-                            Operation.LOAD_VERSES,
-                            error.message ?: "Failed to load verses")
-                    )
+                    viewModelScope.launch {
+                        _effects.emit(BibleEffect.ShowSnackbar(
+                            message = error.message ?: "Failed to load verses",
+                            actionLabel = "Retry",
+                            onAction = { onIntent(BibleIntent.RetryOperation(Operation.LOAD_VERSES)) }
+                        ))
+                    }
                 }
             )
         }

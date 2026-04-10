@@ -11,6 +11,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -19,12 +22,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.error
 import bible.composeapp.generated.resources.ok
-import bible.composeapp.generated.resources.search
 import bible.composeapp.generated.resources.retry
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.presentation.bible.components.*
@@ -38,9 +41,26 @@ fun BibleScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.onIntent(BibleIntent.LoadInitialData)
+    }
+
+    LaunchedEffect(viewModel.effects) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                is BibleEffect.ShowSnackbar -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        actionLabel = effect.actionLabel
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        effect.onAction?.invoke()
+                    }
+                }
+            }
+        }
     }
 
     Scaffold(
@@ -63,6 +83,7 @@ fun BibleScreen(
                 scrollBehavior = scrollBehavior
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             Box(
                 Modifier
@@ -173,29 +194,6 @@ fun BibleScreen(
                         onDismiss = { viewModel.onIntent(BibleIntent.ShowDialog(null)) },
                         onItemClick = { viewModel.onIntent(BibleIntent.NavigateToHistoryItem(it)) },
                         onClear = { viewModel.onIntent(BibleIntent.ClearHistory) }
-                    )
-                }
-
-                is ActiveDialog.Error -> {
-                    AlertDialog(
-                        onDismissRequest = { viewModel.onIntent(BibleIntent.DismissError) },
-                        title = { Text(stringResource(Res.string.error)) },
-                        text = { Text(dialog.message) },
-                        confirmButton = {
-                            TextButton(onClick = { viewModel.onIntent(BibleIntent.DismissError) }) {
-                                Text(stringResource(Res.string.ok))
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(
-                                onClick = {
-                                    viewModel.onIntent(BibleIntent.DismissError)
-                                    viewModel.onIntent(BibleIntent.RetryOperation(dialog.operation))
-                                }
-                            ) {
-                                Text(stringResource(Res.string.retry))
-                            }
-                        }
                     )
                 }
             }
