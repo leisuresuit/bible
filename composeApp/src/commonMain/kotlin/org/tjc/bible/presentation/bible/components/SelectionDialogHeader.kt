@@ -1,7 +1,9 @@
 package org.tjc.bible.presentation.bible.components
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
@@ -23,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.sort
 import org.jetbrains.compose.resources.painterResource
+import org.tjc.bible.presentation.ui.AutoResizedText
 
 @Composable
 fun SelectionDialogHeader(
@@ -32,7 +35,9 @@ fun SelectionDialogHeader(
     onSearchQueryChange: (String) -> Unit,
     showSortButton: Boolean = false,
     onSortClick: () -> Unit = {},
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    titleWeight: Float? = null,
+    searchWeight: Float? = null
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -41,8 +46,15 @@ fun SelectionDialogHeader(
     }
 
     Column(modifier = Modifier.padding(bottom = 16.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(title, style = MaterialTheme.typography.headlineSmall)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            AutoResizedText(
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = if (titleWeight != null) Modifier.weight(titleWeight) else Modifier
+            )
             if (showSortButton) {
                 IconButton(onClick = onSortClick) {
                     Icon(
@@ -63,7 +75,7 @@ fun SelectionDialogHeader(
                 ),
                 modifier = Modifier
                     .padding(start = 8.dp)
-                    .weight(1f)
+                    .then(if (searchWeight != null) Modifier.weight(searchWeight) else Modifier)
                     .focusRequester(focusRequester),
                 singleLine = true
             )
