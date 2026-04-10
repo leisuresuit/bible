@@ -13,7 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
@@ -76,6 +79,7 @@ fun SearchScreen(
                     items(searchResults) { result ->
                         SearchItem(
                             result = result,
+                            searchQuery = searchQuery,
                             onClick = { onResultClick(result) }
                         )
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 8.dp))
@@ -160,8 +164,32 @@ fun SearchScreen(
 @Composable
 private fun SearchItem(
     result: SearchResult,
+    searchQuery: String,
     onClick: () -> Unit
 ) {
+    val annotatedText = remember(result.text, searchQuery) {
+        buildAnnotatedString {
+            val text = result.text
+            if (searchQuery.isBlank()) {
+                append(text)
+            } else {
+                var start = 0
+                while (true) {
+                    val index = text.indexOf(searchQuery, start, ignoreCase = true)
+                    if (index == -1) {
+                        append(text.substring(start))
+                        break
+                    }
+                    append(text.substring(start, index))
+                    withStyle(SpanStyle(background = Color.Yellow, color = Color.Black, fontWeight = FontWeight.Bold)) {
+                        append(text.substring(index, index + searchQuery.length))
+                    }
+                    start = index + searchQuery.length
+                }
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -176,7 +204,7 @@ private fun SearchItem(
         )
         Spacer(Modifier.height(4.dp))
         Text(
-            text = result.text,
+            text = annotatedText,
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 5,
             overflow = TextOverflow.Ellipsis
