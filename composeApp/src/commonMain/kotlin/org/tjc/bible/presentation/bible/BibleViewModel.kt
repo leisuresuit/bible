@@ -154,7 +154,14 @@ class BibleViewModel(
 
             searchUseCase(versionId, query).fold(
                 onSuccess = { results ->
-                    dispatch(BibleAction.SearchResultsLoaded(results))
+                    val sortedResults = results.sortedWith(
+                        compareBy(
+                            { it.book },
+                            { it.chapterNumber },
+                            { it.verseNumber }
+                        )
+                    )
+                    dispatch(BibleAction.SearchResultsLoaded(sortedResults))
                     dispatch(BibleAction.Loading(false))
                 },
                 onFailure = { error ->
