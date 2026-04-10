@@ -364,22 +364,21 @@ class BibleViewModel(
     private fun addToHistory(book: Book, chapter: Int, verse: Int) {
         viewModelScope.launch {
             val currentHistory = _state.value.history
-            val first = currentHistory.firstOrNull()
-            val now = 0L // Placeholder until Clock is available or just use 0 as before
-            
-            // If the top item is in the same chapter, replace it to avoid flooding
-            if (first != null && first.book == book && first.chapter == chapter) {
-                if (first.verse != verse) {
-                    val newItem = HistoryItem(book, chapter, verse, timestamp = now)
-                    val newList = listOf(newItem) + currentHistory.drop(1)
+            val existingIndex = currentHistory.indexOfFirst { it.book == book && it.chapter == chapter }
+
+            if (existingIndex != -1) {
+                // Chapter exists in history: update the verse if it changed, keeping its position
+                if (currentHistory[existingIndex].verse != verse) {
+                    val newList = currentHistory.toMutableList()
+                    newList[existingIndex] = HistoryItem(book, chapter, verse, timestamp = 0L)
                     preferenceStorage.saveHistory(newList)
                 }
-                return@launch
+            } else {
+                // New chapter visit: add to the top of history
+                val newItem = HistoryItem(book, chapter, verse, timestamp = 0L)
+                val newList = (listOf(newItem) + currentHistory).take(50)
+                preferenceStorage.saveHistory(newList)
             }
-
-            val newItem = HistoryItem(book, chapter, verse, timestamp = now)
-            val newList = (listOf(newItem) + currentHistory).take(50)
-            preferenceStorage.saveHistory(newList)
         }
     }
 
