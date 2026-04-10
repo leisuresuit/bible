@@ -30,7 +30,8 @@ data class BibleState(
     val searchQuery: String = "",
     val isSearchMode: Boolean = false,
     val displayMode: DisplayMode = DisplayMode.SINGLE_CHAPTER,
-    val allBooks: List<Book> = Book.entries
+    val allBooks: List<Book> = Book.entries,
+    val selectionEventId: Long = 0L
 )
 
 enum class Operation {
@@ -89,7 +90,7 @@ internal sealed class BibleAction {
     data class BookSelected(val book: Book) : BibleAction()
     data class ChapterSelected(val chapter: Int) : BibleAction()
     data class VerseSelected(val verse: Int) : BibleAction()
-    data class PassageSelected(val book: Book, val chapter: Int, val verse: Int) : BibleAction()
+    data class PassageSelected(val book: Book, val chapter: Int, val verse: Int, val eventId: Long) : BibleAction()
     data class VisiblePassageChanged(val book: Book, val chapter: Int) : BibleAction()
     data class VersionsChanged(val selected: List<BibleVersion>) : BibleAction()
     data class NavigateChapter(val delta: Int) : BibleAction()
@@ -97,7 +98,7 @@ internal sealed class BibleAction {
     data class SearchModeChanged(val enabled: Boolean) : BibleAction()
     data class SearchQueryChanged(val query: String) : BibleAction()
     data class SearchResultsLoaded(val results: List<SearchResult>) : BibleAction()
-    data class HistoryItemNavigated(val item: HistoryItem) : BibleAction()
+    data class HistoryItemNavigated(val item: HistoryItem, val eventId: Long) : BibleAction()
     data class ErrorOccurred(val operation: Operation, val message: String) : BibleAction()
     object DismissError : BibleAction()
 }

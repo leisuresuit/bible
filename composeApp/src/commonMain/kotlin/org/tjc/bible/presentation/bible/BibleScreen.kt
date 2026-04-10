@@ -100,6 +100,7 @@ fun BibleScreen(
                 chaptersVerses = state.chaptersVerses,
                 displayMode = state.displayMode,
                 showWordsOfJesus = state.showWordsOfJesus,
+                selectionEventId = state.selectionEventId,
                 isLoading = state.isLoading,
                 onShowPassageSelection = {
                     viewModel.onIntent(

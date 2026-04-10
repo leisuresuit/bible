@@ -65,6 +65,7 @@ fun VerseList(
     chaptersVerses: Map<Int, List<Verse>>,
     displayMode: DisplayMode,
     showWordsOfJesus: Boolean,
+    selectionEventId: Long,
     isLoading: Boolean,
     onShowPassageSelection: (initialPage: Int) -> Unit,
     onUpdateVisiblePassage: (Book, Int) -> Unit,
@@ -147,6 +148,7 @@ fun VerseList(
                     verses = chapterVerses,
                     targetVerse = if (page == pagerState.currentPage) currentVerse else null,
                     showWordsOfJesus = showWordsOfJesus,
+                    selectionEventId = selectionEventId,
                     onShowPassageSelection = onShowPassageSelection,
                     modifier = Modifier.padding(horizontal = 8.dp),
                     nestedScrollConnection = nestedScrollConnection,
@@ -164,6 +166,7 @@ fun VerseList(
             verses = verses,
             targetVerse = currentVerse,
             showWordsOfJesus = showWordsOfJesus,
+            selectionEventId = selectionEventId,
             onShowPassageSelection = onShowPassageSelection,
             modifier = modifier,
             nestedScrollConnection = nestedScrollConnection,
@@ -179,24 +182,26 @@ private fun VerseListContent(
     verses: List<Verse>,
     targetVerse: Int?,
     showWordsOfJesus: Boolean,
+    selectionEventId: Long,
     onShowPassageSelection: (initialPage: Int) -> Unit,
     modifier: Modifier = Modifier,
     nestedScrollConnection: NestedScrollConnection? = null,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val lazyListState = rememberLazyListState()
-    var lastScrolledVerse by rememberSaveable(book, chapter) { mutableStateOf<Int?>(null) }
+    var lastProcessedEventId by rememberSaveable { mutableStateOf(-1L) }
 
-    LaunchedEffect(book, chapter, targetVerse, verses.size) {
-        if (targetVerse != null && verses.isNotEmpty() && lastScrolledVerse != targetVerse) {
-            val index = verses.indexOfFirst { it.number == targetVerse }
+    LaunchedEffect(selectionEventId, verses) {
+        if (selectionEventId > lastProcessedEventId && verses.isNotEmpty()) {
+            val verseToScroll = targetVerse ?: 1
+            val index = verses.indexOfFirst { it.number == verseToScroll }
             if (index != -1) {
                 // index 0 in LazyColumn is the ChapterHeader. 
                 // We scroll to 0 for the first verse to show the header.
                 // For other verses, we scroll to index + 1.
-                val itemIndex = if (targetVerse == 1) 0 else index + 1
+                val itemIndex = if (verseToScroll == 1) 0 else index + 1
                 lazyListState.scrollToItem(itemIndex)
-                lastScrolledVerse = targetVerse
+                lastProcessedEventId = selectionEventId
             }
         }
     }
@@ -389,6 +394,7 @@ fun VerseListPreview() {
                 chaptersVerses = emptyMap(),
                 displayMode = DisplayMode.CONTIGUOUS,
                 showWordsOfJesus = true,
+                selectionEventId = 0L,
                 isLoading = false,
                 onShowPassageSelection = {},
                 onUpdateVisiblePassage = { _, _ -> },
@@ -418,6 +424,7 @@ fun VerseListParallelPreview() {
                 chaptersVerses = emptyMap(),
                 displayMode = DisplayMode.CONTIGUOUS,
                 showWordsOfJesus = true,
+                selectionEventId = 0L,
                 isLoading = false,
                 onShowPassageSelection = {},
                 onUpdateVisiblePassage = { _, _ -> },
@@ -440,6 +447,7 @@ fun VerseListLoadingPreview() {
                 chaptersVerses = emptyMap(),
                 displayMode = DisplayMode.SINGLE_CHAPTER,
                 showWordsOfJesus = true,
+                selectionEventId = 0L,
                 isLoading = true,
                 onShowPassageSelection = {},
                 onUpdateVisiblePassage = { _, _ -> },
