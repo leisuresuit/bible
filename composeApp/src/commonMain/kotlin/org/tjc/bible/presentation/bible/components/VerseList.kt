@@ -202,7 +202,7 @@ private fun VerseListContent(
             .then(if (nestedScrollConnection != null) Modifier.nestedScroll(nestedScrollConnection) else Modifier),
         contentPadding = PaddingValues(
             start = 16.dp + contentPadding.calculateStartPadding(LayoutDirection.Ltr),
-            top = 16.dp + contentPadding.calculateTopPadding(),
+            top = contentPadding.calculateTopPadding(),
             end = 16.dp + contentPadding.calculateEndPadding(LayoutDirection.Ltr),
             bottom = 16.dp + contentPadding.calculateBottomPadding()
         ),

@@ -13,8 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.arrow_back
@@ -35,6 +38,8 @@ fun SearchScreen(
     searchQuery: String,
     searchResults: List<SearchResult>,
     isLoading: Boolean = false,
+    showTopBar: Boolean = true,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
     onSearchQueryChange: (String) -> Unit,
     onResultClick: (SearchResult) -> Unit,
     onBack: () -> Unit
@@ -42,79 +47,31 @@ fun SearchScreen(
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
+        if (showTopBar) {
+            focusRequester.requestFocus()
+        }
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize().imePadding(),
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-                ),
-                title = {
-                    TextField(
-                        value = searchQuery,
-                        onValueChange = onSearchQueryChange,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(focusRequester),
-                        placeholder = { Text(stringResource(Res.string.search)) },
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                        ),
-                        trailingIcon = {
-                            if (isLoading) {
-                                LoadingIndicator(
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            } else if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { onSearchQueryChange("") }) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.clear),
-                                        contentDescription = stringResource(Res.string.clear)
-                                    )
-                                }
-                            }
-                        }
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            painter = painterResource(Res.drawable.arrow_back),
-                            contentDescription = stringResource(Res.string.back)
-                        )
-                    }
-                }
-            )
-        },
-        bottomBar = {
-            Surface(
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-            ) {
-                Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
-            }
-        }
-    ) { padding ->
+    val content = @Composable { padding: PaddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
-            if (isLoading && searchResults.isEmpty()) {
+            if (isLoading) {
                 LoadingIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (searchResults.isEmpty() && searchQuery.length >= 3 && !isLoading) {
                 Text(
                     text = stringResource(Res.string.no_results_found),
-                    modifier = Modifier.align(Alignment.Center).padding(padding)
+                    modifier = Modifier.align(Alignment.Center)
                 )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = padding
+                    userScrollEnabled = searchResults.isNotEmpty(),
+                    contentPadding = PaddingValues(
+                        start = 16.dp + padding.calculateStartPadding(LayoutDirection.Ltr),
+                        top = padding.calculateTopPadding(),
+                        end = 16.dp + padding.calculateEndPadding(LayoutDirection.Ltr),
+                        bottom = 16.dp + padding.calculateBottomPadding()
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(searchResults) { result ->
                         SearchItem(
@@ -126,6 +83,77 @@ fun SearchScreen(
                 }
             }
         }
+    }
+
+    if (showTopBar) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize().imePadding(),
+            topBar = {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                        scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+                    ),
+                    title = {
+                        val textFieldValue = remember(searchQuery) {
+                            TextFieldValue(
+                                text = searchQuery,
+                                selection = TextRange(searchQuery.length)
+                            )
+                        }
+                        TextField(
+                            value = textFieldValue,
+                            onValueChange = { onSearchQueryChange(it.text) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester),
+                            placeholder = { Text(stringResource(Res.string.search)) },
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                            ),
+                            trailingIcon = {
+                                if (isLoading) {
+                                    LoadingIndicator(
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                } else if (searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { onSearchQueryChange("") }) {
+                                        Icon(
+                                            painter = painterResource(Res.drawable.clear),
+                                            contentDescription = stringResource(Res.string.clear)
+                                        )
+                                    }
+                                }
+                            }
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                painter = painterResource(Res.drawable.arrow_back),
+                                contentDescription = stringResource(Res.string.back)
+                            )
+                        }
+                    }
+                )
+            },
+            bottomBar = {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
+                ) {
+                    Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+                }
+            }
+        ) { padding ->
+            content(padding)
+        }
+    } else {
+        content(contentPadding)
     }
 }
 

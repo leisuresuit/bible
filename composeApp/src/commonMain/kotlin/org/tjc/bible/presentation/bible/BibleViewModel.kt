@@ -71,6 +71,7 @@ class BibleViewModel(
                 loadVerses()
             }
             is BibleIntent.UpdateSearchQuery -> handleSearch(intent.query)
+            is BibleIntent.SetSearchMode -> dispatch(BibleAction.SearchModeChanged(intent.enabled))
             is BibleIntent.DismissError -> dispatch(BibleAction.DismissError)
             is BibleIntent.RetryOperation -> {
                 when (intent.operation) {
@@ -84,6 +85,7 @@ class BibleViewModel(
 
     private fun handleSelectPassage(book: Book, chapter: Int, verse: Int) {
         dispatch(BibleAction.PassageSelected(book, chapter, verse))
+        dispatch(BibleAction.SearchModeChanged(false))
         saveLastPassage(chapter, verse)
         addToHistory(verse)
         loadVerses()
@@ -116,16 +118,20 @@ class BibleViewModel(
         dispatch(BibleAction.SearchQueryChanged(query))
         if (query.length < 3) {
             dispatch(BibleAction.SearchResultsLoaded(emptyList()))
+            dispatch(BibleAction.Loading(false))
             return
         }
+        dispatch(BibleAction.Loading(true))
         viewModelScope.launch {
             val versionId = _state.value.selectedVersions.firstOrNull()?.id ?: return@launch
 
             searchUseCase(versionId, query).fold(
                 onSuccess = { results ->
                     dispatch(BibleAction.SearchResultsLoaded(results))
+                    dispatch(BibleAction.Loading(false))
                 },
                 onFailure = { error ->
+                    dispatch(BibleAction.Loading(false))
                     dispatch(BibleAction.ErrorOccurred(
                         Operation.SEARCH,
                         error.message ?: "Search failed")
@@ -249,12 +255,14 @@ class BibleViewModel(
                 }
                 state.copy(currentBook = nextBook, currentChapter = nextChapter)
             }
+            is BibleAction.SearchModeChanged -> state.copy(isSearchMode = action.enabled)
             is BibleAction.SearchQueryChanged -> state.copy(searchQuery = action.query)
             is BibleAction.SearchResultsLoaded -> state.copy(searchResults = action.results)
             is BibleAction.HistoryItemNavigated -> state.copy(
                 currentBook = action.item.book,
                 currentChapter = action.item.chapter,
-                currentVerse = action.item.verse
+                currentVerse = action.item.verse,
+                isSearchMode = false
             )
             is BibleAction.ErrorOccurred -> state.copy(
                 activeDialog = Error(action.message, action.operation)
