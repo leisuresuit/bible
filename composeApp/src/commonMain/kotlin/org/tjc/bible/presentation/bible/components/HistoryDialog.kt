@@ -132,7 +132,7 @@ fun HistoryDialog(
                             .fillMaxWidth()
                             .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                             .clickable { onItemClick(item) }
-                            .padding(vertical = 12.dp),
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
                         style = if (isSelected) MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold) else MaterialTheme.typography.bodyLarge,
                         color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center

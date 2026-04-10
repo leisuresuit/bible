@@ -234,7 +234,7 @@ fun BookSelectionPage(
                     .fillMaxWidth()
                     .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                     .clickable { onBookSelected(book) }
-                    .padding(vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
                 AutoResizedText(

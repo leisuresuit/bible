@@ -98,7 +98,7 @@ fun VersionSelectionDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onVersionToggle(version) }
-                            .padding(vertical = 12.dp),
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(modifier = Modifier.size(24.dp)) {
