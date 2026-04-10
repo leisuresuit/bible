@@ -122,9 +122,9 @@ fun BibleScreen(
                         )
                     )
                 },
-                onUpdateVisiblePassage = { book, chapter ->
+                onUpdateVisiblePassage = { book, chapter, verse ->
                     viewModel.onIntent(
-                        BibleIntent.UpdateVisiblePassage(book, chapter)
+                        BibleIntent.UpdateVisiblePassage(book, chapter, verse)
                     )
                 },
                 onLoadChapterVerses = { book, chapter, page ->

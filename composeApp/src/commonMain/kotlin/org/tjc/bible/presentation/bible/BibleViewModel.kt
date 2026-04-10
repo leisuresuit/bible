@@ -57,7 +57,7 @@ class BibleViewModel(
                 }
             }
             is BibleIntent.SelectPassage -> handleSelectPassage(intent.book, intent.chapter, intent.verse)
-            is BibleIntent.UpdateVisiblePassage -> handleUpdateVisiblePassage(intent.book, intent.chapter)
+            is BibleIntent.UpdateVisiblePassage -> handleUpdateVisiblePassage(intent.book, intent.chapter, intent.verse)
             is BibleIntent.LoadChapterVerses -> handleLoadChapterVerses(intent.book, intent.chapter, intent.globalIndex)
             is BibleIntent.ShowDialog -> dispatch(BibleAction.DialogChanged(intent.dialog))
             is BibleIntent.UpdateTheme -> viewModelScope.launch { preferenceStorage.setTheme(intent.theme) }
@@ -103,9 +103,18 @@ class BibleViewModel(
         loadVerses()
     }
 
-    private fun handleUpdateVisiblePassage(book: Book, chapter: Int) {
-        dispatch(BibleAction.VisiblePassageChanged(book, chapter))
-        saveLastPassage(chapter)
+    private fun handleUpdateVisiblePassage(book: Book, chapter: Int, verse: Int?) {
+        val v = verse ?: 1
+        dispatch(BibleAction.VisiblePassageChanged(book, chapter, v))
+        saveLastPassage(chapter, v)
+        
+        // Only load verses if chapter actually changed
+        val currentState = _state.value
+        if (currentState.currentBook != book || currentState.currentChapter != chapter) {
+            loadVerses()
+        }
+        
+        addToHistory(book, chapter, v)
     }
 
     private fun handleLoadChapterVerses(book: Book, chapter: Int, globalIndex: Int) {
@@ -246,7 +255,7 @@ class BibleViewModel(
             is BibleAction.VisiblePassageChanged -> state.copy(
                 currentBook = action.book,
                 currentChapter = action.chapter,
-                currentVerse = 1 // Reset verse when swiping to new chapter
+                currentVerse = action.verse
             )
             is BibleAction.VersionsChanged -> state.copy(
                 selectedVersions = action.selected,
@@ -355,13 +364,22 @@ class BibleViewModel(
     private fun addToHistory(book: Book, chapter: Int, verse: Int) {
         viewModelScope.launch {
             val currentHistory = _state.value.history
-            val alreadyExists = currentHistory.any { it.book == book && it.chapter == chapter && it.verse == verse }
-
-            if (!alreadyExists) {
-                val newItem = HistoryItem(book, chapter, verse, timestamp = 0L)
-                val newList = listOf(newItem) + currentHistory
-                preferenceStorage.saveHistory(newList.take(50))
+            val first = currentHistory.firstOrNull()
+            val now = 0L // Placeholder until Clock is available or just use 0 as before
+            
+            // If the top item is in the same chapter, replace it to avoid flooding
+            if (first != null && first.book == book && first.chapter == chapter) {
+                if (first.verse != verse) {
+                    val newItem = HistoryItem(book, chapter, verse, timestamp = now)
+                    val newList = listOf(newItem) + currentHistory.drop(1)
+                    preferenceStorage.saveHistory(newList)
+                }
+                return@launch
             }
+
+            val newItem = HistoryItem(book, chapter, verse, timestamp = now)
+            val newList = (listOf(newItem) + currentHistory).take(50)
+            preferenceStorage.saveHistory(newList)
         }
     }
 

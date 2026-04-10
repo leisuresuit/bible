@@ -68,7 +68,7 @@ fun VerseList(
     selectionEventId: Long,
     isLoading: Boolean,
     onShowPassageSelection: (initialPage: Int) -> Unit,
-    onUpdateVisiblePassage: (Book, Int) -> Unit,
+    onUpdateVisiblePassage: (Book, Int, Int) -> Unit,
     onLoadChapterVerses: (Book, Int, Int) -> Unit,
     modifier: Modifier = Modifier,
     nestedScrollConnection: NestedScrollConnection? = null,
@@ -124,7 +124,7 @@ fun VerseList(
                 .collect { page ->
                     val (book, chapter) = getPassageFromGlobalIndex(page)
                     if (book != currentBook || chapter != currentChapter) {
-                        onUpdateVisiblePassage(book, chapter)
+                        onUpdateVisiblePassage(book, chapter, 1)
                     }
                 }
         }
@@ -150,6 +150,11 @@ fun VerseList(
                     showWordsOfJesus = showWordsOfJesus,
                     selectionEventId = selectionEventId,
                     onShowPassageSelection = onShowPassageSelection,
+                    onVerseVisible = { verse ->
+                        if (page == pagerState.currentPage) {
+                            onUpdateVisiblePassage(book, chapter, verse)
+                        }
+                    },
                     modifier = Modifier.padding(horizontal = 8.dp),
                     nestedScrollConnection = nestedScrollConnection,
                     contentPadding = contentPadding
@@ -168,6 +173,7 @@ fun VerseList(
             showWordsOfJesus = showWordsOfJesus,
             selectionEventId = selectionEventId,
             onShowPassageSelection = onShowPassageSelection,
+            onVerseVisible = { onUpdateVisiblePassage(currentBook, currentChapter, it) },
             modifier = modifier,
             nestedScrollConnection = nestedScrollConnection,
             contentPadding = contentPadding
@@ -184,6 +190,7 @@ private fun VerseListContent(
     showWordsOfJesus: Boolean,
     selectionEventId: Long,
     onShowPassageSelection: (initialPage: Int) -> Unit,
+    onVerseVisible: (Int) -> Unit,
     modifier: Modifier = Modifier,
     nestedScrollConnection: NestedScrollConnection? = null,
     contentPadding: PaddingValues = PaddingValues(0.dp)
@@ -204,6 +211,18 @@ private fun VerseListContent(
                 lastProcessedEventId = selectionEventId
             }
         }
+    }
+
+    LaunchedEffect(lazyListState) {
+        snapshotFlow { lazyListState.firstVisibleItemIndex }
+            .distinctUntilChanged()
+            .collect { index ->
+                if (index > 0 && index <= verses.size) {
+                    onVerseVisible(verses[index - 1].number)
+                } else if (index == 0) {
+                    onVerseVisible(1)
+                }
+            }
     }
 
     LazyColumn(
@@ -397,7 +416,7 @@ fun VerseListPreview() {
                 selectionEventId = 0L,
                 isLoading = false,
                 onShowPassageSelection = {},
-                onUpdateVisiblePassage = { _, _ -> },
+                onUpdateVisiblePassage = { _, _, _ -> },
                 onLoadChapterVerses = { _, _, _ -> }
             )
         }
@@ -427,7 +446,7 @@ fun VerseListParallelPreview() {
                 selectionEventId = 0L,
                 isLoading = false,
                 onShowPassageSelection = {},
-                onUpdateVisiblePassage = { _, _ -> },
+                onUpdateVisiblePassage = { _, _, _ -> },
                 onLoadChapterVerses = { _, _, _ -> }
             )
         }
@@ -450,7 +469,7 @@ fun VerseListLoadingPreview() {
                 selectionEventId = 0L,
                 isLoading = true,
                 onShowPassageSelection = {},
-                onUpdateVisiblePassage = { _, _ -> },
+                onUpdateVisiblePassage = { _, _, _ -> },
                 onLoadChapterVerses = { _, _, _ -> }
             )
         }
