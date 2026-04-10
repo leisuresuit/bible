@@ -127,7 +127,7 @@ fun HistoryDialog(
                             item.verse == currentVerse
 
                     AutoResizedText(
-                        text = "${stringResource(item.book.nameResource)} ${item.chapter}${if (item.verse != null) ":${item.verse}" else ""}",
+                        text = "${stringResource(item.book.nameResource)} ${item.chapter}${":${item.verse}"}",
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
