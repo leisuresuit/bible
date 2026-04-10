@@ -22,7 +22,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -113,7 +117,7 @@ fun VerseList(
         }
 
         // Sync state with pager swipes
-        LaunchedEffect(pagerState) {
+        LaunchedEffect(pagerState, currentBook, currentChapter) {
             snapshotFlow { pagerState.currentPage }
                 .distinctUntilChanged()
                 .collect { page ->
@@ -181,16 +185,18 @@ private fun VerseListContent(
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val lazyListState = rememberLazyListState()
+    var lastScrolledVerse by rememberSaveable(book, chapter) { mutableStateOf<Int?>(null) }
 
-    LaunchedEffect(book, chapter, targetVerse, verses) {
-        if (targetVerse != null && verses.isNotEmpty()) {
+    LaunchedEffect(book, chapter, targetVerse, verses.size) {
+        if (targetVerse != null && verses.isNotEmpty() && lastScrolledVerse != targetVerse) {
             val index = verses.indexOfFirst { it.number == targetVerse }
             if (index != -1) {
+                // index 0 in LazyColumn is the ChapterHeader. 
+                // We scroll to 0 for the first verse to show the header.
+                // For other verses, we scroll to index + 1.
                 val itemIndex = if (targetVerse == 1) 0 else index + 1
-                val isVisible = lazyListState.layoutInfo.visibleItemsInfo.any { it.index == itemIndex }
-                if (!isVisible) {
-                    lazyListState.scrollToItem(itemIndex)
-                }
+                lazyListState.scrollToItem(itemIndex)
+                lastScrolledVerse = targetVerse
             }
         }
     }
