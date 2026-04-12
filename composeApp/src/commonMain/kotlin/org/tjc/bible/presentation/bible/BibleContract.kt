@@ -1,5 +1,6 @@
 package org.tjc.bible.presentation.bible
 
+import androidx.navigation3.runtime.NavKey
 import org.tjc.bible.domain.model.AppTheme
 import org.tjc.bible.domain.model.BibleVersion
 import org.tjc.bible.domain.model.Book
@@ -99,5 +100,6 @@ internal sealed class BibleAction {
 }
 
 sealed class BibleEffect {
+    data class Navigate(val destination: NavKey) : BibleEffect()
     data class ShowSnackbar(val message: String, val actionLabel: String? = null, val onAction: (() -> Unit)? = null) : BibleEffect()
 }

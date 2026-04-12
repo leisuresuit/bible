@@ -22,14 +22,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import org.tjc.bible.presentation.bible.components.*
-import org.tjc.bible.presentation.search.SearchScreen
+import androidx.navigation3.runtime.NavKey
+import org.tjc.bible.presentation.bible.components.BibleTopBar
+import org.tjc.bible.presentation.bible.components.HistoryDialog
+import org.tjc.bible.presentation.bible.components.PassageSelectionDialog
+import org.tjc.bible.presentation.bible.components.SettingsDialog
+import org.tjc.bible.presentation.bible.components.VerseList
+import org.tjc.bible.presentation.bible.components.VersionSelectionDialog
 import org.tjc.bible.presentation.ui.supportsDynamicColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BibleScreen(
-    viewModel: BibleViewModel
+    viewModel: BibleViewModel,
+    onNavigate: (NavKey) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -42,6 +48,7 @@ fun BibleScreen(
     LaunchedEffect(viewModel.effects) {
         viewModel.effects.collect { effect ->
             when (effect) {
+                is BibleEffect.Navigate -> onNavigate(effect.destination)
                 is BibleEffect.ShowSnackbar -> {
                     val result = snackbarHostState.showSnackbar(
                         message = effect.message,
@@ -64,9 +71,6 @@ fun BibleScreen(
                 currentBook = state.currentBook,
                 currentChapter = state.currentChapter,
                 selectedVersions = state.selectedVersions,
-                isSearchMode = state.isSearchMode,
-                searchQuery = state.searchQuery,
-                onSearchQueryChange = { viewModel.onIntent(BibleIntent.UpdateSearchQuery(it)) },
                 onSetSearchMode = { viewModel.onIntent(BibleIntent.SetSearchMode(it)) },
                 onShowPassageSelection = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.PassageSelection(it))) },
                 onShowVersionSelection = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.VersionSelection)) },
@@ -85,57 +89,36 @@ fun BibleScreen(
             )
         }
     ) { padding ->
-        if (state.isSearchMode) {
-            SearchScreen(
-                searchQuery = state.searchQuery,
-                searchResults = state.searchResults,
-                isLoading = state.isLoading,
-                showTopBar = false,
-                contentPadding = padding,
-                onSearchQueryChange = { viewModel.onIntent(BibleIntent.UpdateSearchQuery(it)) },
-                onResultClick = { result ->
-                    viewModel.onIntent(
-                        BibleIntent.SelectPassage(
-                            result.book,
-                            result.chapterNumber,
-                            result.verseNumber
-                        )
+        VerseList(
+            currentBook = state.currentBook,
+            currentChapter = state.currentChapter,
+            currentVerse = state.currentVerse,
+            verses = state.verses,
+            chaptersVerses = state.chaptersVerses,
+            displayMode = state.displayMode,
+            showWordsOfJesus = state.showWordsOfJesus,
+            selectionEventId = state.selectionEventId,
+            isLoading = state.isLoading,
+            onShowPassageSelection = {
+                viewModel.onIntent(
+                    BibleIntent.ShowDialog(
+                        ActiveDialog.PassageSelection(it)
                     )
-                },
-                onBack = { viewModel.onIntent(BibleIntent.SetSearchMode(false)) }
-            )
-        } else {
-            VerseList(
-                currentBook = state.currentBook,
-                currentChapter = state.currentChapter,
-                currentVerse = state.currentVerse,
-                verses = state.verses,
-                chaptersVerses = state.chaptersVerses,
-                displayMode = state.displayMode,
-                showWordsOfJesus = state.showWordsOfJesus,
-                selectionEventId = state.selectionEventId,
-                isLoading = state.isLoading,
-                onShowPassageSelection = {
-                    viewModel.onIntent(
-                        BibleIntent.ShowDialog(
-                            ActiveDialog.PassageSelection(it)
-                        )
-                    )
-                },
-                onUpdateVisiblePassage = { book, chapter, verse ->
-                    viewModel.onIntent(
-                        BibleIntent.UpdateVisiblePassage(book, chapter, verse)
-                    )
-                },
-                onLoadChapterVerses = { book, chapter, page ->
-                    viewModel.onIntent(
-                        BibleIntent.LoadChapterVerses(book, chapter, page)
-                    )
-                },
-                contentPadding = padding,
-                nestedScrollConnection = scrollBehavior.nestedScrollConnection
-            )
-        }
+                )
+            },
+            onUpdateVisiblePassage = { book, chapter, verse ->
+                viewModel.onIntent(
+                    BibleIntent.UpdateVisiblePassage(book, chapter, verse)
+                )
+            },
+            onLoadChapterVerses = { book, chapter, page ->
+                viewModel.onIntent(
+                    BibleIntent.LoadChapterVerses(book, chapter, page)
+                )
+            },
+            contentPadding = padding,
+            nestedScrollConnection = scrollBehavior.nestedScrollConnection
+        )
 
         // Dialogs
         state.activeDialog?.let { dialog ->

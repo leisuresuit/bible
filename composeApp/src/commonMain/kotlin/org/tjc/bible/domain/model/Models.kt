@@ -201,8 +201,7 @@ data class SearchResult(
 data class HistoryItem(
     val book: Book,
     val chapter: Int,
-    val verse: Int,
-    val timestamp: Long = 0L
+    val verse: Int
 )
 
 enum class AppTheme {

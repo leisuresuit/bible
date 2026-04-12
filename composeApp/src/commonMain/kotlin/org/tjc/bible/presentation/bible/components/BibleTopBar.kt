@@ -57,10 +57,6 @@ fun BibleTopBar(
     currentBook: Book?,
     currentChapter: Int,
     selectedVersions: List<BibleVersion>,
-    isSearchMode: Boolean,
-    searchQuery: String,
-    isLoading: Boolean = false,
-    onSearchQueryChange: (String) -> Unit,
     onSetSearchMode: (Boolean) -> Unit,
     onShowPassageSelection: (initialPage: Int) -> Unit,
     onShowVersionSelection: () -> Unit,
@@ -68,117 +64,64 @@ fun BibleTopBar(
     onShowSettings: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
-    val focusManager = LocalFocusManager.current
-    val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(isSearchMode) {
-        if (isSearchMode) {
-            focusRequester.requestFocus()
-        }
-    }
-
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
             scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
         ),
         title = {
-            if (isSearchMode) {
-                val textFieldValue = remember(searchQuery) {
-                    TextFieldValue(
-                        text = searchQuery,
-                        selection = TextRange(searchQuery.length)
-                    )
-                }
-                TextField(
-                    value = textFieldValue,
-                    onValueChange = { onSearchQueryChange(it.text) },
-                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-                    placeholder = { Text(stringResource(Res.string.search)) },
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                    ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { onSearchQueryChange("") }) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.clear),
-                                    contentDescription = stringResource(Res.string.clear)
-                                )
-                            }
-                        }
-                    }
-                )
-            } else {
-                Row(
-                    Modifier.fillMaxWidth().padding(end = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    currentBook?.let { book ->
-                        Row(
-                            Modifier.width(0.dp).weight(1f)
-                        ) {
-                            TextButton(
-                                onClick = { onShowPassageSelection(0) }
-                            ) {
-                                AutoResizedText(
-                                    text = "${stringResource(book.nameResource)} $currentChapter",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            }
-                            Spacer(Modifier.weight(1f))
-                        }
-                    }
-                    TextButton(
-                        onClick = onShowVersionSelection
+            Row(
+                Modifier.fillMaxWidth().padding(end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                currentBook?.let { book ->
+                    Row(
+                        Modifier.width(0.dp).weight(1f)
                     ) {
-                        val versionText = if (selectedVersions.size > 1) {
-                            stringResource(Res.string.versions)
-                        } else {
-                            selectedVersions.firstOrNull()?.abbreviation ?: stringResource(Res.string.versions)
+                        TextButton(
+                            onClick = { onShowPassageSelection(0) }
+                        ) {
+                            AutoResizedText(
+                                text = "${stringResource(book.nameResource)} $currentChapter",
+                                style = MaterialTheme.typography.titleMedium
+                            )
                         }
-                        Text(
-                            text = versionText,
-                            style = MaterialTheme.typography.titleMedium,
-                        )
+                        Spacer(Modifier.weight(1f))
                     }
+                }
+                TextButton(
+                    onClick = onShowVersionSelection
+                ) {
+                    val versionText = if (selectedVersions.size > 1) {
+                        stringResource(Res.string.versions)
+                    } else {
+                        selectedVersions.firstOrNull()?.abbreviation ?: stringResource(Res.string.versions)
+                    }
+                    Text(
+                        text = versionText,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
                 }
             }
         },
         actions = {
-            if (isSearchMode) {
-                IconButton(onClick = { onSetSearchMode(false) }) {
-                    Icon(
-                        painter = painterResource(Res.drawable.close),
-                        contentDescription = stringResource(Res.string.close)
-                    )
-                }
-            } else {
-                IconButton(onClick = { onSetSearchMode(true) }) {
-                    Icon(
-                        painter = painterResource(Res.drawable.search),
-                        contentDescription = stringResource(Res.string.search)
-                    )
-                }
-                IconButton(onClick = onShowHistory) {
-                    Icon(
-                        painter = painterResource(Res.drawable.history),
-                        contentDescription = stringResource(Res.string.history)
-                    )
-                }
-                IconButton(onClick = onShowSettings) {
-                    Icon(
-                        painter = painterResource(Res.drawable.settings),
-                        contentDescription = stringResource(Res.string.settings)
-                    )
-                }
+            IconButton(onClick = { onSetSearchMode(true) }) {
+                Icon(
+                    painter = painterResource(Res.drawable.search),
+                    contentDescription = stringResource(Res.string.search)
+                )
+            }
+            IconButton(onClick = onShowHistory) {
+                Icon(
+                    painter = painterResource(Res.drawable.history),
+                    contentDescription = stringResource(Res.string.history)
+                )
+            }
+            IconButton(onClick = onShowSettings) {
+                Icon(
+                    painter = painterResource(Res.drawable.settings),
+                    contentDescription = stringResource(Res.string.settings)
+                )
             }
         },
         scrollBehavior = scrollBehavior
@@ -195,9 +138,6 @@ fun BibleTopBarPreview() {
                 currentBook = Book.Luke,
                 currentChapter = 18,
                 selectedVersions = listOf(BibleVersion("nkjv", "New King James Version", "English", "NKJV")),
-                isSearchMode = false,
-                searchQuery = "",
-                onSearchQueryChange = {},
                 onSetSearchMode = {},
                 onShowPassageSelection = {},
                 onShowVersionSelection = {},

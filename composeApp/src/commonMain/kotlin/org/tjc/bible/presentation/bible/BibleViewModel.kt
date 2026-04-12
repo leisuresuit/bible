@@ -14,11 +14,15 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.tjc.bible.data.local.PreferenceStorage
-import org.tjc.bible.domain.model.*
+import org.tjc.bible.domain.model.BibleVersion
+import org.tjc.bible.domain.model.Book
+import org.tjc.bible.domain.model.HistoryItem
+import org.tjc.bible.domain.model.Verse
 import org.tjc.bible.domain.usecase.GetBibleVersionsUseCase
 import org.tjc.bible.domain.usecase.GetVersesUseCase
 import org.tjc.bible.domain.usecase.SearchUseCase
 import org.tjc.bible.presentation.bible.ActiveDialog.PassageSelection
+import org.tjc.bible.presentation.ui.Search
 
 class BibleViewModel(
     private val getBibleVersionsUseCase: GetBibleVersionsUseCase,
@@ -46,7 +50,8 @@ class BibleViewModel(
             is BibleIntent.SelectBook -> dispatch(BibleAction.BookSelected(intent.book))
             is BibleIntent.SelectChapter -> {
                 dispatch(BibleAction.ChapterSelected(intent.chapter))
-                saveLastPassage(intent.chapter)
+                val book = _state.value.currentBook
+                saveLastPassage(book, intent.chapter)
                 loadVerses()
             }
             is BibleIntent.SelectVerse -> {
@@ -78,12 +83,20 @@ class BibleViewModel(
             is BibleIntent.NavigateToHistoryItem -> {
                 val eventId = nextEventId++
                 dispatch(BibleAction.HistoryItemNavigated(intent.item, eventId))
-                saveLastPassage(intent.item.chapter)
+                saveLastPassage(intent.item.book, intent.item.chapter, intent.item.verse)
                 addToHistory(intent.item.book, intent.item.chapter, intent.item.verse)
                 loadVerses()
             }
             is BibleIntent.UpdateSearchQuery -> handleSearch(intent.query)
-            is BibleIntent.SetSearchMode -> dispatch(BibleAction.SearchModeChanged(intent.enabled))
+            is BibleIntent.SetSearchMode -> {
+                if (intent.enabled) {
+                    viewModelScope.launch { _effects.emit(BibleEffect.Navigate(Search)) }
+                } else {
+                    dispatch(BibleAction.SearchModeChanged(false))
+                    dispatch(BibleAction.SearchQueryChanged(""))
+                    dispatch(BibleAction.SearchResultsLoaded(emptyList()))
+                }
+            }
             is BibleIntent.RetryOperation -> {
                 when (intent.operation) {
                     Operation.LOAD_VERSIONS -> handleLoadInitialData()
@@ -98,23 +111,29 @@ class BibleViewModel(
         val eventId = nextEventId++
         dispatch(BibleAction.PassageSelected(book, chapter, verse, eventId))
         dispatch(BibleAction.SearchModeChanged(false))
-        saveLastPassage(chapter, verse)
+        saveLastPassage(book, chapter, verse)
         addToHistory(book, chapter, verse)
         loadVerses()
     }
 
     private fun handleUpdateVisiblePassage(book: Book, chapter: Int, verse: Int?) {
         val v = verse ?: 1
-        dispatch(BibleAction.VisiblePassageChanged(book, chapter, v))
-        saveLastPassage(chapter, v)
-        
-        // Only load verses if chapter actually changed
         val currentState = _state.value
+
+        // Only update if something actually changed
+        if (currentState.currentBook == book && currentState.currentChapter == chapter && currentState.currentVerse == v) {
+            return
+        }
+
+        dispatch(BibleAction.VisiblePassageChanged(book, chapter, v))
+
+        // Only load verses and save last passage/history if chapter actually changed
+        // This prevents excessive DataStore writes during scrolling within a chapter
         if (currentState.currentBook != book || currentState.currentChapter != chapter) {
             loadVerses()
+            saveLastPassage(book, chapter, v)
+            addToHistory(book, chapter, v)
         }
-        
-        addToHistory(book, chapter, v)
     }
 
     private fun handleLoadChapterVerses(book: Book, chapter: Int, globalIndex: Int) {
@@ -358,13 +377,13 @@ class BibleViewModel(
         }
     }
 
-    private fun saveLastPassage(chapter: Int? = null, verse: Int? = null) {
+    private fun saveLastPassage(book: Book? = null, chapter: Int? = null, verse: Int? = null) {
         viewModelScope.launch {
             val currentState = _state.value
-            val book = currentState.currentBook ?: return@launch
+            val b = book ?: currentState.currentBook ?: return@launch
             val ch = chapter ?: currentState.currentChapter
             val v = verse ?: currentState.currentVerse
-            preferenceStorage.setLastPassage(book, ch, v)
+            preferenceStorage.setLastPassage(b, ch, v)
         }
     }
 
@@ -377,12 +396,12 @@ class BibleViewModel(
                 // Chapter exists in history: update the verse if it changed, keeping its position
                 if (currentHistory[existingIndex].verse != verse) {
                     val newList = currentHistory.toMutableList()
-                    newList[existingIndex] = HistoryItem(book, chapter, verse, timestamp = 0L)
+                    newList[existingIndex] = HistoryItem(book, chapter, verse)
                     preferenceStorage.saveHistory(newList)
                 }
             } else {
                 // New chapter visit: add to the top of history
-                val newItem = HistoryItem(book, chapter, verse, timestamp = 0L)
+                val newItem = HistoryItem(book, chapter, verse)
                 val newList = (listOf(newItem) + currentHistory).take(50)
                 preferenceStorage.saveHistory(newList)
             }
