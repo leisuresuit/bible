@@ -67,7 +67,12 @@ fun SelectionDialogHeader(
             TextField(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
-                placeholder = { Text(searchHint) },
+                placeholder = {
+                    AutoResizedText(
+                        text = searchHint,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
