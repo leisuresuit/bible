@@ -40,11 +40,11 @@ class BibleViewModel(
 
     init {
         observePreferences()
+        handleLoadInitialData()
     }
 
     fun onIntent(intent: BibleIntent) {
         when (intent) {
-            is BibleIntent.LoadInitialData -> handleLoadInitialData()
             is BibleIntent.SelectVersions -> handleSelectVersions(intent.versions)
             is BibleIntent.ToggleParallelVersion -> handleToggleParallelVersion(intent.version)
             is BibleIntent.SelectBook -> dispatch(BibleAction.BookSelected(intent.book))

@@ -46,7 +46,6 @@ sealed class ActiveDialog {
 }
 
 sealed class BibleIntent {
-    object LoadInitialData : BibleIntent()
     data class SelectVersions(val versions: List<BibleVersion>) : BibleIntent()
     data class ToggleParallelVersion(val version: BibleVersion) : BibleIntent()
     data class SelectBook(val book: Book) : BibleIntent()
