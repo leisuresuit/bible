@@ -107,7 +107,7 @@ fun SearchScreen(
                         }
                         TextField(
                             value = textFieldValue,
-                            onValueChange = { onSearchQueryChange(it.text) },
+                            onValueChange = { onSearchQueryChange(it.text.trim()) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .focusRequester(focusRequester),

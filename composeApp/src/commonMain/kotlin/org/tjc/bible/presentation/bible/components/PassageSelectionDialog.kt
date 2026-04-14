@@ -131,7 +131,7 @@ fun PassageSelectionDialog(
                     title = title,
                     searchHint = searchHint,
                     searchQuery = searchQuery,
-                    onSearchQueryChange = { searchQuery = it },
+                    onSearchQueryChange = { searchQuery = it.trim() },
                     showSortButton = pagerState.currentPage == 0,
                     onSortClick = { isAlphabeticalOrder = !isAlphabeticalOrder },
                     keyboardType = keyboardType,
