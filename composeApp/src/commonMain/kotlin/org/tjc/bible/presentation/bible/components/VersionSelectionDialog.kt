@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -79,6 +80,7 @@ fun VersionSelectionDialog(
                 Text(stringResource(Res.string.close))
             }
         },
+        modifier = Modifier.imePadding(),
         title = {
             SelectionDialogHeader(
                 title = stringResource(Res.string.versions),
@@ -89,7 +91,7 @@ fun VersionSelectionDialog(
         },
         text = {
             LazyColumn(
-                modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp),
                 state = listState
             ) {
                 items(filteredVersions) { version ->

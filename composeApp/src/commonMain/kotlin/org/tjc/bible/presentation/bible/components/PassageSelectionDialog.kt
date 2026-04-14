@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -141,7 +140,7 @@ fun PassageSelectionDialog(
 
                 HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier.heightIn(max = 450.dp)
+                    modifier = Modifier.heightIn(max = 300.dp)
                 ) { page ->
                     when (page) {
                         0 -> {
@@ -226,7 +225,7 @@ fun BookSelectionPage(
     }
 
     LazyColumn(
-        modifier = Modifier.height(350.dp),
+        modifier = Modifier.heightIn(max = 300.dp),
         state = listState
     ) {
         items(filteredBooks) { (book, name) ->
@@ -273,7 +272,7 @@ fun ChapterSelectionPage(
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier.height(350.dp),
+        modifier = Modifier.heightIn(max = 300.dp),
         state = gridState
     ) {
         items(filteredChapters.size) { index ->
@@ -325,7 +324,7 @@ fun VerseSelectionPage(
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier.height(350.dp),
+        modifier = Modifier.heightIn(max = 300.dp),
         state = gridState
     ) {
         items(filteredVerses.size) { index ->
