@@ -2,6 +2,7 @@ package org.tjc.bible.presentation.bible.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -225,27 +227,33 @@ private fun VerseListContent(
             }
     }
 
-    LazyColumn(
-        state = lazyListState,
-        modifier = modifier
-            .fillMaxSize()
-            .then(if (nestedScrollConnection != null) Modifier.nestedScroll(nestedScrollConnection) else Modifier),
-        contentPadding = PaddingValues(
-            start = 16.dp + contentPadding.calculateStartPadding(LayoutDirection.Ltr),
-            top = contentPadding.calculateTopPadding(),
-            end = 16.dp + contentPadding.calculateEndPadding(LayoutDirection.Ltr),
-            bottom = 16.dp + contentPadding.calculateBottomPadding()
-        ),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item {
-            ChapterHeader(book, chapter) {
-                onShowPassageSelection(0)
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val maxColumnWidth = if (maxWidth > 600.dp) 600.dp else maxWidth
+        
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .widthIn(max = maxColumnWidth)
+                .fillMaxSize()
+                .then(if (nestedScrollConnection != null) Modifier.nestedScroll(nestedScrollConnection) else Modifier),
+            contentPadding = PaddingValues(
+                start = 16.dp + contentPadding.calculateStartPadding(LayoutDirection.Ltr),
+                top = contentPadding.calculateTopPadding(),
+                end = 16.dp + contentPadding.calculateEndPadding(LayoutDirection.Ltr),
+                bottom = 16.dp + contentPadding.calculateBottomPadding()
+            ),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item {
+                ChapterHeader(book, chapter) {
+                    onShowPassageSelection(0)
+                }
             }
-        }
 
-        items(verses, key = { "${it.number}_${it.versionAbbreviation.orEmpty()}" }) { verse ->
-            VerseItem(verse, showWordsOfJesus)
+            items(verses, key = { "${it.number}_${it.versionAbbreviation.orEmpty()}" }) { verse ->
+                VerseItem(verse, showWordsOfJesus)
+            }
         }
     }
 }
