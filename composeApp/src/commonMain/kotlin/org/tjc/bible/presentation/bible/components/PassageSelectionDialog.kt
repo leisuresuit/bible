@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -60,7 +61,7 @@ fun PassageSelectionDialog(
 ) {
     val pagerState = rememberPagerState(initialPage = initialPage) { 3 }
     val scope = rememberCoroutineScope()
-    
+
     var searchQuery by remember { mutableStateOf("") }
     var isAlphabeticalOrder by remember { mutableStateOf(false) }
 
@@ -75,6 +76,7 @@ fun PassageSelectionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.imePadding(),
         confirmButton = {
             TextButton(
                 onClick = {
