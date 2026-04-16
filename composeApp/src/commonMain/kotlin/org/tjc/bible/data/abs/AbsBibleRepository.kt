@@ -9,7 +9,8 @@ import io.ktor.client.request.parameter
 import org.tjc.bible.Config
 import org.tjc.bible.domain.model.BibleVersion
 import org.tjc.bible.domain.model.Book
-import org.tjc.bible.domain.model.SearchResult
+import org.tjc.bible.domain.model.SearchResponse
+import org.tjc.bible.domain.model.SearchSort
 import org.tjc.bible.domain.model.Verse
 import org.tjc.bible.domain.repository.BibleRepository
 
@@ -49,13 +50,29 @@ class AbsBibleRepository(
         response.data.toDomain()
     }
 
-    override suspend fun search(versionId: String, query: String): Result<List<SearchResult>> = runCatching {
+    override suspend fun search(
+        versionId: String,
+        query: String,
+        offset: Int,
+        limit: Int,
+        sort: SearchSort
+    ): Result<SearchResponse> = runCatching {
         val response = httpClient.get("https://rest.api.bible/v1/bibles/$versionId/search") {
             absHeaders()
             parameter("query", query)
-            parameter("limit", 20)
+            parameter("sort", when (sort) {
+                SearchSort.RELEVANCE -> "relevance"
+                SearchSort.CANONICAL -> "canonical"
+            })
+            parameter("limit", limit)
+            parameter("offset", offset)
         }.body<AbsSearchResponse>()
 
-        response.data.verses?.map { it.toDomain(versionId) } ?: emptyList()
+        SearchResponse(
+            results = response.data.verses?.map { it.toDomain(versionId) } ?: emptyList(),
+            total = response.data.total,
+            offset = response.data.offset,
+            limit = response.data.limit
+        )
     }
 }

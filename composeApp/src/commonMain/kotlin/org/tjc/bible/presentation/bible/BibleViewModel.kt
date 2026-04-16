@@ -1,5 +1,6 @@
 package org.tjc.bible.presentation.bible
 
+import kotlinx.coroutines.isActive
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,6 +24,8 @@ import org.tjc.bible.domain.usecase.GetVersesUseCase
 import org.tjc.bible.domain.usecase.SearchUseCase
 import org.tjc.bible.presentation.bible.ActiveDialog.PassageSelection
 import org.tjc.bible.presentation.ui.Search
+
+import org.tjc.bible.domain.model.SearchSort
 
 class BibleViewModel(
     private val getBibleVersionsUseCase: GetBibleVersionsUseCase,
@@ -88,13 +91,16 @@ class BibleViewModel(
                 loadVerses()
             }
             is BibleIntent.UpdateSearchQuery -> handleSearch(intent.query)
+            is BibleIntent.UpdateSearchSort -> handleSearchSort(intent.sort)
+            is BibleIntent.ToggleSearchSortVisibility -> dispatch(BibleAction.SearchSortVisibilityToggled)
+            is BibleIntent.LoadMoreSearchResults -> handleLoadMoreSearchResults()
             is BibleIntent.SetSearchMode -> {
                 if (intent.enabled) {
                     viewModelScope.launch { _effects.emit(BibleEffect.Navigate(Search)) }
                 } else {
                     dispatch(BibleAction.SearchModeChanged(false))
                     dispatch(BibleAction.SearchQueryChanged(""))
-                    dispatch(BibleAction.SearchResultsLoaded(emptyList()))
+                    dispatch(BibleAction.SearchResultsLoaded(emptyList(), hasMore = false))
                 }
             }
             is BibleIntent.RetryOperation -> {
@@ -160,40 +166,100 @@ class BibleViewModel(
         }
     }
 
+    private var searchJob: kotlinx.coroutines.Job? = null
+    private var loadMoreJob: kotlinx.coroutines.Job? = null
+
     private fun handleSearch(query: String) {
+        val trimmedQuery = query.trim()
         dispatch(BibleAction.SearchQueryChanged(query))
-        if (query.length < 3) {
-            dispatch(BibleAction.SearchResultsLoaded(emptyList()))
+        
+        searchJob?.cancel()
+        loadMoreJob?.cancel()
+        
+        if (trimmedQuery.length < 3) {
+            dispatch(BibleAction.SearchResultsLoaded(emptyList(), hasMore = false))
             dispatch(BibleAction.Loading(false))
             return
         }
-        dispatch(BibleAction.Loading(true))
-        viewModelScope.launch {
-            val versionId = _state.value.selectedVersions.firstOrNull()?.id ?: return@launch
+        
+        performSearch(trimmedQuery, _state.value.searchSort)
+    }
 
-            searchUseCase(versionId, query).fold(
-                onSuccess = { results ->
-                    val sortedResults = results.sortedWith(
-                        compareBy(
-                            { it.book },
-                            { it.chapterNumber },
-                            { it.verseNumber }
-                        )
-                    )
-                    dispatch(BibleAction.SearchResultsLoaded(sortedResults))
+    private fun handleSearchSort(sort: SearchSort) {
+        dispatch(BibleAction.SearchSortChanged(sort))
+        val query = _state.value.searchQuery.trim()
+        if (query.length >= 3) {
+            searchJob?.cancel()
+            loadMoreJob?.cancel()
+            performSearch(query, sort)
+        }
+    }
+
+    private fun performSearch(query: String, sort: SearchSort) {
+        dispatch(BibleAction.Loading(true))
+        searchJob = viewModelScope.launch {
+            try {
+                val versionId = _state.value.selectedVersions.firstOrNull()?.id ?: run {
                     dispatch(BibleAction.Loading(false))
-                },
-                onFailure = { error ->
-                    dispatch(BibleAction.Loading(false))
-                    viewModelScope.launch {
-                        _effects.emit(BibleEffect.ShowSnackbar(
-                            message = error.message ?: "Search failed",
-                            actionLabel = "Retry",
-                            onAction = { onIntent(BibleIntent.RetryOperation(Operation.SEARCH)) }
-                        ))
-                    }
+                    return@launch
                 }
-            )
+
+                searchUseCase(versionId, query, offset = 0, sort = sort).fold(
+                    onSuccess = { response ->
+                        if (coroutineContext.isActive) {
+                            dispatch(BibleAction.SearchResultsLoaded(response.results, hasMore = response.results.size + response.offset < response.total))
+                        }
+                    },
+                    onFailure = { error ->
+                        if (coroutineContext.isActive) {
+                            _effects.emit(BibleEffect.ShowSnackbar(
+                                message = error.message ?: "Search failed",
+                                actionLabel = "Retry",
+                                onAction = { onIntent(BibleIntent.RetryOperation(Operation.SEARCH)) }
+                            ))
+                        }
+                    }
+                )
+            } finally {
+                if (coroutineContext.isActive) {
+                    dispatch(BibleAction.Loading(false))
+                }
+            }
+        }
+    }
+
+    private fun handleLoadMoreSearchResults() {
+        val currentState = _state.value
+        val trimmedQuery = currentState.searchQuery.trim()
+        if (currentState.isSearchingMore || !currentState.hasMoreSearchResults || trimmedQuery.length < 3) return
+
+        dispatch(BibleAction.SearchingMore(true))
+        val currentQuery = currentState.searchQuery
+        val currentSort = currentState.searchSort
+        loadMoreJob = viewModelScope.launch {
+            try {
+                val versionId = currentState.selectedVersions.firstOrNull()?.id ?: return@launch
+                val offset = _state.value.searchResults.size
+
+                searchUseCase(versionId, trimmedQuery, offset = offset, sort = currentSort).fold(
+                    onSuccess = { response ->
+                        if (_state.value.searchQuery == currentQuery && _state.value.searchSort == currentSort && coroutineContext.isActive) {
+                            dispatch(BibleAction.SearchMoreResultsLoaded(response.results, hasMore = response.results.isNotEmpty() && response.results.size + response.offset < response.total))
+                        }
+                    },
+                    onFailure = { error ->
+                        if (coroutineContext.isActive) {
+                            _effects.emit(BibleEffect.ShowSnackbar(
+                                message = error.message ?: "Failed to load more results"
+                            ))
+                        }
+                    }
+                )
+            } finally {
+                if (coroutineContext.isActive) {
+                    dispatch(BibleAction.SearchingMore(false))
+                }
+            }
         }
     }
 
@@ -313,8 +379,26 @@ class BibleViewModel(
                 state.copy(currentBook = nextBook, currentChapter = nextChapter)
             }
             is BibleAction.SearchModeChanged -> state.copy(isSearchMode = action.enabled)
-            is BibleAction.SearchQueryChanged -> state.copy(searchQuery = action.query)
-            is BibleAction.SearchResultsLoaded -> state.copy(searchResults = action.results)
+            is BibleAction.SearchQueryChanged -> state.copy(
+                searchQuery = action.query,
+                searchResults = if (action.query.trim().length < 3) emptyList() else state.searchResults,
+                hasMoreSearchResults = true
+            )
+            is BibleAction.SearchSortChanged -> state.copy(searchSort = action.sort)
+            is BibleAction.SearchSortVisibilityToggled -> state.copy(isSearchSortVisible = !state.isSearchSortVisible)
+            is BibleAction.SearchResultsLoaded -> state.copy(
+                searchResults = action.results,
+                hasMoreSearchResults = action.hasMore,
+                isLoading = false
+            )
+            is BibleAction.SearchMoreResultsLoaded -> {
+                val combined = state.searchResults + action.results
+                state.copy(
+                    searchResults = combined.distinctBy { it.id },
+                    hasMoreSearchResults = action.hasMore
+                )
+            }
+            is BibleAction.SearchingMore -> state.copy(isSearchingMore = action.isSearching)
             is BibleAction.HistoryItemNavigated -> state.copy(
                 currentBook = action.item.book,
                 currentChapter = action.item.chapter,

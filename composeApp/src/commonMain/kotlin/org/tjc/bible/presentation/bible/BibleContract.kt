@@ -8,6 +8,8 @@ import org.tjc.bible.domain.model.HistoryItem
 import org.tjc.bible.domain.model.SearchResult
 import org.tjc.bible.domain.model.Verse
 
+import org.tjc.bible.domain.model.SearchSort
+
 enum class DisplayMode {
     SINGLE_CHAPTER, CONTIGUOUS
 }
@@ -23,12 +25,16 @@ data class BibleState(
     val history: List<HistoryItem> = emptyList(),
     val isLoading: Boolean = false,
     val searchResults: List<SearchResult> = emptyList(),
+    val isSearchingMore: Boolean = false,
+    val hasMoreSearchResults: Boolean = true,
     val activeDialog: ActiveDialog? = null,
     val theme: AppTheme = AppTheme.SYSTEM,
     val isDynamicColor: Boolean = true,
     val showWordsOfJesus: Boolean = true,
     val searchQuery: String = "",
+    val searchSort: SearchSort = SearchSort.RELEVANCE,
     val isSearchMode: Boolean = false,
+    val isSearchSortVisible: Boolean = true,
     val displayMode: DisplayMode = DisplayMode.SINGLE_CHAPTER,
     val allBooks: List<Book> = Book.entries,
     val selectionEventId: Long = 0L
@@ -55,8 +61,11 @@ sealed class BibleIntent {
     data class UpdateVisiblePassage(val book: Book, val chapter: Int, val verse: Int? = null) : BibleIntent()
     data class LoadChapterVerses(val book: Book, val chapter: Int, val globalIndex: Int) : BibleIntent()
     data class UpdateSearchQuery(val query: String) : BibleIntent()
+    data class UpdateSearchSort(val sort: SearchSort) : BibleIntent()
     data class SetSearchMode(val enabled: Boolean) : BibleIntent()
+    object ToggleSearchSortVisibility : BibleIntent()
     object ClearHistory : BibleIntent()
+    object LoadMoreSearchResults : BibleIntent()
     data class UpdateTheme(val theme: AppTheme) : BibleIntent()
     data class UpdateDynamicColor(val enabled: Boolean) : BibleIntent()
     data class UpdateShowWordsOfJesus(val enabled: Boolean) : BibleIntent()
@@ -93,8 +102,12 @@ internal sealed class BibleAction {
     data class NavigateChapter(val delta: Int) : BibleAction()
     data class HistoryLoaded(val history: List<HistoryItem>) : BibleAction()
     data class SearchModeChanged(val enabled: Boolean) : BibleAction()
+    object SearchSortVisibilityToggled : BibleAction()
     data class SearchQueryChanged(val query: String) : BibleAction()
-    data class SearchResultsLoaded(val results: List<SearchResult>) : BibleAction()
+    data class SearchSortChanged(val sort: SearchSort) : BibleAction()
+    data class SearchResultsLoaded(val results: List<SearchResult>, val hasMore: Boolean) : BibleAction()
+    data class SearchMoreResultsLoaded(val results: List<SearchResult>, val hasMore: Boolean) : BibleAction()
+    data class SearchingMore(val isSearching: Boolean) : BibleAction()
     data class HistoryItemNavigated(val item: HistoryItem, val eventId: Long) : BibleAction()
 }
 

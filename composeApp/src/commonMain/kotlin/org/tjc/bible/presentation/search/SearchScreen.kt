@@ -1,15 +1,23 @@
 package org.tjc.bible.presentation.search
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -22,15 +30,24 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.arrow_back
 import bible.composeapp.generated.resources.back
+import bible.composeapp.generated.resources.check
 import bible.composeapp.generated.resources.clear
 import bible.composeapp.generated.resources.no_results_found
 import bible.composeapp.generated.resources.search
+import bible.composeapp.generated.resources.sort_by
+import bible.composeapp.generated.resources.sort_canonical
+import bible.composeapp.generated.resources.sort_relevance
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.SearchResult
+
+import org.tjc.bible.domain.model.SearchSort
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -40,14 +57,23 @@ import org.tjc.bible.domain.model.SearchResult
 fun SearchScreen(
     searchQuery: String,
     searchResults: List<SearchResult>,
+    searchSort: SearchSort = SearchSort.RELEVANCE,
+    isSearchSortVisible: Boolean = true,
     isLoading: Boolean = false,
+    isSearchingMore: Boolean = false,
+    hasMoreResults: Boolean = true,
     showTopBar: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     onSearchQueryChange: (String) -> Unit,
+    onSearchSortChange: (SearchSort) -> Unit = {},
+    onToggleSearchSortVisibility: () -> Unit = {},
+    onLoadMore: () -> Unit,
     onResultClick: (SearchResult) -> Unit,
     onBack: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
+    val listState = rememberLazyListState()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(Unit) {
         if (showTopBar) {
@@ -55,9 +81,35 @@ fun SearchScreen(
         }
     }
 
+    val shouldLoadMore = remember(listState, hasMoreResults, isLoading, isSearchingMore, searchResults) {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val visibleItemsInfo = layoutInfo.visibleItemsInfo
+            if (visibleItemsInfo.isEmpty()) return@derivedStateOf false
+
+            val lastVisibleItemIndex = visibleItemsInfo.last().index
+            val totalItemsCount = layoutInfo.totalItemsCount
+
+            searchResults.isNotEmpty() &&
+                    hasMoreResults &&
+                    !isLoading &&
+                    !isSearchingMore &&
+                    lastVisibleItemIndex >= totalItemsCount - 5
+        }
+    }
+
+    LaunchedEffect(shouldLoadMore) {
+        snapshotFlow { shouldLoadMore.value }
+            .distinctUntilChanged()
+            .filter { it }
+            .collect {
+                onLoadMore()
+            }
+    }
+
     val content = @Composable { padding: PaddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
-            if (isLoading) {
+            if (isLoading && searchResults.isEmpty()) {
                 LoadingIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (searchResults.isEmpty() && searchQuery.length >= 3 && !isLoading) {
                 Text(
@@ -66,6 +118,7 @@ fun SearchScreen(
                 )
             } else {
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier.fillMaxSize(),
                     userScrollEnabled = searchResults.isNotEmpty(),
                     contentPadding = PaddingValues(
@@ -76,13 +129,29 @@ fun SearchScreen(
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(searchResults) { result ->
+                    items(
+                        items = searchResults,
+                        key = { it.id }
+                    ) { result ->
                         SearchItem(
                             result = result,
                             searchQuery = searchQuery,
                             onClick = { onResultClick(result) }
                         )
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 8.dp))
+                    }
+
+                    if (isSearchingMore) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                LoadingIndicator()
+                            }
+                        }
                     }
                 }
             }
@@ -91,59 +160,22 @@ fun SearchScreen(
 
     if (showTopBar) {
         Scaffold(
-            modifier = Modifier.fillMaxSize().imePadding(),
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                TopAppBar(
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-                        scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-                    ),
-                    title = {
-                        val textFieldValue = remember(searchQuery) {
-                            TextFieldValue(
-                                text = searchQuery,
-                                selection = TextRange(searchQuery.length)
-                            )
-                        }
-                        TextField(
-                            value = textFieldValue,
-                            onValueChange = { onSearchQueryChange(it.text.trim()) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .focusRequester(focusRequester),
-                            placeholder = { Text(stringResource(Res.string.search)) },
-                            singleLine = true,
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                            ),
-                            trailingIcon = {
-                                if (isLoading) {
-                                    LoadingIndicator(
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                } else if (searchQuery.isNotEmpty()) {
-                                    IconButton(onClick = { onSearchQueryChange("") }) {
-                                        Icon(
-                                            painter = painterResource(Res.drawable.clear),
-                                            contentDescription = stringResource(Res.string.clear)
-                                        )
-                                    }
-                                }
-                            }
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                painter = painterResource(Res.drawable.arrow_back),
-                                contentDescription = stringResource(Res.string.back)
-                            )
-                        }
-                    }
+                SearchTopBar(
+                    searchQuery = searchQuery,
+                    searchSort = searchSort,
+                    isSearchSortVisible = isSearchSortVisible,
+                    isLoading = isLoading,
+                    focusRequester = focusRequester,
+                    scrollBehavior = scrollBehavior,
+                    onSearchQueryChange = onSearchQueryChange,
+                    onSearchSortChange = onSearchSortChange,
+                    onToggleSearchSortVisibility = onToggleSearchSortVisibility,
+                    onBack = onBack
                 )
             },
             bottomBar = {
@@ -161,16 +193,168 @@ fun SearchScreen(
     }
 }
 
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
+@Composable
+private fun SearchTopBar(
+    searchQuery: String,
+    searchSort: SearchSort,
+    isSearchSortVisible: Boolean,
+    isLoading: Boolean,
+    focusRequester: FocusRequester,
+    scrollBehavior: TopAppBarScrollBehavior,
+    onSearchQueryChange: (String) -> Unit,
+    onSearchSortChange: (SearchSort) -> Unit,
+    onToggleSearchSortVisibility: () -> Unit,
+    onBack: () -> Unit
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+        tonalElevation = 2.dp,
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+    ) {
+        Column {
+            TopAppBar(
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                ),
+                title = {
+                    val textFieldValue = remember(searchQuery) {
+                        TextFieldValue(
+                            text = searchQuery,
+                            selection = TextRange(searchQuery.length)
+                        )
+                    }
+                    TextField(
+                        value = textFieldValue,
+                        onValueChange = { onSearchQueryChange(it.text) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequester),
+                        placeholder = { Text(stringResource(Res.string.search)) },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                        ),
+                        trailingIcon = {
+                            if (isLoading) {
+                                LoadingIndicator(
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            } else if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { onSearchQueryChange("") }) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.clear),
+                                        contentDescription = stringResource(Res.string.clear)
+                                    )
+                                }
+                            }
+                        }
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            painter = painterResource(Res.drawable.arrow_back),
+                            contentDescription = stringResource(Res.string.back)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onToggleSearchSortVisibility) {
+                        Icon(
+                            painter = painterResource(Res.drawable.sort),
+                            contentDescription = stringResource(Res.string.sort_by),
+                            tint = if (isSearchSortVisible) MaterialTheme.colorScheme.primary else LocalContentColor.current
+                        )
+                    }
+                }
+            )
+            AnimatedVisibility(
+                visible = isSearchSortVisible && scrollBehavior.state.collapsedFraction < 0.5f,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                SortOptions(
+                    currentSort = searchSort,
+                    onSortChange = onSearchSortChange
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SortOptions(
+    currentSort: SearchSort,
+    onSortChange: (SearchSort) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(Res.string.sort_by),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        
+        FilterChip(
+            selected = currentSort == SearchSort.RELEVANCE,
+            onClick = { onSortChange(SearchSort.RELEVANCE) },
+            label = { Text(stringResource(Res.string.sort_relevance)) },
+            leadingIcon = if (currentSort == SearchSort.RELEVANCE) {
+                {
+                    Icon(
+                        painter = painterResource(Res.drawable.check),
+                        contentDescription = null,
+                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                    )
+                }
+            } else null
+        )
+
+        FilterChip(
+            selected = currentSort == SearchSort.CANONICAL,
+            onClick = { onSortChange(SearchSort.CANONICAL) },
+            label = { Text(stringResource(Res.string.sort_canonical)) },
+            leadingIcon = if (currentSort == SearchSort.CANONICAL) {
+                {
+                    Icon(
+                        painter = painterResource(Res.drawable.check),
+                        contentDescription = null,
+                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                    )
+                }
+            } else null
+        )
+    }
+}
+
 @Composable
 private fun SearchItem(
     result: SearchResult,
     searchQuery: String,
     onClick: () -> Unit
 ) {
-    val annotatedText = remember(result.text, searchQuery) {
+    val highlightColor = MaterialTheme.colorScheme.primaryContainer
+    val onHighlightColor = MaterialTheme.colorScheme.onPrimaryContainer
+
+    val annotatedText = remember(result.text, searchQuery, highlightColor, onHighlightColor) {
         buildAnnotatedString {
             val text = result.text
-            if (searchQuery.isBlank()) {
+            if (searchQuery.isBlank() || searchQuery.length < 3) {
                 append(text)
             } else {
                 var start = 0
@@ -181,7 +365,13 @@ private fun SearchItem(
                         break
                     }
                     append(text.substring(start, index))
-                    withStyle(SpanStyle(background = Color.Yellow, color = Color.Black, fontWeight = FontWeight.Bold)) {
+                    withStyle(
+                        SpanStyle(
+                            background = highlightColor,
+                            color = onHighlightColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                    ) {
                         append(text.substring(index, index + searchQuery.length))
                     }
                     start = index + searchQuery.length
@@ -193,21 +383,23 @@ private fun SearchItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
-            .padding(16.dp)
+            .padding(12.dp)
     ) {
         Text(
             text = "${stringResource(result.book.nameResource)} ${result.chapterNumber}:${result.verseNumber}",
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.secondary
         )
         Spacer(Modifier.height(4.dp))
         Text(
             text = annotatedText,
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 5,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.2
         )
     }
 }

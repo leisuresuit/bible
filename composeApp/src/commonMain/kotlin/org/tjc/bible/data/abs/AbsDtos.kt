@@ -127,6 +127,7 @@ internal fun AbsSearchResultDto.toDomain(versionId: String): SearchResult {
     val verse = parts.getOrNull(2)?.toIntOrNull() ?: 1
 
     return SearchResult(
+        id = id,
         versionId = versionId,
         book = book,
         chapterNumber = chapter,

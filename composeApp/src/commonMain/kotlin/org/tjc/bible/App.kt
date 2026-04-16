@@ -54,11 +54,30 @@ fun App() {
                     SearchScreen(
                         searchQuery = state.searchQuery,
                         searchResults = state.searchResults,
+                        searchSort = state.searchSort,
+                        isSearchSortVisible = state.isSearchSortVisible,
                         isLoading = state.isLoading,
+                        isSearchingMore = state.isSearchingMore,
+                        hasMoreResults = state.hasMoreSearchResults,
                         showTopBar = true,
                         onSearchQueryChange = {
                             viewModel.onIntent(
                                 BibleIntent.UpdateSearchQuery(it)
+                            )
+                        },
+                        onSearchSortChange = {
+                            viewModel.onIntent(
+                                BibleIntent.UpdateSearchSort(it)
+                            )
+                        },
+                        onToggleSearchSortVisibility = {
+                            viewModel.onIntent(
+                                BibleIntent.ToggleSearchSortVisibility
+                            )
+                        },
+                        onLoadMore = {
+                            viewModel.onIntent(
+                                BibleIntent.LoadMoreSearchResults
                             )
                         },
                         onResultClick = { result ->

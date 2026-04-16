@@ -28,6 +28,9 @@
     <string name="previous">上</string>
     <string name="next">下</string>
     <string name="toggle_sort_order">切换排序</string>
+    <string name="sort_by">排序：</string>
+    <string name="sort_relevance">相关性</string>
+    <string name="sort_canonical">圣经顺序</string>
     <string name="no_results_found">未找到结果</string>
 
     <!-- Bible Books -->

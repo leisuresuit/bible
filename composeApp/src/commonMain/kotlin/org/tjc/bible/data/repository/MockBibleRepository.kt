@@ -9,6 +9,10 @@ import org.tjc.bible.domain.model.Verse
 import org.tjc.bible.domain.model.VerseElement
 import org.tjc.bible.domain.repository.BibleRepository
 
+import org.tjc.bible.domain.model.SearchResponse
+
+import org.tjc.bible.domain.model.SearchSort
+
 class MockBibleRepository : BibleRepository {
     private val versions = listOf(
         BibleVersion("nkjv", "New King James Version", "English", "NKJV"),
@@ -39,9 +43,39 @@ class MockBibleRepository : BibleRepository {
         }
     )
 
-    override suspend fun search(versionId: String, query: String): Result<List<SearchResult>> = Result.success(
-        listOf(
-            SearchResult(versionId, Book.Genesis, 1, 1, "In the beginning God created...")
+    override suspend fun search(
+        versionId: String,
+        query: String,
+        offset: Int,
+        limit: Int,
+        sort: SearchSort
+    ): Result<SearchResponse> {
+        val totalAvailable = 100 // Simulate 100 total results
+        val count = if (offset + limit > totalAvailable) {
+            (totalAvailable - offset).coerceAtLeast(0)
+        } else {
+            limit
+        }
+        
+        val results = List(count) { i ->
+            val globalIndex = offset + i
+            SearchResult(
+                id = "${versionId}_${globalIndex}",
+                versionId = versionId,
+                book = Book.entries[globalIndex % Book.entries.size],
+                chapterNumber = (globalIndex / 10) + 1,
+                verseNumber = (globalIndex % 10) + 1,
+                text = "Mock result ${globalIndex + 1} for '$query' in $versionId. This is a longer text to test the search result item layout and how it handles multi-line content."
+            )
+        }
+
+        return Result.success(
+            SearchResponse(
+                results = results,
+                total = totalAvailable,
+                offset = offset,
+                limit = limit
+            )
         )
-    )
+    }
 }

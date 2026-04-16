@@ -190,11 +190,25 @@ enum class TextStyle {
 
 @Serializable
 data class SearchResult(
+    val id: String,
     val versionId: String,
     val book: Book,
     val chapterNumber: Int,
     val verseNumber: Int,
     val text: String
+)
+
+@Serializable
+enum class SearchSort {
+    RELEVANCE, CANONICAL
+}
+
+@Serializable
+data class SearchResponse(
+    val results: List<SearchResult>,
+    val total: Int,
+    val offset: Int,
+    val limit: Int
 )
 
 @Serializable

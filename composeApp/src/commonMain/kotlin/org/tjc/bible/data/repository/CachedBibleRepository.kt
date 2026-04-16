@@ -9,6 +9,9 @@ import org.tjc.bible.domain.model.Verse
 import org.tjc.bible.domain.repository.BibleRepository
 import kotlin.time.Clock
 
+import org.tjc.bible.domain.model.SearchResponse
+import org.tjc.bible.domain.model.SearchSort
+
 class CachedBibleRepository(
     private val delegate: BibleRepository,
     database: BibleDatabase
@@ -64,22 +67,34 @@ class CachedBibleRepository(
         return result
     }
 
-    override suspend fun search(versionId: String, query: String): Result<List<SearchResult>> {
-        // Try cache first
-        val cached = queries.getSearch(versionId, query).executeAsOneOrNull()
+    override suspend fun search(
+        versionId: String,
+        query: String,
+        offset: Int,
+        limit: Int,
+        sort: SearchSort
+    ): Result<SearchResponse> {
+        // For now, we only cache by basic parameters, sort can be added to cache key if needed
+        // but since it's a dynamic search, let's keep it simple.
+        // Actually, we should include sort in the cache key to be correct.
+        
+        val cacheKey = "${query}_${sort.name}"
+        val cached = queries.getSearch(versionId, cacheKey, offset.toLong(), limit.toLong()).executeAsOneOrNull()
         if (cached != null) {
-            return Result.success(json.decodeFromString<List<SearchResult>>(cached.resultsJson))
+            return Result.success(json.decodeFromString<SearchResponse>(cached.resultsJson))
         }
 
         // Fetch from network if not in cache
-        val result = delegate.search(versionId, query)
+        val result = delegate.search(versionId, query, offset, limit, sort)
 
         // Store in cache if successful
-        result.onSuccess { results ->
+        result.onSuccess { response ->
             queries.insertSearch(
                 bibleId = versionId,
-                query = query,
-                resultsJson = json.encodeToString(results),
+                query = cacheKey,
+                offset_ = offset.toLong(),
+                limit_ = limit.toLong(),
+                resultsJson = json.encodeToString(response),
                 lastUpdated = Clock.System.now().toEpochMilliseconds()
             )
         }

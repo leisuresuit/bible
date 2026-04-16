@@ -27,6 +27,9 @@
     <string name="previous">Previous</string>
     <string name="next">Next</string>
     <string name="toggle_sort_order">Toggle sort order</string>
+    <string name="sort_by">Sort by:</string>
+    <string name="sort_relevance">Relevance</string>
+    <string name="sort_canonical">Bible Order</string>
     <string name="no_results_found">No results found</string>
 
     <!-- Bible Books -->

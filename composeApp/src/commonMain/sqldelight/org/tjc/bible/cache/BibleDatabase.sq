@@ -32,18 +32,20 @@ WHERE bibleId = ? AND bookId = ? AND chapterNumber = ?;
 CREATE TABLE CachedSearch (
     bibleId TEXT NOT NULL,
     query TEXT NOT NULL,
+    offset_ INTEGER NOT NULL,
+    limit_ INTEGER NOT NULL,
     resultsJson TEXT NOT NULL,
     lastUpdated INTEGER NOT NULL,
-    PRIMARY KEY (bibleId, query)
+    PRIMARY KEY (bibleId, query, offset_, limit_)
 );
 
 insertSearch:
-INSERT OR REPLACE INTO CachedSearch(bibleId, query, resultsJson, lastUpdated)
-VALUES (?, ?, ?, ?);
+INSERT OR REPLACE INTO CachedSearch(bibleId, query, offset_, limit_, resultsJson, lastUpdated)
+VALUES (?, ?, ?, ?, ?, ?);
 
 getSearch:
 SELECT * FROM CachedSearch
-WHERE bibleId = ? AND query = ?;
+WHERE bibleId = ? AND query = ? AND offset_ = ? AND limit_ = ?;
 
 clearCache:
 DELETE FROM CachedVersions;
