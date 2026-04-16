@@ -221,7 +221,7 @@ fun BookSelectionPage(
     onBookSelected: (Book) -> Unit
 ) {
     val filteredBooks = remember(booksWithNames, searchQuery) {
-        booksWithNames.filter { it.second.contains(searchQuery, ignoreCase = true) }
+        booksWithNames.filter { it.second.startsWith(searchQuery, ignoreCase = true) }
     }
 
     val listState = rememberLazyListState()
