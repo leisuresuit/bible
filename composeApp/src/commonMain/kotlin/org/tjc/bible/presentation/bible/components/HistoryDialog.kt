@@ -3,6 +3,7 @@ package org.tjc.bible.presentation.bible.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -67,6 +69,7 @@ fun HistoryDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.imePadding(),
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(Res.string.close))
@@ -116,27 +119,30 @@ fun HistoryDialog(
             }
         },
         text = {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                items(history) { item ->
-                    val isSelected = item.book == currentBook &&
-                            item.chapter == currentChapter &&
-                            item.verse == currentVerse
+            BoxWithConstraints {
+                val maxHeight = maxHeight * 0.6f
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    items(history) { item ->
+                        val isSelected = item.book == currentBook &&
+                                item.chapter == currentChapter &&
+                                item.verse == currentVerse
 
-                    AutoResizedText(
-                        text = "${stringResource(item.book.nameResource)} ${item.chapter}${":${item.verse}"}",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
-                            .clickable { onItemClick(item) }
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        style = if (isSelected) MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold) else MaterialTheme.typography.bodyLarge,
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
-                    )
+                        AutoResizedText(
+                            text = "${stringResource(item.book.nameResource)} ${item.chapter}${":${item.verse}"}",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                                .clickable { onItemClick(item) }
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            style = if (isSelected) MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold) else MaterialTheme.typography.bodyLarge,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }

@@ -38,6 +38,7 @@ import bible.composeapp.generated.resources.check
 import bible.composeapp.generated.resources.clear
 import bible.composeapp.generated.resources.no_results_found
 import bible.composeapp.generated.resources.search
+import bible.composeapp.generated.resources.sort
 import bible.composeapp.generated.resources.sort_by
 import bible.composeapp.generated.resources.sort_canonical
 import bible.composeapp.generated.resources.sort_relevance

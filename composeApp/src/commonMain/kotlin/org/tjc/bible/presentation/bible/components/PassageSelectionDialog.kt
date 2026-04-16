@@ -3,6 +3,7 @@ package org.tjc.bible.presentation.bible.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -107,96 +108,102 @@ fun PassageSelectionDialog(
             }
         },
         text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                // Stationary Header
-                val title = when (pagerState.currentPage) {
-                    0 -> stringResource(Res.string.book)
-                    1 -> selectedBook?.let { stringResource(it.nameResource) } ?: stringResource(Res.string.chapter)
-                    else -> {
-                        val bookName = selectedBook?.let { stringResource(it.nameResource) } ?: ""
-                        if (bookName.isNotEmpty()) "$bookName $selectedChapter" else stringResource(Res.string.verse)
+            BoxWithConstraints {
+                val maxHeight = maxHeight * 0.6f
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Stationary Header
+                    val title = when (pagerState.currentPage) {
+                        0 -> stringResource(Res.string.book)
+                        1 -> selectedBook?.let { stringResource(it.nameResource) } ?: stringResource(Res.string.chapter)
+                        else -> {
+                            val bookName = selectedBook?.let { stringResource(it.nameResource) } ?: ""
+                            if (bookName.isNotEmpty()) "$bookName $selectedChapter" else stringResource(Res.string.verse)
+                        }
                     }
-                }
-                
-                val keyboardType = if (pagerState.currentPage == 0) KeyboardType.Text else KeyboardType.Number
-                
-                val searchHint = when (pagerState.currentPage) {
-                    0 -> stringResource(Res.string.search)
-                    1 -> stringResource(Res.string.chapter)
-                    else -> stringResource(Res.string.verse)
-                }
-                
-                SelectionDialogHeader(
-                    title = title,
-                    searchHint = searchHint,
-                    searchQuery = searchQuery,
-                    onSearchQueryChange = { searchQuery = it.trim() },
-                    showSortButton = pagerState.currentPage == 0,
-                    onSortClick = { isAlphabeticalOrder = !isAlphabeticalOrder },
-                    keyboardType = keyboardType,
-                    titleWeight = if (pagerState.currentPage == 0) null else 1.5f,
-                    searchWeight = if (pagerState.currentPage == 0) null else 1f
-                )
 
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.heightIn(max = 300.dp)
-                ) { page ->
-                    when (page) {
-                        0 -> {
-                            val booksWithNames = Book.entries.map { it to stringResource(it.nameResource) }
-                            val sortedBooksWithNames = if (isAlphabeticalOrder) {
-                                booksWithNames.sortedBy { it.second }
-                            } else {
-                                booksWithNames
+                    val keyboardType = if (pagerState.currentPage == 0) KeyboardType.Text else KeyboardType.Number
+
+                    val searchHint = when (pagerState.currentPage) {
+                        0 -> stringResource(Res.string.search)
+                        1 -> stringResource(Res.string.chapter)
+                        else -> stringResource(Res.string.verse)
+                    }
+
+                    SelectionDialogHeader(
+                        title = title,
+                        searchHint = searchHint,
+                        searchQuery = searchQuery,
+                        onSearchQueryChange = { searchQuery = it.trim() },
+                        showSortButton = pagerState.currentPage == 0,
+                        onSortClick = { isAlphabeticalOrder = !isAlphabeticalOrder },
+                        keyboardType = keyboardType,
+                        titleWeight = if (pagerState.currentPage == 0) null else 1.5f,
+                        searchWeight = if (pagerState.currentPage == 0) null else 1f
+                    )
+
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.heightIn(max = maxHeight)
+                    ) { page ->
+                        when (page) {
+                            0 -> {
+                                val booksWithNames = Book.entries.map { it to stringResource(it.nameResource) }
+                                val sortedBooksWithNames = if (isAlphabeticalOrder) {
+                                    booksWithNames.sortedBy { it.second }
+                                } else {
+                                    booksWithNames
+                                }
+
+                                BookSelectionPage(
+                                    booksWithNames = sortedBooksWithNames,
+                                    selectedBook = selectedBook,
+                                    searchQuery = searchQuery,
+                                    maxHeight = maxHeight,
+                                    onBookSelected = { book ->
+                                        if (selectedBook != book) {
+                                            selectedBook = book
+                                            selectedChapter = 1
+                                            selectedVerse = 1
+                                        }
+                                        if (book.chaptersCount == 1) {
+                                            scope.launch { pagerState.animateScrollToPage(2) }
+                                        } else {
+                                            scope.launch { pagerState.animateScrollToPage(1) }
+                                        }
+                                    }
+                                )
                             }
-                            
-                            BookSelectionPage(
-                                booksWithNames = sortedBooksWithNames,
+                            1 -> ChapterSelectionPage(
                                 selectedBook = selectedBook,
+                                chaptersCount = selectedBook?.chaptersCount ?: 0,
+                                selectedChapter = selectedChapter,
                                 searchQuery = searchQuery,
-                                onBookSelected = { book ->
-                                    if (selectedBook != book) {
-                                        selectedBook = book
-                                        selectedChapter = 1
+                                maxHeight = maxHeight,
+                                onChapterSelected = { chapter ->
+                                    if (selectedChapter != chapter) {
+                                        selectedChapter = chapter
                                         selectedVerse = 1
                                     }
-                                    if (book.chaptersCount == 1) {
-                                        scope.launch { pagerState.animateScrollToPage(2) }
-                                    } else {
-                                        scope.launch { pagerState.animateScrollToPage(1) }
-                                    }
+                                    scope.launch { pagerState.animateScrollToPage(2) }
                                 }
                             )
-                        }
-                        1 -> ChapterSelectionPage(
-                            selectedBook = selectedBook,
-                            chaptersCount = selectedBook?.chaptersCount ?: 0,
-                            selectedChapter = selectedChapter,
-                            searchQuery = searchQuery,
-                            onChapterSelected = { chapter ->
-                                if (selectedChapter != chapter) {
-                                    selectedChapter = chapter
-                                    selectedVerse = 1
-                                }
-                                scope.launch { pagerState.animateScrollToPage(2) }
+                            2 -> {
+                                val versesCount = selectedBook?.versesInChapters?.getOrNull(selectedChapter - 1) ?: 0
+                                VerseSelectionPage(
+                                    selectedBook = selectedBook,
+                                    selectedChapter = selectedChapter,
+                                    versesCount = versesCount,
+                                    selectedVerse = selectedVerse,
+                                    searchQuery = searchQuery,
+                                    maxHeight = maxHeight,
+                                    onVerseSelected = { verse ->
+                                        selectedVerse = verse
+                                        selectedBook?.let { book ->
+                                            onPassageSelected(book, selectedChapter, selectedVerse)
+                                        }
+                                    }
+                                )
                             }
-                        )
-                        2 -> {
-                            val versesCount = selectedBook?.versesInChapters?.getOrNull(selectedChapter - 1) ?: 0
-                            VerseSelectionPage(
-                                selectedBook = selectedBook,
-                                selectedChapter = selectedChapter,
-                                versesCount = versesCount,
-                                selectedVerse = selectedVerse,
-                                searchQuery = searchQuery,
-                                onVerseSelected = { verse ->
-                                    selectedVerse = verse
-                                    selectedBook?.let { book ->
-                                        onPassageSelected(book, selectedChapter, selectedVerse)
-                                    }
-                                }
-                            )
                         }
                     }
                 }
@@ -210,6 +217,7 @@ fun BookSelectionPage(
     booksWithNames: List<Pair<Book, String>>,
     selectedBook: Book?,
     searchQuery: String,
+    maxHeight: androidx.compose.ui.unit.Dp,
     onBookSelected: (Book) -> Unit
 ) {
     val filteredBooks = remember(booksWithNames, searchQuery) {
@@ -225,7 +233,7 @@ fun BookSelectionPage(
     }
 
     LazyColumn(
-        modifier = Modifier.heightIn(max = 300.dp),
+        modifier = Modifier.heightIn(max = maxHeight),
         state = listState
     ) {
         items(filteredBooks) { (book, name) ->
@@ -254,6 +262,7 @@ fun ChapterSelectionPage(
     chaptersCount: Int,
     selectedChapter: Int,
     searchQuery: String,
+    maxHeight: androidx.compose.ui.unit.Dp,
     onChapterSelected: (Int) -> Unit
 ) {
     val chapters = (1..chaptersCount).toList()
@@ -272,7 +281,7 @@ fun ChapterSelectionPage(
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier.heightIn(max = 300.dp),
+        modifier = Modifier.heightIn(max = maxHeight),
         state = gridState
     ) {
         items(filteredChapters.size) { index ->
@@ -306,6 +315,7 @@ fun VerseSelectionPage(
     versesCount: Int,
     selectedVerse: Int?,
     searchQuery: String,
+    maxHeight: androidx.compose.ui.unit.Dp,
     onVerseSelected: (Int) -> Unit
 ) {
     val verses = (1..versesCount).toList()
@@ -324,7 +334,7 @@ fun VerseSelectionPage(
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier.heightIn(max = 300.dp),
+        modifier = Modifier.heightIn(max = maxHeight),
         state = gridState
     ) {
         items(filteredVerses.size) { index ->

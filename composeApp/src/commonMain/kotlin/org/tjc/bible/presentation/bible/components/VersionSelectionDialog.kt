@@ -2,6 +2,7 @@ package org.tjc.bible.presentation.bible.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -90,36 +91,39 @@ fun VersionSelectionDialog(
             )
         },
         text = {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp),
-                state = listState
-            ) {
-                items(filteredVersions) { version ->
-                    val isSelected = selectedVersions.any { it.id == version.id }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onVersionToggle(version) }
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(modifier = Modifier.size(24.dp)) {
-                            if (isSelected) {
-                                Icon(painterResource(Res.drawable.check), contentDescription = null)
+            BoxWithConstraints {
+                val maxHeight = maxHeight * 0.6f
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight),
+                    state = listState
+                ) {
+                    items(filteredVersions) { version ->
+                        val isSelected = selectedVersions.any { it.id == version.id }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onVersionToggle(version) }
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(modifier = Modifier.size(24.dp)) {
+                                if (isSelected) {
+                                    Icon(painterResource(Res.drawable.check), contentDescription = null)
+                                }
                             }
-                        }
-                        Spacer(Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = version.abbreviation,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = version.name,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = version.abbreviation,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = version.name,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            }
                         }
                     }
                 }

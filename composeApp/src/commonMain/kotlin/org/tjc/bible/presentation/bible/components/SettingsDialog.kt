@@ -36,6 +36,7 @@ fun SettingsDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.imePadding(),
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(Res.string.close))
@@ -55,121 +56,125 @@ fun SettingsDialog(
             }
         },
         text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Text(
-                    text = stringResource(Res.string.display_mode),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Column(Modifier.selectableGroup()) {
-                    DisplayMode.entries.forEach { mode ->
-                        val selected = displayMode == mode
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .selectable(
-                                    selected = selected,
-                                    onClick = { onDisplayModeChange(mode) },
-                                    role = Role.RadioButton
-                                )
-                                .padding(start = 12.dp, top = 8.dp, bottom = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = selected,
-                                onClick = null
-                            )
-                            val label = when (mode) {
-                                DisplayMode.SINGLE_CHAPTER -> stringResource(Res.string.display_mode_single_chapter)
-                                DisplayMode.CONTIGUOUS -> stringResource(Res.string.display_mode_contiguous)
-                            }
-                            Text(
-                                text = label,
-                                modifier = Modifier.padding(start = 8.dp)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(16.dp))
-
-                HorizontalDivider(Modifier.fillMaxWidth())
-
-                Row(
+            BoxWithConstraints {
+                val maxHeight = maxHeight * 0.7f
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onShowWordsOfJesusChange(!showWordsOfJesus) }
-                        .padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .heightIn(max = maxHeight)
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    Checkbox(
-                        checked = showWordsOfJesus,
-                        onCheckedChange = { onShowWordsOfJesusChange(it) }
-                    )
                     Text(
-                        text = stringResource(Res.string.show_words_of_jesus),
-                        modifier = Modifier.padding(start = 8.dp)
+                        text = stringResource(Res.string.display_mode),
+                        style = MaterialTheme.typography.titleMedium
                     )
-                }
-
-                HorizontalDivider(Modifier.fillMaxWidth())
-
-                Spacer(Modifier.height(16.dp))
-
-                Text(
-                    text = stringResource(Res.string.theme),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Column(Modifier.selectableGroup()) {
-                    AppTheme.entries.forEach { themeEntry ->
-                        val selected = theme == themeEntry
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .selectable(
+                    Column(Modifier.selectableGroup()) {
+                        DisplayMode.entries.forEach { mode ->
+                            val selected = displayMode == mode
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .selectable(
+                                        selected = selected,
+                                        onClick = { onDisplayModeChange(mode) },
+                                        role = Role.RadioButton
+                                    )
+                                    .padding(start = 12.dp, top = 8.dp, bottom = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
                                     selected = selected,
-                                    onClick = { onThemeChange(themeEntry) },
-                                    role = Role.RadioButton
+                                    onClick = null
                                 )
-                                .padding(start = 12.dp, top = 8.dp, bottom = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = selected,
-                                onClick = null
-                            )
-                            val label = when (themeEntry) {
-                                AppTheme.SYSTEM -> stringResource(Res.string.theme_system)
-                                AppTheme.LIGHT -> stringResource(Res.string.theme_light)
-                                AppTheme.DARK -> stringResource(Res.string.theme_dark)
+                                val label = when (mode) {
+                                    DisplayMode.SINGLE_CHAPTER -> stringResource(Res.string.display_mode_single_chapter)
+                                    DisplayMode.CONTIGUOUS -> stringResource(Res.string.display_mode_contiguous)
+                                }
+                                Text(
+                                    text = label,
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
                             }
-                            Text(
-                                text = label,
-                                modifier = Modifier.padding(start = 8.dp)
-                            )
                         }
                     }
-                }
 
-                if (supportsDynamicColor) {
+                    Spacer(Modifier.height(16.dp))
+
+                    HorizontalDivider(Modifier.fillMaxWidth())
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onDynamicColorChange(!isDynamicColor) }
+                            .clickable { onShowWordsOfJesusChange(!showWordsOfJesus) }
                             .padding(vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
-                            checked = isDynamicColor,
-                            onCheckedChange = { onDynamicColorChange(it) }
+                            checked = showWordsOfJesus,
+                            onCheckedChange = { onShowWordsOfJesusChange(it) }
                         )
                         Text(
-                            text = stringResource(Res.string.dynamic_color),
+                            text = stringResource(Res.string.show_words_of_jesus),
                             modifier = Modifier.padding(start = 8.dp)
                         )
+                    }
+
+                    HorizontalDivider(Modifier.fillMaxWidth())
+
+                    Spacer(Modifier.height(16.dp))
+
+                    Text(
+                        text = stringResource(Res.string.theme),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Column(Modifier.selectableGroup()) {
+                        AppTheme.entries.forEach { themeEntry ->
+                            val selected = theme == themeEntry
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .selectable(
+                                        selected = selected,
+                                        onClick = { onThemeChange(themeEntry) },
+                                        role = Role.RadioButton
+                                    )
+                                    .padding(start = 12.dp, top = 8.dp, bottom = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = selected,
+                                    onClick = null
+                                )
+                                val label = when (themeEntry) {
+                                    AppTheme.SYSTEM -> stringResource(Res.string.theme_system)
+                                    AppTheme.LIGHT -> stringResource(Res.string.theme_light)
+                                    AppTheme.DARK -> stringResource(Res.string.theme_dark)
+                                }
+                                Text(
+                                    text = label,
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    if (supportsDynamicColor) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onDynamicColorChange(!isDynamicColor) }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = isDynamicColor,
+                                onCheckedChange = { onDynamicColorChange(it) }
+                            )
+                            Text(
+                                text = stringResource(Res.string.dynamic_color),
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
                     }
                 }
             }
