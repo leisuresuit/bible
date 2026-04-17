@@ -44,6 +44,7 @@ import org.tjc.bible.domain.model.HistoryItem
 import org.tjc.bible.presentation.ui.AutoResizedText
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
+import org.tjc.bible.presentation.ui.nameResource
 
 @Composable
 fun HistoryDialog(

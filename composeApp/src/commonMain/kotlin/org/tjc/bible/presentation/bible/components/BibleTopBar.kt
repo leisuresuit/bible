@@ -47,6 +47,7 @@ import org.tjc.bible.domain.model.Book
 import org.tjc.bible.presentation.ui.AutoResizedText
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
+import org.tjc.bible.presentation.ui.nameResource
 
 @OptIn(
     ExperimentalMaterial3Api::class,

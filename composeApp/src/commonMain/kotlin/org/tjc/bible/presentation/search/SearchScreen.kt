@@ -49,6 +49,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.SearchResult
 
 import org.tjc.bible.domain.model.SearchSort
+import org.tjc.bible.presentation.ui.nameResource
 
 @OptIn(
     ExperimentalMaterial3Api::class,

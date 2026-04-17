@@ -56,6 +56,7 @@ import org.tjc.bible.domain.model.VerseElement
 import org.tjc.bible.presentation.bible.DisplayMode
 import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
+import org.tjc.bible.presentation.ui.nameResource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
