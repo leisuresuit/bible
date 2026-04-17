@@ -118,8 +118,8 @@ internal class AbsChapterParser {
         val firstChar = next.first()
 
         if (lastChar.isWhitespace() || firstChar.isWhitespace()) return false
-        if (",.?!:;)]}\"".contains(lastChar)) return false
-        if ("([{".contains(firstChar)) return false
+        if (",.?!:;)]}\"".contains(firstChar)) return false
+        if ("([{".contains(lastChar)) return false
 
         // Only add space for "character-based" (alphabetical) languages, not ideographic ones.
         return !lastChar.isIdeographic() && !firstChar.isIdeographic()
