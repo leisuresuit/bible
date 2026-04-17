@@ -1,14 +1,14 @@
 package org.tjc.bible.presentation.bible
 
+import co.touchlab.skie.configuration.annotations.FlowInterop
 import androidx.navigation3.runtime.NavKey
 import org.tjc.bible.domain.model.AppTheme
 import org.tjc.bible.domain.model.BibleVersion
 import org.tjc.bible.domain.model.Book
 import org.tjc.bible.domain.model.HistoryItem
 import org.tjc.bible.domain.model.SearchResult
-import org.tjc.bible.domain.model.Verse
-
 import org.tjc.bible.domain.model.SearchSort
+import org.tjc.bible.domain.model.Verse
 
 enum class DisplayMode {
     SINGLE_CHAPTER, CONTIGUOUS

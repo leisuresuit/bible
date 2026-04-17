@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.skie)
 }
 
 val localProperties = Properties().apply {
@@ -31,7 +32,8 @@ kotlin {
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
-            isStatic = true
+            isStatic = false
+            linkerOpts.add("-lsqlite3")
         }
     }
     
@@ -69,6 +71,7 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.sqldelight.coroutines.ext)
+            implementation(libs.skie.annotations)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

@@ -27,6 +27,8 @@ import org.tjc.bible.presentation.ui.Search
 
 import org.tjc.bible.domain.model.SearchSort
 
+import co.touchlab.skie.configuration.annotations.FlowInterop
+
 class BibleViewModel(
     private val getBibleVersionsUseCase: GetBibleVersionsUseCase,
     private val getVersesUseCase: GetVersesUseCase,
@@ -34,9 +36,12 @@ class BibleViewModel(
     private val preferenceStorage: PreferenceStorage
 ) : ViewModel() {
     private val _state = MutableStateFlow(BibleState())
+    @FlowInterop.Enabled
     val state: StateFlow<BibleState> = _state.asStateFlow()
 
+    @FlowInterop.Enabled
     private val _effects = MutableSharedFlow<BibleEffect>()
+    @FlowInterop.Enabled
     val effects: SharedFlow<BibleEffect> = _effects.asSharedFlow()
 
     private var nextEventId = 1L

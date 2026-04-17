@@ -58,7 +58,7 @@ val appModule = module {
     factoryOf(::GetVersesUseCase)
     factoryOf(::SearchUseCase)
 
-    viewModelOf(::BibleViewModel)
+    singleOf(::BibleViewModel)
 }
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) =
