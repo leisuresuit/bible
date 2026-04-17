@@ -122,19 +122,17 @@ internal class AbsChapterParser {
         if ("([{".contains(firstChar)) return false
 
         // Only add space for "character-based" (alphabetical) languages, not ideographic ones.
-        return !isIdeographic(lastChar) && !isIdeographic(firstChar)
+        return !lastChar.isIdeographic() && !firstChar.isIdeographic()
     }
 
     /**
      * Checks if a character belongs to a CJK (Chinese, Japanese, Korean) ideographic range.
      */
-    private fun isIdeographic(c: Char): Boolean {
-        val i = c.code
-        return i in 0x4E00..0x9FFF || // CJK Unified Ideographs
-               i in 0x3400..0x4DBF || // CJK Unified Ideographs Extension A
-               i in 0x3040..0x30FF || // Japanese Hiragana and Katakana
-               i in 0xAC00..0xD7AF    // Korean Hangul Syllables
-    }
+    private fun Char.isIdeographic(): Boolean =
+        code in 0x4E00..0x9FFF || // CJK Unified Ideographs
+        code in 0x3400..0x4DBF || // CJK Unified Ideographs Extension A
+        code in 0x3040..0x30FF || // Japanese Hiragana and Katakana
+        code in 0xAC00..0xD7AF    // Korean Hangul Syllables
 
     /**
      * Moves any headings collected since the last verse and attaches them to the specified verse number.
