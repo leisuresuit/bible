@@ -53,7 +53,7 @@ internal class AbsChapterParser {
 
         val verseNumber = verseId?.let { extractVerseNumber(it) } ?: 0
         if (inHeading) {
-            handleHeadingText(cleanedText, style, verseNumber)
+            handleHeadingText(cleanedText, style)
         } else if (verseNumber > 0) {
             handleVerseText(cleanedText, style, verseNumber)
         }
@@ -62,7 +62,7 @@ internal class AbsChapterParser {
     /**
      * Collects text belonging to a heading, creating new heading blocks as needed.
      */
-    private fun handleHeadingText(text: String, style: TextStyle, verseNumber: Int) {
+    private fun handleHeadingText(text: String, style: TextStyle) {
         if (pendingBreak || currentHeadings.isEmpty()) {
             currentHeadings.add(mutableListOf())
         }
