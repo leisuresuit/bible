@@ -222,7 +222,27 @@ fun BookSelectionPage(
     onBookSelected: (Book) -> Unit
 ) {
     val filteredBooks = remember(booksWithNames, searchQuery) {
-        booksWithNames.filter { it.second.startsWith(searchQuery, ignoreCase = true) }
+        val searchTerms = searchQuery.lowercase().split(" ").filter { it.isNotEmpty() }
+        if (searchTerms.isEmpty()) {
+            booksWithNames
+        } else {
+            booksWithNames.filter { (_, name) ->
+                val bookWords = name.lowercase().split(" ").filter { it.isNotEmpty() }
+                var bookWordIndex = 0
+                searchTerms.all { term ->
+                    var found = false
+                    while (bookWordIndex < bookWords.size) {
+                        if (bookWords[bookWordIndex].startsWith(term)) {
+                            found = true
+                            bookWordIndex++
+                            break
+                        }
+                        bookWordIndex++
+                    }
+                    found
+                }
+            }
+        }
     }
 
     val listState = rememberLazyListState()
