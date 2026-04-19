@@ -1,8 +1,8 @@
 package org.tjc.bible.presentation.bible
 
-import kotlinx.coroutines.isActive
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.touchlab.skie.configuration.annotations.FlowInterop
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -13,21 +13,23 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.tjc.bible.data.local.PreferenceStorage
+import org.tjc.bible.domain.model.AppTheme
 import org.tjc.bible.domain.model.BibleVersion
 import org.tjc.bible.domain.model.Book
 import org.tjc.bible.domain.model.HistoryItem
+import org.tjc.bible.domain.model.SearchSort
 import org.tjc.bible.domain.model.Verse
 import org.tjc.bible.domain.usecase.GetBibleVersionsUseCase
 import org.tjc.bible.domain.usecase.GetVersesUseCase
 import org.tjc.bible.domain.usecase.SearchUseCase
-import org.tjc.bible.presentation.bible.ActiveDialog.PassageSelection
+import org.tjc.bible.presentation.ui.History
+import org.tjc.bible.presentation.ui.PassageSelection
 import org.tjc.bible.presentation.ui.Search
-
-import org.tjc.bible.domain.model.SearchSort
-
-import co.touchlab.skie.configuration.annotations.FlowInterop
+import org.tjc.bible.presentation.ui.Settings
+import org.tjc.bible.presentation.ui.VersionSelection
 
 class BibleViewModel(
     private val getBibleVersionsUseCase: GetBibleVersionsUseCase,
@@ -53,6 +55,13 @@ class BibleViewModel(
 
     fun onIntent(intent: BibleIntent) {
         when (intent) {
+            is BibleIntent.ShowSheet -> {
+                dispatch(BibleAction.ShowSheet(intent.sheet))
+                if (intent.sheet == null) {
+                    dispatch(BibleAction.SearchQueryChanged(""))
+                    dispatch(BibleAction.SearchResultsLoaded(emptyList(), hasMore = false))
+                }
+            }
             is BibleIntent.SelectVersions -> handleSelectVersions(intent.versions)
             is BibleIntent.ToggleParallelVersion -> handleToggleParallelVersion(intent.version)
             is BibleIntent.SelectBook -> dispatch(BibleAction.BookSelected(intent.book))
@@ -72,7 +81,6 @@ class BibleViewModel(
             is BibleIntent.SelectPassage -> handleSelectPassage(intent.book, intent.chapter, intent.verse)
             is BibleIntent.UpdateVisiblePassage -> handleUpdateVisiblePassage(intent.book, intent.chapter, intent.verse)
             is BibleIntent.LoadChapterVerses -> handleLoadChapterVerses(intent.book, intent.chapter, intent.globalIndex)
-            is BibleIntent.ShowDialog -> dispatch(BibleAction.DialogChanged(intent.dialog))
             is BibleIntent.UpdateTheme -> viewModelScope.launch { preferenceStorage.setTheme(intent.theme) }
             is BibleIntent.UpdateDynamicColor -> viewModelScope.launch { preferenceStorage.setDynamicColor(intent.enabled) }
             is BibleIntent.UpdateShowWordsOfJesus -> viewModelScope.launch { preferenceStorage.setShowWordsOfJesus(intent.enabled) }
@@ -99,15 +107,6 @@ class BibleViewModel(
             is BibleIntent.UpdateSearchSort -> handleSearchSort(intent.sort)
             is BibleIntent.ToggleSearchSortVisibility -> dispatch(BibleAction.SearchSortVisibilityToggled)
             is BibleIntent.LoadMoreSearchResults -> handleLoadMoreSearchResults()
-            is BibleIntent.SetSearchMode -> {
-                if (intent.enabled) {
-                    viewModelScope.launch { _effects.emit(BibleEffect.Navigate(Search)) }
-                } else {
-                    dispatch(BibleAction.SearchModeChanged(false))
-                    dispatch(BibleAction.SearchQueryChanged(""))
-                    dispatch(BibleAction.SearchResultsLoaded(emptyList(), hasMore = false))
-                }
-            }
             is BibleIntent.RetryOperation -> {
                 when (intent.operation) {
                     Operation.LOAD_VERSIONS -> handleLoadInitialData()
@@ -121,7 +120,6 @@ class BibleViewModel(
     private fun handleSelectPassage(book: Book, chapter: Int, verse: Int) {
         val eventId = nextEventId++
         dispatch(BibleAction.PassageSelected(book, chapter, verse, eventId))
-        dispatch(BibleAction.SearchModeChanged(false))
         saveLastPassage(book, chapter, verse)
         addToHistory(book, chapter, verse)
         loadVerses()
@@ -309,45 +307,32 @@ class BibleViewModel(
             is BibleAction.ChapterVersesLoaded -> state.copy(
                 chaptersVerses = state.chaptersVerses + (action.globalIndex to action.verses)
             )
-            is BibleAction.DialogChanged -> state.copy(activeDialog = action.dialog)
             is BibleAction.ThemeChanged -> state.copy(theme = action.theme)
             is BibleAction.DynamicColorChanged -> state.copy(isDynamicColor = action.enabled)
             is BibleAction.ShowWordsOfJesusChanged -> state.copy(showWordsOfJesus = action.enabled)
             is BibleAction.DisplayModeChanged -> state.copy(displayMode = action.mode)
             is BibleAction.HistoryLoaded -> state.copy(history = action.history)
             is BibleAction.BookSelected -> {
-                if (state.currentBook != action.book) {
-                    state.copy(
-                        currentBook = action.book,
-                        currentChapter = 1,
-                        currentVerse = 1,
-                        activeDialog = PassageSelection(1)
-                    )
-                } else {
-                    state.copy(activeDialog = PassageSelection(1))
-                }
+                state.copy(
+                    currentBook = action.book,
+                    currentChapter = 1,
+                    currentVerse = 1
+                )
             }
             is BibleAction.ChapterSelected -> {
-                if (state.currentChapter != action.chapter) {
-                    state.copy(
-                        currentChapter = action.chapter,
-                        currentVerse = 1,
-                        activeDialog = PassageSelection(2)
-                    )
-                } else {
-                    state.copy(activeDialog = PassageSelection(2))
-                }
+                state.copy(
+                    currentChapter = action.chapter,
+                    currentVerse = 1
+                )
             }
             is BibleAction.VerseSelected -> state.copy(
-                currentVerse = action.verse,
-                activeDialog = null
+                currentVerse = action.verse
             )
             is BibleAction.PassageSelected -> state.copy(
                 currentBook = action.book,
                 currentChapter = action.chapter,
                 currentVerse = action.verse,
-                selectionEventId = action.eventId,
-                activeDialog = null
+                selectionEventId = action.eventId
             )
             is BibleAction.VisiblePassageChanged -> state.copy(
                 currentBook = action.book,
@@ -383,12 +368,12 @@ class BibleViewModel(
                 }
                 state.copy(currentBook = nextBook, currentChapter = nextChapter)
             }
-            is BibleAction.SearchModeChanged -> state.copy(isSearchMode = action.enabled)
             is BibleAction.SearchQueryChanged -> state.copy(
                 searchQuery = action.query,
                 searchResults = if (action.query.trim().length < 3) emptyList() else state.searchResults,
                 hasMoreSearchResults = true
             )
+            is BibleAction.ShowSheet -> state.copy(activeSheet = action.sheet)
             is BibleAction.SearchSortChanged -> state.copy(searchSort = action.sort)
             is BibleAction.SearchSortVisibilityToggled -> state.copy(isSearchSortVisible = !state.isSearchSortVisible)
             is BibleAction.SearchResultsLoaded -> state.copy(
@@ -408,8 +393,7 @@ class BibleViewModel(
                 currentBook = action.item.book,
                 currentChapter = action.item.chapter,
                 currentVerse = action.item.verse,
-                selectionEventId = action.eventId,
-                isSearchMode = false
+                selectionEventId = action.eventId
             )
         }
     }
@@ -574,6 +558,12 @@ class BibleViewModel(
                     }
                 }
             )
+        }
+    }
+
+    fun onThemeChange(theme: AppTheme) {
+        viewModelScope.launch {
+            preferenceStorage.setTheme(theme)
         }
     }
 }

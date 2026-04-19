@@ -35,7 +35,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.clear
-import bible.composeapp.generated.resources.close
 import bible.composeapp.generated.resources.history
 import bible.composeapp.generated.resources.search
 import bible.composeapp.generated.resources.settings
@@ -58,7 +57,7 @@ fun BibleTopBar(
     currentBook: Book?,
     currentChapter: Int,
     selectedVersions: List<BibleVersion>,
-    onSetSearchMode: (Boolean) -> Unit,
+    onShowSearch: () -> Unit,
     onShowPassageSelection: (initialPage: Int) -> Unit,
     onShowVersionSelection: () -> Unit,
     onShowHistory: () -> Unit,
@@ -106,7 +105,7 @@ fun BibleTopBar(
             }
         },
         actions = {
-            IconButton(onClick = { onSetSearchMode(true) }) {
+            IconButton(onClick = onShowSearch) {
                 Icon(
                     painter = painterResource(Res.drawable.search),
                     contentDescription = stringResource(Res.string.search)
@@ -139,7 +138,7 @@ fun BibleTopBarPreview() {
                 currentBook = Book.Luke,
                 currentChapter = 18,
                 selectedVersions = listOf(BibleVersion("nkjv", "New King James Version", "English", "NKJV")),
-                onSetSearchMode = {},
+                onShowSearch = {},
                 onShowPassageSelection = {},
                 onShowVersionSelection = {},
                 onShowHistory = {},

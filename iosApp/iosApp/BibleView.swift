@@ -18,6 +18,10 @@ struct BibleView: View {
         self._searchQuery = State(initialValue: vm.state.value.searchQuery)
     }
     
+    private var navigationTitleText: String {
+        "\(state.currentBook.localizedName) \(state.currentChapter)"
+    }
+
     var body: some View {
         NavigationView {
             VStack {
@@ -39,15 +43,14 @@ struct BibleView: View {
                         .listRowSeparator(.hidden)
                     }
                 }
-                .listStyle(.plain)
-                .navigationTitle("\(state.currentBook?.localizedName ?? "") \(state.currentChapter)")
+                .navigationTitle(navigationTitleText)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button(action: {
-                            viewModel.onIntent(intent: BibleIntent.ShowDialog(dialog: ActiveDialog.PassageSelection(initialPage: 0)))
+                            viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.PassageSelection(initialPage: 0)))
                         }) {
                             HStack(spacing: 4) {
-                                Text("\(state.currentBook?.localizedName ?? "") \(state.currentChapter)")
+                                Text(navigationTitleText)
                                     .font(.headline)
                                 Image(systemName: "chevron.down")
                                     .font(.caption.bold())
@@ -72,25 +75,25 @@ struct BibleView: View {
                     
                     ToolbarItemGroup(placement: .bottomBar) {
                         Button(action: {
-                            viewModel.onIntent(intent: BibleIntent.ShowDialog(dialog: ActiveDialog.VersionSelection()))
+                            viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.VersionSelection()))
                         }) {
                             Label(NSLocalizedString("versions", comment: ""), systemImage: "books.vertical")
                         }
                         Spacer()
                         Button(action: {
-                            viewModel.onIntent(intent: BibleIntent.SetSearchMode(enabled: true))
+                            viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.Search()))
                         }) {
                             Label(NSLocalizedString("search", comment: ""), systemImage: "magnifyingglass")
                         }
                         Spacer()
                         Button(action: {
-                            viewModel.onIntent(intent: BibleIntent.ShowDialog(dialog: ActiveDialog.History()))
+                            viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.History()))
                         }) {
                             Label(NSLocalizedString("history", comment: ""), systemImage: "clock")
                         }
                         Spacer()
                         Button(action: {
-                            viewModel.onIntent(intent: BibleIntent.ShowDialog(dialog: ActiveDialog.Settings()))
+                            viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.Settings()))
                         }) {
                             Label(NSLocalizedString("settings", comment: ""), systemImage: "gearshape")
                         }
@@ -123,10 +126,13 @@ struct BibleView: View {
             }
             .preferredColorScheme(colorScheme)
             .sheet(isPresented: Binding(
-                get: { state.activeDialog is ActiveDialog.PassageSelection },
-                set: { if !$0 { viewModel.onIntent(intent: BibleIntent.ShowDialog(dialog: nil)) } }
+                get: {
+                    let active = state.activeSheet
+                    return active is ActiveSheet.PassageSelection
+                },
+                set: { if !$0 { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: nil)) } }
             )) {
-                if let selection = state.activeDialog as? ActiveDialog.PassageSelection {
+                if let selection = state.activeSheet as? ActiveSheet.PassageSelection {
                     PassageSelectionView(
                         allBooks: state.allBooks,
                         selectedBook: state.currentBook,
@@ -135,13 +141,16 @@ struct BibleView: View {
                         onSelectPassage: { book, chapter, verse in
                             viewModel.onIntent(intent: BibleIntent.SelectPassage(book: book, chapter: Int32(chapter), verse: Int32(verse)))
                         },
-                        onDismiss: { viewModel.onIntent(intent: BibleIntent.ShowDialog(dialog: nil)) }
+                        onDismiss: { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: nil)) }
                     )
                 }
             }
             .sheet(isPresented: Binding(
-                get: { state.activeDialog is ActiveDialog.Settings },
-                set: { if !$0 { viewModel.onIntent(intent: BibleIntent.ShowDialog(dialog: nil)) } }
+                get: {
+                    let active = state.activeSheet
+                    return active is ActiveSheet.Settings
+                },
+                set: { if !$0 { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: nil)) } }
             )) {
                 SettingsView(
                     theme: state.theme,
@@ -150,40 +159,48 @@ struct BibleView: View {
                     onThemeChange: { viewModel.onIntent(intent: BibleIntent.UpdateTheme(theme: $0)) },
                     onDisplayModeChange: { viewModel.onIntent(intent: BibleIntent.UpdateDisplayMode(mode: $0)) },
                     onShowWordsOfJesusChange: { viewModel.onIntent(intent: BibleIntent.UpdateShowWordsOfJesus(enabled: $0)) },
-                    onDismiss: { viewModel.onIntent(intent: BibleIntent.ShowDialog(dialog: nil)) }
+                    onDismiss: { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: nil)) }
                 )
             }
             .sheet(isPresented: Binding(
-                get: { state.activeDialog is ActiveDialog.History },
-                set: { if !$0 { viewModel.onIntent(intent: BibleIntent.ShowDialog(dialog: nil)) } }
+                get: {
+                    let active = state.activeSheet
+                    return active is ActiveSheet.History
+                },
+                set: { if !$0 { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: nil)) } }
             )) {
                 HistoryView(
                     history: state.history,
                     currentBook: state.currentBook,
                     currentChapter: state.currentChapter,
                     currentVerse: state.currentVerse,
-                    onDismiss: { viewModel.onIntent(intent: BibleIntent.ShowDialog(dialog: nil)) },
                     onItemClick: { item in
                         viewModel.onIntent(intent: BibleIntent.NavigateToHistoryItem(item: item))
-                        viewModel.onIntent(intent: BibleIntent.ShowDialog(dialog: nil))
+                        viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: nil))
                     },
                     onClear: { viewModel.onIntent(intent: BibleIntent.ClearHistory()) }
                 )
             }
             .sheet(isPresented: Binding(
-                get: { state.activeDialog is ActiveDialog.VersionSelection },
-                set: { if !$0 { viewModel.onIntent(intent: BibleIntent.ShowDialog(dialog: nil)) } }
+                get: {
+                    let active = state.activeSheet
+                    return active is ActiveSheet.VersionSelection
+                },
+                set: { if !$0 { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: nil)) } }
             )) {
                 VersionSelectionView(
                     versions: state.versions,
                     selectedVersions: state.selectedVersions,
                     onToggleVersion: { viewModel.onIntent(intent: BibleIntent.ToggleParallelVersion(version: $0)) },
-                    onDismiss: { viewModel.onIntent(intent: BibleIntent.ShowDialog(dialog: nil)) }
+                    onDismiss: { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: nil)) }
                 )
             }
-            .fullScreenCover(isPresented: Binding(
-                get: { state.isSearchMode },
-                set: { viewModel.onIntent(intent: BibleIntent.SetSearchMode(enabled: $0)) }
+            .sheet(isPresented: Binding(
+                get: {
+                    let active = state.activeSheet
+                    return active is ActiveSheet.Search
+                },
+                set: { if !$0 { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: nil)) } }
             )) {
                 SearchView(
                     searchQuery: $searchQuery,
@@ -194,9 +211,9 @@ struct BibleView: View {
                     onSearchSortChange: { viewModel.onIntent(intent: BibleIntent.UpdateSearchSort(sort: $0)) },
                     onResultClick: { result in
                         viewModel.onIntent(intent: BibleIntent.SelectPassage(book: result.book, chapter: result.chapterNumber, verse: result.verseNumber))
-                        viewModel.onIntent(intent: BibleIntent.SetSearchMode(enabled: false))
+                        viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: nil))
                     },
-                    onBack: { viewModel.onIntent(intent: BibleIntent.SetSearchMode(enabled: false)) }
+                    onBack: { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: nil)) }
                 )
             }
         }

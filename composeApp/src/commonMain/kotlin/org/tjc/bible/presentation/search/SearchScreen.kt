@@ -163,9 +163,9 @@ fun SearchScreen(
     if (showTopBar) {
         Scaffold(
             modifier = Modifier
-                .fillMaxSize()
-                .imePadding()
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
+                .fillMaxWidth()
+                .fillMaxHeight(0.95f)
+                .imePadding(),
             topBar = {
                 SearchTopBar(
                     searchQuery = searchQuery,
@@ -180,12 +180,10 @@ fun SearchScreen(
                     onBack = onBack
                 )
             },
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
             bottomBar = {
-                Surface(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-                ) {
-                    Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
-                }
+                Spacer(Modifier.navigationBarsPadding())
             }
         ) { padding ->
             content(padding)
@@ -261,14 +259,6 @@ private fun SearchTopBar(
                             }
                         }
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            painter = painterResource(Res.drawable.arrow_back),
-                            contentDescription = stringResource(Res.string.back)
-                        )
-                    }
                 },
                 actions = {
                     IconButton(onClick = onToggleSearchSortVisibility) {

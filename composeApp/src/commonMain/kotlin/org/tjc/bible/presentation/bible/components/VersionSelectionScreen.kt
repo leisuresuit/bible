@@ -1,21 +1,24 @@
 package org.tjc.bible.presentation.bible.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.check
-import bible.composeapp.generated.resources.close
 import bible.composeapp.generated.resources.search
 import bible.composeapp.generated.resources.versions
 import org.jetbrains.compose.resources.painterResource
@@ -42,7 +44,7 @@ import org.tjc.bible.presentation.ui.BibleTheme
 import org.tjc.bible.presentation.ui.ThemePreviews
 
 @Composable
-fun VersionSelectionDialog(
+fun VersionSelectionScreen(
     versions: List<BibleVersion>,
     selectedVersions: List<BibleVersion>,
     onVersionToggle: (BibleVersion) -> Unit,
@@ -72,71 +74,72 @@ fun VersionSelectionDialog(
         }
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = onDismiss
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.8f)
+            .navigationBarsPadding()
+            .imePadding()
+    ) {
+        SelectionDialogHeader(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            title = stringResource(Res.string.versions),
+            searchHint = stringResource(Res.string.search),
+            searchQuery = searchQuery,
+            onSearchQueryChange = { searchQuery = it },
+            requestFocus = false
+        )
+
+        BoxWithConstraints(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 16.dp)
+        ) {
+            val maxHeight = maxHeight
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight),
+                state = listState
             ) {
-                Text(stringResource(Res.string.close))
-            }
-        },
-        modifier = Modifier.imePadding(),
-        title = {
-            SelectionDialogHeader(
-                title = stringResource(Res.string.versions),
-                searchHint = stringResource(Res.string.search),
-                searchQuery = searchQuery,
-                onSearchQueryChange = { searchQuery = it }
-            )
-        },
-        text = {
-            BoxWithConstraints {
-                val maxHeight = maxHeight * 0.6f
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight),
-                    state = listState
-                ) {
-                    items(filteredVersions) { version ->
-                        val isSelected = selectedVersions.any { it.id == version.id }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onVersionToggle(version) }
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(modifier = Modifier.size(24.dp)) {
-                                if (isSelected) {
-                                    Icon(painterResource(Res.drawable.check), contentDescription = null)
-                                }
+                items(filteredVersions) { version ->
+                    val isSelected = selectedVersions.any { it.id == version.id }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onVersionToggle(version) }
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(modifier = Modifier.size(24.dp)) {
+                            if (isSelected) {
+                                Icon(painterResource(Res.drawable.check), contentDescription = null)
                             }
-                            Spacer(Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = version.abbreviation,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    text = version.name,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
-                            }
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = version.abbreviation,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = version.name,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
                         }
                     }
                 }
             }
         }
-    )
+
+    }
 }
 
 @ThemePreviews
 @Composable
-fun VersionSelectionDialogPreview() {
+fun VersionSelectionScreenPreview() {
     BibleTheme {
-        VersionSelectionDialog(
+        VersionSelectionScreen(
             versions = listOf(
                 BibleVersion("nkjv", "New King James Version", "English", "NKJV"),
                 BibleVersion("kjv", "King King James Version", "English", "KJV"),

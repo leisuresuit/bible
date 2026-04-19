@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
+import bible.composeapp.generated.resources.clear
 import bible.composeapp.generated.resources.sort
 import org.jetbrains.compose.resources.painterResource
 import org.tjc.bible.presentation.ui.AutoResizedText
@@ -31,19 +32,23 @@ fun SelectionDialogHeader(
     searchHint: String,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
     showSortButton: Boolean = false,
     onSortClick: () -> Unit = {},
     keyboardType: KeyboardType = KeyboardType.Text,
     titleWeight: Float? = null,
-    searchWeight: Float? = null
+    searchWeight: Float? = null,
+    requestFocus: Boolean = true
 ) {
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
+        if (requestFocus) {
+            focusRequester.requestFocus()
+        }
     }
 
-    Column(modifier = Modifier.padding(bottom = 16.dp)) {
+    Column(modifier = modifier.padding(bottom = 16.dp)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
@@ -78,10 +83,11 @@ fun SelectionDialogHeader(
                 ),
                 modifier = Modifier
                     .padding(start = 8.dp)
-                    .then(if (searchWeight != null) Modifier.weight(searchWeight) else Modifier)
+                    .weight(1f)
                     .focusRequester(focusRequester),
                 singleLine = true
             )
         }
     }
 }
+

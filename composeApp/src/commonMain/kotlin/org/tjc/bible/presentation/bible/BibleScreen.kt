@@ -23,13 +23,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.navigation3.runtime.NavKey
+import org.tjc.bible.presentation.bible.ActiveSheet
+import org.tjc.bible.presentation.bible.BibleIntent
+import org.tjc.bible.presentation.bible.BibleViewModel
 import org.tjc.bible.presentation.bible.components.BibleTopBar
-import org.tjc.bible.presentation.bible.components.HistoryDialog
-import org.tjc.bible.presentation.bible.components.PassageSelectionDialog
-import org.tjc.bible.presentation.bible.components.SettingsDialog
 import org.tjc.bible.presentation.bible.components.VerseList
-import org.tjc.bible.presentation.bible.components.VersionSelectionDialog
-import org.tjc.bible.presentation.ui.supportsDynamicColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,11 +65,11 @@ fun BibleScreen(
                 currentBook = state.currentBook,
                 currentChapter = state.currentChapter,
                 selectedVersions = state.selectedVersions,
-                onSetSearchMode = { viewModel.onIntent(BibleIntent.SetSearchMode(it)) },
-                onShowPassageSelection = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.PassageSelection(it))) },
-                onShowVersionSelection = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.VersionSelection)) },
-                onShowHistory = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.History)) },
-                onShowSettings = { viewModel.onIntent(BibleIntent.ShowDialog(ActiveDialog.Settings)) },
+                onShowSearch = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.Search)) },
+                onShowPassageSelection = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.PassageSelection(it))) },
+                onShowVersionSelection = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.VersionSelection)) },
+                onShowHistory = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.History)) },
+                onShowSettings = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.Settings)) },
                 scrollBehavior = scrollBehavior
             )
         },
@@ -97,8 +95,8 @@ fun BibleScreen(
             isLoading = state.isLoading,
             onShowPassageSelection = {
                 viewModel.onIntent(
-                    BibleIntent.ShowDialog(
-                        ActiveDialog.PassageSelection(it)
+                    BibleIntent.ShowSheet(
+                        ActiveSheet.PassageSelection(it)
                     )
                 )
             },
@@ -115,59 +113,5 @@ fun BibleScreen(
             contentPadding = padding,
             nestedScrollConnection = scrollBehavior.nestedScrollConnection
         )
-
-        // Dialogs
-        state.activeDialog?.let { dialog ->
-            when (dialog) {
-                is ActiveDialog.PassageSelection -> {
-                    PassageSelectionDialog(
-                        currentBook = state.currentBook,
-                        currentChapter = state.currentChapter,
-                        currentVerse = state.currentVerse,
-                        initialPage = dialog.initialPage,
-                        onPassageSelected = { book, chapter, verse ->
-                            viewModel.onIntent(BibleIntent.SelectPassage(book, chapter, verse))
-                        },
-                        onDismiss = { viewModel.onIntent(BibleIntent.ShowDialog(null)) }
-                    )
-                }
-
-                is ActiveDialog.VersionSelection -> {
-                    VersionSelectionDialog(
-                        versions = state.versions,
-                        selectedVersions = state.selectedVersions,
-                        onVersionToggle = { viewModel.onIntent(BibleIntent.ToggleParallelVersion(it)) },
-                        onDismiss = { viewModel.onIntent(BibleIntent.ShowDialog(null)) }
-                    )
-                }
-
-                is ActiveDialog.Settings -> {
-                    SettingsDialog(
-                        displayMode = state.displayMode,
-                        showWordsOfJesus = state.showWordsOfJesus,
-                        theme = state.theme,
-                        isDynamicColor = state.isDynamicColor,
-                        supportsDynamicColor = supportsDynamicColor,
-                        onDisplayModeChange = { viewModel.onIntent(BibleIntent.UpdateDisplayMode(it)) },
-                        onShowWordsOfJesusChange = { viewModel.onIntent(BibleIntent.UpdateShowWordsOfJesus(it)) },
-                        onThemeChange = { viewModel.onIntent(BibleIntent.UpdateTheme(it)) },
-                        onDynamicColorChange = { viewModel.onIntent(BibleIntent.UpdateDynamicColor(it)) },
-                        onDismiss = { viewModel.onIntent(BibleIntent.ShowDialog(null)) }
-                    )
-                }
-
-                is ActiveDialog.History -> {
-                    HistoryDialog(
-                        history = state.history,
-                        currentBook = state.currentBook,
-                        currentChapter = state.currentChapter,
-                        currentVerse = state.currentVerse,
-                        onDismiss = { viewModel.onIntent(BibleIntent.ShowDialog(null)) },
-                        onItemClick = { viewModel.onIntent(BibleIntent.NavigateToHistoryItem(it)) },
-                        onClear = { viewModel.onIntent(BibleIntent.ClearHistory) }
-                    )
-                }
-            }
-        }
     }
 }

@@ -6,9 +6,14 @@ struct HistoryView: View {
     let currentBook: Book?
     let currentChapter: Int32
     let currentVerse: Int32?
-    let onDismiss: () -> Void
     let onItemClick: (HistoryItem) -> Void
     let onClear: () -> Void
+
+    private var currentIndex: Int? {
+        history.firstIndex(where: {
+            $0.book == currentBook && $0.chapter == currentChapter && $0.verse == currentVerse
+        })
+    }
 
     var body: some View {
         NavigationView {
@@ -36,15 +41,28 @@ struct HistoryView: View {
             }
             .navigationTitle(NSLocalizedString("history", comment: ""))
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
                     Button(NSLocalizedString("clear", comment: "")) {
                         onClear()
                     }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(NSLocalizedString("close", comment: "")) {
-                        onDismiss()
+                    
+                    Button(action: {
+                        if let index = currentIndex, index < history.count - 1 {
+                            onItemClick(history[index + 1])
+                        }
+                    }) {
+                        Image(systemName: "chevron.left")
                     }
+                    .disabled(currentIndex == nil || currentIndex == history.count - 1)
+
+                    Button(action: {
+                        if let index = currentIndex, index > 0 {
+                            onItemClick(history[index - 1])
+                        }
+                    }) {
+                        Image(systemName: "chevron.right")
+                    }
+                    .disabled(currentIndex == nil || currentIndex == 0)
                 }
             }
         }

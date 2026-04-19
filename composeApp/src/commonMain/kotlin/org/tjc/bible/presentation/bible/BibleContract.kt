@@ -27,28 +27,28 @@ data class BibleState(
     val searchResults: List<SearchResult> = emptyList(),
     val isSearchingMore: Boolean = false,
     val hasMoreSearchResults: Boolean = true,
-    val activeDialog: ActiveDialog? = null,
     val theme: AppTheme = AppTheme.SYSTEM,
     val isDynamicColor: Boolean = true,
     val showWordsOfJesus: Boolean = true,
     val searchQuery: String = "",
     val searchSort: SearchSort = SearchSort.RELEVANCE,
-    val isSearchMode: Boolean = false,
     val isSearchSortVisible: Boolean = true,
     val displayMode: DisplayMode = DisplayMode.SINGLE_CHAPTER,
     val allBooks: List<Book> = Book.entries,
-    val selectionEventId: Long = 0L
+    val selectionEventId: Long = 0L,
+    val activeSheet: ActiveSheet? = null
 )
 
 enum class Operation {
     LOAD_VERSIONS, LOAD_VERSES, SEARCH
 }
 
-sealed class ActiveDialog {
-    object VersionSelection : ActiveDialog()
-    data class PassageSelection(val initialPage: Int = 0) : ActiveDialog()
-    object Settings : ActiveDialog()
-    object History : ActiveDialog()
+sealed class ActiveSheet {
+    object VersionSelection : ActiveSheet()
+    data class PassageSelection(val initialPage: Int = 0) : ActiveSheet()
+    object Settings : ActiveSheet()
+    object History : ActiveSheet()
+    object Search : ActiveSheet()
 }
 
 sealed class BibleIntent {
@@ -62,14 +62,13 @@ sealed class BibleIntent {
     data class LoadChapterVerses(val book: Book, val chapter: Int, val globalIndex: Int) : BibleIntent()
     data class UpdateSearchQuery(val query: String) : BibleIntent()
     data class UpdateSearchSort(val sort: SearchSort) : BibleIntent()
-    data class SetSearchMode(val enabled: Boolean) : BibleIntent()
     object ToggleSearchSortVisibility : BibleIntent()
     object ClearHistory : BibleIntent()
     object LoadMoreSearchResults : BibleIntent()
     data class UpdateTheme(val theme: AppTheme) : BibleIntent()
     data class UpdateDynamicColor(val enabled: Boolean) : BibleIntent()
     data class UpdateShowWordsOfJesus(val enabled: Boolean) : BibleIntent()
-    data class ShowDialog(val dialog: ActiveDialog?) : BibleIntent()
+    data class ShowSheet(val sheet: ActiveSheet?) : BibleIntent()
     data class NavigateToHistoryItem(val item: HistoryItem) : BibleIntent()
     data class UpdateDisplayMode(val mode: DisplayMode) : BibleIntent()
     object NextChapter : BibleIntent()
@@ -78,6 +77,7 @@ sealed class BibleIntent {
 }
 
 internal sealed class BibleAction {
+    data class ShowSheet(val sheet: ActiveSheet?) : BibleAction()
     data class DataLoaded(
         val versions: List<BibleVersion>,
         val selectedVersions: List<BibleVersion>,
@@ -88,7 +88,6 @@ internal sealed class BibleAction {
     data class VersesLoaded(val verses: List<Verse>) : BibleAction()
     data class ChapterVersesLoaded(val globalIndex: Int, val verses: List<Verse>) : BibleAction()
     data class Loading(val isLoading: Boolean) : BibleAction()
-    data class DialogChanged(val dialog: ActiveDialog?) : BibleAction()
     data class ThemeChanged(val theme: AppTheme) : BibleAction()
     data class DynamicColorChanged(val enabled: Boolean) : BibleAction()
     data class ShowWordsOfJesusChanged(val enabled: Boolean) : BibleAction()
@@ -101,7 +100,6 @@ internal sealed class BibleAction {
     data class VersionsChanged(val selected: List<BibleVersion>) : BibleAction()
     data class NavigateChapter(val delta: Int) : BibleAction()
     data class HistoryLoaded(val history: List<HistoryItem>) : BibleAction()
-    data class SearchModeChanged(val enabled: Boolean) : BibleAction()
     object SearchSortVisibilityToggled : BibleAction()
     data class SearchQueryChanged(val query: String) : BibleAction()
     data class SearchSortChanged(val sort: SearchSort) : BibleAction()
