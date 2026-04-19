@@ -91,6 +91,9 @@ fun HistoryScreen(
                 style = MaterialTheme.typography.headlineSmall
             )
             Spacer(Modifier.weight(1f))
+            TextButton(onClick = onClear) {
+                Text(stringResource(Res.string.clear))
+            }
             IconButton(
                 onClick = { if (currentIndex < history.size - 1) onItemClick(history[currentIndex + 1]) },
                 enabled = currentIndex != -1 && currentIndex < history.size - 1
@@ -144,19 +147,6 @@ fun HistoryScreen(
                         textAlign = TextAlign.Center
                     )
                 }
-            }
-        }
-
-        HorizontalDivider()
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
-            TextButton(onClick = onClear) {
-                Text(stringResource(Res.string.clear))
             }
         }
     }
