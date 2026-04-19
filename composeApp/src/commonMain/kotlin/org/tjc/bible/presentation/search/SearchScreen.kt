@@ -19,23 +19,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import bible.composeapp.generated.resources.Res
-import bible.composeapp.generated.resources.arrow_back
-import bible.composeapp.generated.resources.back
 import bible.composeapp.generated.resources.check
-import bible.composeapp.generated.resources.clear
 import bible.composeapp.generated.resources.no_results_found
 import bible.composeapp.generated.resources.search
 import bible.composeapp.generated.resources.sort
@@ -47,8 +41,8 @@ import kotlinx.coroutines.flow.filter
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.SearchResult
-
 import org.tjc.bible.domain.model.SearchSort
+import org.tjc.bible.presentation.ui.ClearableTextField
 import org.tjc.bible.presentation.ui.nameResource
 
 @OptIn(
@@ -70,8 +64,7 @@ fun SearchScreen(
     onSearchSortChange: (SearchSort) -> Unit = {},
     onToggleSearchSortVisibility: () -> Unit = {},
     onLoadMore: () -> Unit,
-    onResultClick: (SearchResult) -> Unit,
-    onBack: () -> Unit
+    onResultClick: (SearchResult) -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
@@ -171,13 +164,11 @@ fun SearchScreen(
                     searchQuery = searchQuery,
                     searchSort = searchSort,
                     isSearchSortVisible = isSearchSortVisible,
-                    isLoading = isLoading,
                     focusRequester = focusRequester,
                     scrollBehavior = scrollBehavior,
                     onSearchQueryChange = onSearchQueryChange,
                     onSearchSortChange = onSearchSortChange,
-                    onToggleSearchSortVisibility = onToggleSearchSortVisibility,
-                    onBack = onBack
+                    onToggleSearchSortVisibility = onToggleSearchSortVisibility
                 )
             },
             containerColor = MaterialTheme.colorScheme.surface,
@@ -202,13 +193,11 @@ private fun SearchTopBar(
     searchQuery: String,
     searchSort: SearchSort,
     isSearchSortVisible: Boolean,
-    isLoading: Boolean,
     focusRequester: FocusRequester,
     scrollBehavior: TopAppBarScrollBehavior,
     onSearchQueryChange: (String) -> Unit,
     onSearchSortChange: (SearchSort) -> Unit,
-    onToggleSearchSortVisibility: () -> Unit,
-    onBack: () -> Unit
+    onToggleSearchSortVisibility: () -> Unit
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
@@ -223,41 +212,12 @@ private fun SearchTopBar(
                     scrolledContainerColor = Color.Transparent
                 ),
                 title = {
-                    val textFieldValue = remember(searchQuery) {
-                        TextFieldValue(
-                            text = searchQuery,
-                            selection = TextRange(searchQuery.length)
-                        )
-                    }
-                    TextField(
-                        value = textFieldValue,
-                        onValueChange = { onSearchQueryChange(it.text) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(focusRequester),
-                        placeholder = { Text(stringResource(Res.string.search)) },
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                        ),
-                        trailingIcon = {
-                            if (isLoading) {
-                                LoadingIndicator(
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            } else if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { onSearchQueryChange("") }) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.clear),
-                                        contentDescription = stringResource(Res.string.clear)
-                                    )
-                                }
-                            }
-                        }
+                    ClearableTextField(
+                        value = searchQuery,
+                        onValueChange = onSearchQueryChange,
+                        modifier = Modifier.fillMaxWidth(),
+                        focusRequester = focusRequester,
+                        placeholder = stringResource(Res.string.search)
                     )
                 },
                 actions = {

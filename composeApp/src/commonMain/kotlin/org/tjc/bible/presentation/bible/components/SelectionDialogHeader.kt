@@ -21,10 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
-import bible.composeapp.generated.resources.clear
 import bible.composeapp.generated.resources.sort
 import org.jetbrains.compose.resources.painterResource
 import org.tjc.bible.presentation.ui.AutoResizedText
+import org.tjc.bible.presentation.ui.ClearableTextField
 
 @Composable
 fun SelectionDialogHeader(
@@ -67,25 +67,15 @@ fun SelectionDialogHeader(
                     )
                 }
             }
-            TextField(
+            ClearableTextField(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
-                placeholder = {
-                    AutoResizedText(
-                        text = searchHint,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                },
+                placeholder = searchHint,
                 keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
-                ),
                 modifier = Modifier
                     .padding(start = 8.dp)
-                    .weight(1f)
-                    .focusRequester(focusRequester),
-                singleLine = true
+                    .weight(1f),
+                focusRequester = focusRequester
             )
         }
     }
