@@ -105,7 +105,7 @@ class BibleViewModel(
             }
             is BibleIntent.UpdateSearchQuery -> handleSearch(intent.query)
             is BibleIntent.UpdateSearchSort -> handleSearchSort(intent.sort)
-            is BibleIntent.ToggleSearchSortVisibility -> dispatch(BibleAction.SearchSortVisibilityToggled)
+            is BibleIntent.ToggleSearchSortVisibility -> viewModelScope.launch { preferenceStorage.setSearchSortVisible(!_state.value.isSearchSortVisible) }
             is BibleIntent.LoadMoreSearchResults -> handleLoadMoreSearchResults()
             is BibleIntent.RetryOperation -> {
                 when (intent.operation) {
@@ -268,19 +268,26 @@ class BibleViewModel(
 
     private fun observePreferences() {
         viewModelScope.launch {
-            combine(
-                preferenceStorage.theme,
-                preferenceStorage.displayMode,
-                preferenceStorage.isDynamicColor,
-                preferenceStorage.showWordsOfJesus,
-                preferenceStorage.history
-            ) { theme, mode, dynamic, showWJ, history ->
-                dispatch(BibleAction.ThemeChanged(theme))
-                dispatch(BibleAction.DisplayModeChanged(mode))
-                dispatch(BibleAction.DynamicColorChanged(dynamic))
-                dispatch(BibleAction.ShowWordsOfJesusChanged(showWJ))
-                dispatch(BibleAction.HistoryLoaded(history))
-            }.collectLatest { }
+            preferenceStorage.theme.collect { dispatch(BibleAction.ThemeChanged(it)) }
+        }
+        viewModelScope.launch {
+            preferenceStorage.displayMode.collect { dispatch(BibleAction.DisplayModeChanged(it)) }
+        }
+        viewModelScope.launch {
+            preferenceStorage.isDynamicColor.collect { dispatch(BibleAction.DynamicColorChanged(it)) }
+        }
+        viewModelScope.launch {
+            preferenceStorage.showWordsOfJesus.collect { dispatch(BibleAction.ShowWordsOfJesusChanged(it)) }
+        }
+        viewModelScope.launch {
+            preferenceStorage.history.collect { dispatch(BibleAction.HistoryLoaded(it)) }
+        }
+        viewModelScope.launch {
+            preferenceStorage.isSearchSortVisible.collect { sortVisible ->
+                if (sortVisible != _state.value.isSearchSortVisible) {
+                    dispatch(BibleAction.SearchSortVisibilityToggled)
+                }
+            }
         }
     }
 

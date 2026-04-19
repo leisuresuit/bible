@@ -29,6 +29,7 @@ class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
         val HISTORY = stringPreferencesKey("history")
         val SELECTED_VERSIONS = stringPreferencesKey("selected_versions")
         val SHOW_WORDS_OF_JESUS = booleanPreferencesKey("show_words_of_jesus")
+        val SEARCH_SORT_VISIBLE = booleanPreferencesKey("search_sort_visible")
     }
 
     val theme: Flow<AppTheme> = dataStore.data
@@ -55,6 +56,12 @@ class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
         .catch { emit(emptyPreferences()) }
         .map { prefs ->
             prefs[Keys.SHOW_WORDS_OF_JESUS] ?: true
+        }
+
+    val isSearchSortVisible: Flow<Boolean> = dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map { prefs ->
+            prefs[Keys.SEARCH_SORT_VISIBLE] ?: true
         }
 
     val lastPassage: Flow<Triple<Book, Int, Int>> = dataStore.data
@@ -124,5 +131,9 @@ class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
 
     suspend fun setShowWordsOfJesus(enabled: Boolean) {
         dataStore.edit { it[Keys.SHOW_WORDS_OF_JESUS] = enabled }
+    }
+
+    suspend fun setSearchSortVisible(visible: Boolean) {
+        dataStore.edit { it[Keys.SEARCH_SORT_VISIBLE] = visible }
     }
 }
