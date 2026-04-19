@@ -74,9 +74,7 @@ class BibleViewModel(
             is BibleIntent.SelectVerse -> {
                 dispatch(BibleAction.VerseSelected(intent.verse))
                 val book = _state.value.currentBook
-                if (book != null) {
-                    addToHistory(book, _state.value.currentChapter, intent.verse)
-                }
+                addToHistory(book, _state.value.currentChapter, intent.verse)
             }
             is BibleIntent.SelectPassage -> handleSelectPassage(intent.book, intent.chapter, intent.verse)
             is BibleIntent.UpdateVisiblePassage -> handleUpdateVisiblePassage(intent.book, intent.chapter, intent.verse)
@@ -309,7 +307,7 @@ class BibleViewModel(
             is BibleAction.VersesLoaded -> state.copy(
                 verses = action.verses,
                 // Update chaptersVerses for the current chapter as well to keep it in sync
-                chaptersVerses = state.chaptersVerses + (getGlobalIndex(state.currentBook!!, state.currentChapter) to action.verses)
+                chaptersVerses = state.chaptersVerses + (getGlobalIndex(state.currentBook, state.currentChapter) to action.verses)
             )
             is BibleAction.ChapterVersesLoaded -> state.copy(
                 chaptersVerses = state.chaptersVerses + (action.globalIndex to action.verses)
@@ -351,7 +349,7 @@ class BibleViewModel(
                 chaptersVerses = emptyMap() // Clear cache when versions change
             )
             is BibleAction.NavigateChapter -> {
-                val currentBook = state.currentBook ?: return state
+                val currentBook = state.currentBook
                 val books = Book.entries
                 val bookIndex = books.indexOf(currentBook)
                 
@@ -460,7 +458,7 @@ class BibleViewModel(
     private fun saveLastPassage(book: Book? = null, chapter: Int? = null, verse: Int? = null) {
         viewModelScope.launch {
             val currentState = _state.value
-            val b = book ?: currentState.currentBook ?: return@launch
+            val b = book ?: currentState.currentBook
             val ch = chapter ?: currentState.currentChapter
             val v = verse ?: currentState.currentVerse
             preferenceStorage.setLastPassage(b, ch, v)
@@ -548,7 +546,7 @@ class BibleViewModel(
         viewModelScope.launch {
             val currentState = state.value
             val selectedVersions = currentState.selectedVersions
-            val book = currentState.currentBook ?: return@launch
+            val book = currentState.currentBook
             val chapter = currentState.currentChapter
 
             fetchVerses(selectedVersions, book, chapter).fold(

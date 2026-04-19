@@ -17,7 +17,7 @@ enum class DisplayMode {
 data class BibleState(
     val versions: List<BibleVersion> = emptyList(),
     val selectedVersions: List<BibleVersion> = emptyList(),
-    val currentBook: Book? = null,
+    val currentBook: Book = Book.Genesis,
     val currentChapter: Int = 1,
     val currentVerse: Int = 1,
     val verses: List<Verse> = emptyList(),
@@ -81,7 +81,7 @@ internal sealed class BibleAction {
     data class DataLoaded(
         val versions: List<BibleVersion>,
         val selectedVersions: List<BibleVersion>,
-        val currentBook: Book?,
+        val currentBook: Book,
         val currentChapter: Int,
         val currentVerse: Int
     ) : BibleAction()
