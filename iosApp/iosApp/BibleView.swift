@@ -39,8 +39,9 @@ struct BibleView: View {
                                 .font(.system(.body, design: .serif))
                                 .lineSpacing(4)
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 0)
                         .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                     }
                 }
                 .navigationTitle(navigationTitleText)
