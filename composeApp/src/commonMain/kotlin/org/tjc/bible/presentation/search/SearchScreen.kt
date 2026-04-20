@@ -39,7 +39,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.SearchResult
 import org.tjc.bible.domain.model.SearchSort
-import org.tjc.bible.presentation.bible.components.SelectionDialogHeader
+import org.tjc.bible.presentation.bible.components.SelectionHeader
 import org.tjc.bible.presentation.ui.nameResource
 
 @OptIn(
@@ -111,6 +111,8 @@ fun SearchScreen(
             onToggleSearchSortVisibility = onToggleSearchSortVisibility
         )
 
+        HorizontalDivider()
+
         Box(
             modifier = Modifier.weight(1f)
         ) {
@@ -179,7 +181,7 @@ private fun SearchHeader(
     Column(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        SelectionDialogHeader(
+        SelectionHeader(
             title = stringResource(Res.string.search),
             searchHint = stringResource(Res.string.search),
             searchQuery = searchQuery,

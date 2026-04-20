@@ -107,7 +107,7 @@ fun PassageSelectionScreen(
                     else -> stringResource(Res.string.verse)
                 }
 
-                SelectionDialogHeader(
+                SelectionHeader(
                     title = title,
                     searchHint = searchHint,
                     searchQuery = searchQuery,
@@ -118,6 +118,8 @@ fun PassageSelectionScreen(
                     titleWeight = if (pagerState.currentPage == 0) null else 1.5f,
                     requestFocus = false
                 )
+
+                HorizontalDivider()
 
                 HorizontalPager(
                     state = pagerState,

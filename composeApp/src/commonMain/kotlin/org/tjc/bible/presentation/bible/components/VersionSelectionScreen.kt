@@ -1,7 +1,6 @@
 package org.tjc.bible.presentation.bible.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -22,7 +21,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -80,7 +78,7 @@ fun VersionSelectionScreen(
             .navigationBarsPadding()
             .imePadding()
     ) {
-        SelectionDialogHeader(
+        SelectionHeader(
             modifier = Modifier.padding(horizontal = 16.dp),
             title = stringResource(Res.string.versions),
             searchHint = stringResource(Res.string.search),
@@ -88,6 +86,8 @@ fun VersionSelectionScreen(
             onSearchQueryChange = { searchQuery = it },
             requestFocus = false
         )
+
+        HorizontalDivider()
 
         BoxWithConstraints(
             modifier = Modifier

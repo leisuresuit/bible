@@ -51,26 +51,14 @@ fun SettingsScreen(
             .navigationBarsPadding()
             .imePadding()
     ) {
-        Row(
-            Modifier
-                .wrapContentHeight()
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(painterResource(Res.drawable.settings), contentDescription = null)
-            Text(
-                text = stringResource(Res.string.settings),
-                Modifier.padding(start = 8.dp),
-                style = MaterialTheme.typography.headlineSmall
-            )
-            Spacer(Modifier.weight(1f))
-        }
+        SettingsHeader()
+
+        HorizontalDivider()
 
         BoxWithConstraints(
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = 16.dp)
+                .padding(16.dp)
         ) {
             val maxHeight = maxHeight
             Column(
@@ -121,7 +109,7 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onShowWordsOfJesusChange(!showWordsOfJesus) }
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 15.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
@@ -193,7 +181,25 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+}
 
+@Composable
+fun SettingsHeader() {
+    Row(
+        Modifier
+            .wrapContentHeight()
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(painterResource(Res.drawable.settings), contentDescription = null)
+        Text(
+            text = stringResource(Res.string.settings),
+            Modifier.padding(start = 8.dp),
+            style = MaterialTheme.typography.headlineSmall
+        )
+        Spacer(Modifier.weight(1f))
     }
 }
 

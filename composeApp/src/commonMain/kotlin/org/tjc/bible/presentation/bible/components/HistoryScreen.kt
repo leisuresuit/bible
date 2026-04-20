@@ -75,43 +75,12 @@ fun HistoryScreen(
             .navigationBarsPadding()
             .imePadding()
     ) {
-        Row(
-            Modifier
-                .wrapContentHeight()
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(painterResource(Res.drawable.history), contentDescription = null)
-            Text(
-                text = stringResource(Res.string.history),
-                Modifier.padding(start = 8.dp),
-                style = MaterialTheme.typography.headlineSmall
-            )
-            Spacer(Modifier.weight(1f))
-            TextButton(onClick = onClear) {
-                Text(stringResource(Res.string.clear))
-            }
-            IconButton(
-                onClick = { if (currentIndex < history.size - 1) onItemClick(history[currentIndex + 1]) },
-                enabled = currentIndex != -1 && currentIndex < history.size - 1
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.arrow_back),
-                    contentDescription = stringResource(Res.string.previous)
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButton(
-                onClick = { if (currentIndex > 0) onItemClick(history[currentIndex - 1]) },
-                enabled = currentIndex > 0
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.arrow_forward),
-                    contentDescription = stringResource(Res.string.next)
-                )
-            }
-        }
+        HistoryHeader(
+            history = history,
+            currentIndex = currentIndex,
+            onItemClick = onItemClick,
+            onClear = onClear
+        )
 
         HorizontalDivider()
 
@@ -146,6 +115,52 @@ fun HistoryScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun HistoryHeader(
+    history: List<HistoryItem>,
+    currentIndex: Int,
+    onItemClick: (HistoryItem) -> Unit,
+    onClear: () -> Unit
+) {
+    Row(
+        Modifier
+            .wrapContentHeight()
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(painterResource(Res.drawable.history), contentDescription = null)
+        Text(
+            text = stringResource(Res.string.history),
+            Modifier.padding(start = 8.dp),
+            style = MaterialTheme.typography.headlineSmall
+        )
+        Spacer(Modifier.weight(1f))
+        TextButton(onClick = onClear) {
+            Text(stringResource(Res.string.clear))
+        }
+        IconButton(
+            onClick = { if (currentIndex < history.size - 1) onItemClick(history[currentIndex + 1]) },
+            enabled = currentIndex != -1 && currentIndex < history.size - 1
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.arrow_back),
+                contentDescription = stringResource(Res.string.previous)
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        IconButton(
+            onClick = { if (currentIndex > 0) onItemClick(history[currentIndex - 1]) },
+            enabled = currentIndex > 0
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.arrow_forward),
+                contentDescription = stringResource(Res.string.next)
+            )
         }
     }
 }
