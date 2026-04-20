@@ -19,8 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -32,7 +30,6 @@ import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.check
 import bible.composeapp.generated.resources.no_results_found
 import bible.composeapp.generated.resources.search
-import bible.composeapp.generated.resources.sort
 import bible.composeapp.generated.resources.sort_by
 import bible.composeapp.generated.resources.sort_canonical
 import bible.composeapp.generated.resources.sort_relevance
@@ -42,7 +39,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.SearchResult
 import org.tjc.bible.domain.model.SearchSort
-import org.tjc.bible.presentation.ui.ClearableTextField
+import org.tjc.bible.presentation.bible.components.SelectionDialogHeader
 import org.tjc.bible.presentation.ui.nameResource
 
 @OptIn(
@@ -58,7 +55,6 @@ fun SearchScreen(
     isLoading: Boolean = false,
     isSearchingMore: Boolean = false,
     hasMoreResults: Boolean = true,
-    showTopBar: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     onSearchQueryChange: (String) -> Unit,
     onSearchSortChange: (SearchSort) -> Unit = {},
@@ -68,12 +64,9 @@ fun SearchScreen(
 ) {
     val focusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(Unit) {
-        if (showTopBar) {
-            focusRequester.requestFocus()
-        }
+        focusRequester.requestFocus()
     }
 
     val shouldLoadMore = remember(listState, hasMoreResults, isLoading, isSearchingMore, searchResults) {
@@ -102,8 +95,25 @@ fun SearchScreen(
             }
     }
 
-    val content = @Composable { padding: PaddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.8f)
+            .navigationBarsPadding()
+            .imePadding()
+    ) {
+        SearchHeader(
+            searchQuery = searchQuery,
+            searchSort = searchSort,
+            isSearchSortVisible = isSearchSortVisible,
+            onSearchQueryChange = onSearchQueryChange,
+            onSearchSortChange = onSearchSortChange,
+            onToggleSearchSortVisibility = onToggleSearchSortVisibility
+        )
+
+        Box(
+            modifier = Modifier.weight(1f)
+        ) {
             if (isLoading && searchResults.isEmpty()) {
                 LoadingIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (searchResults.isEmpty() && searchQuery.length >= 3 && !isLoading) {
@@ -117,10 +127,9 @@ fun SearchScreen(
                     modifier = Modifier.fillMaxSize(),
                     userScrollEnabled = searchResults.isNotEmpty(),
                     contentPadding = PaddingValues(
-                        start = 16.dp + padding.calculateStartPadding(LayoutDirection.Ltr),
-                        top = padding.calculateTopPadding(),
-                        end = 16.dp + padding.calculateEndPadding(LayoutDirection.Ltr),
-                        bottom = 16.dp + padding.calculateBottomPadding()
+                        start = 16.dp + contentPadding.calculateStartPadding(LayoutDirection.Ltr),
+                        end = 16.dp + contentPadding.calculateEndPadding(LayoutDirection.Ltr),
+                        bottom = 16.dp + contentPadding.calculateBottomPadding()
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -152,36 +161,6 @@ fun SearchScreen(
             }
         }
     }
-
-    if (showTopBar) {
-        Scaffold(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.95f)
-                .imePadding(),
-            topBar = {
-                SearchTopBar(
-                    searchQuery = searchQuery,
-                    searchSort = searchSort,
-                    isSearchSortVisible = isSearchSortVisible,
-                    focusRequester = focusRequester,
-                    scrollBehavior = scrollBehavior,
-                    onSearchQueryChange = onSearchQueryChange,
-                    onSearchSortChange = onSearchSortChange,
-                    onToggleSearchSortVisibility = onToggleSearchSortVisibility
-                )
-            },
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            bottomBar = {
-                Spacer(Modifier.navigationBarsPadding())
-            }
-        ) { padding ->
-            content(padding)
-        }
-    } else {
-        content(contentPadding)
-    }
 }
 
 @OptIn(
@@ -189,57 +168,35 @@ fun SearchScreen(
     ExperimentalMaterial3ExpressiveApi::class
 )
 @Composable
-private fun SearchTopBar(
+private fun SearchHeader(
     searchQuery: String,
     searchSort: SearchSort,
     isSearchSortVisible: Boolean,
-    focusRequester: FocusRequester,
-    scrollBehavior: TopAppBarScrollBehavior,
     onSearchQueryChange: (String) -> Unit,
     onSearchSortChange: (SearchSort) -> Unit,
     onToggleSearchSortVisibility: () -> Unit
 ) {
-    Surface(
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-        tonalElevation = 2.dp,
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Column {
-            TopAppBar(
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent
-                ),
-                title = {
-                    ClearableTextField(
-                        value = searchQuery,
-                        onValueChange = onSearchQueryChange,
-                        modifier = Modifier.fillMaxWidth(),
-                        focusRequester = focusRequester,
-                        placeholder = stringResource(Res.string.search)
-                    )
-                },
-                actions = {
-                    IconButton(onClick = onToggleSearchSortVisibility) {
-                        Icon(
-                            painter = painterResource(Res.drawable.sort),
-                            contentDescription = stringResource(Res.string.sort_by),
-                            tint = if (isSearchSortVisible) MaterialTheme.colorScheme.primary else LocalContentColor.current
-                        )
-                    }
-                }
+        SelectionDialogHeader(
+            title = stringResource(Res.string.search),
+            searchHint = stringResource(Res.string.search),
+            searchQuery = searchQuery,
+            onSearchQueryChange = onSearchQueryChange,
+            showSortButton = true,
+            onSortClick = onToggleSearchSortVisibility,
+            requestFocus = false // Focus managed by SearchScreen's LaunchedEffect
+        )
+        AnimatedVisibility(
+            visible = isSearchSortVisible,
+            enter = expandVertically(),
+            exit = shrinkVertically()
+        ) {
+            SortOptions(
+                currentSort = searchSort,
+                onSortChange = onSearchSortChange
             )
-            AnimatedVisibility(
-                visible = isSearchSortVisible && scrollBehavior.state.collapsedFraction < 0.5f,
-                enter = expandVertically(),
-                exit = shrinkVertically()
-            ) {
-                SortOptions(
-                    currentSort = searchSort,
-                    onSortChange = onSearchSortChange
-                )
-            }
         }
     }
 }

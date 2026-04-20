@@ -2,7 +2,6 @@ package org.tjc.bible.presentation.bible.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,7 +35,6 @@ import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.arrow_back
 import bible.composeapp.generated.resources.arrow_forward
 import bible.composeapp.generated.resources.clear
-import bible.composeapp.generated.resources.history
 import bible.composeapp.generated.resources.history
 import bible.composeapp.generated.resources.next
 import bible.composeapp.generated.resources.previous

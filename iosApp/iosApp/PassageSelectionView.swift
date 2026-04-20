@@ -122,7 +122,7 @@ struct VerseGridView: View {
     
     var body: some View {
         ScrollView {
-            let versesCount = Int(truncating: book.versesInChapters[chapter - 1] as! NSNumber)
+            let versesCount = Int(truncating: book.versesInChapters[chapter - 1])
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(1...versesCount, id: \.self) { verse in
                     Button(action: { onVerseSelect(verse) }) {

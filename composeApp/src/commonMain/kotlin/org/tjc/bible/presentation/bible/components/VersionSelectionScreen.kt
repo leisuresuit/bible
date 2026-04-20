@@ -47,8 +47,7 @@ import org.tjc.bible.presentation.ui.ThemePreviews
 fun VersionSelectionScreen(
     versions: List<BibleVersion>,
     selectedVersions: List<BibleVersion>,
-    onVersionToggle: (BibleVersion) -> Unit,
-    onDismiss: () -> Unit
+    onVersionToggle: (BibleVersion) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val filteredVersions by remember(versions, searchQuery) {
@@ -146,8 +145,7 @@ fun VersionSelectionScreenPreview() {
                 BibleVersion("niv", "New International Version", "English", "NIV")
             ),
             selectedVersions = listOf(BibleVersion("nkjv", "New King James Version", "English", "NKJV")),
-            onVersionToggle = {},
-            onDismiss = {}
+            onVersionToggle = {}
         )
     }
 }

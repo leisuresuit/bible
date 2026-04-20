@@ -1,7 +1,6 @@
 package org.tjc.bible.presentation.bible.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,8 +42,7 @@ fun SettingsScreen(
     onDisplayModeChange: (DisplayMode) -> Unit,
     onShowWordsOfJesusChange: (Boolean) -> Unit,
     onThemeChange: (AppTheme) -> Unit,
-    onDynamicColorChange: (Boolean) -> Unit,
-    onDismiss: () -> Unit,
+    onDynamicColorChange: (Boolean) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -212,8 +210,7 @@ fun SettingsScreenPreview() {
             onDisplayModeChange = {},
             onShowWordsOfJesusChange = {},
             onThemeChange = {},
-            onDynamicColorChange = {},
-            onDismiss = {}
+            onDynamicColorChange = {}
         )
     }
 }

@@ -7,14 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -23,11 +22,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -47,9 +41,7 @@ import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.back
 import bible.composeapp.generated.resources.book
-import bible.composeapp.generated.resources.cancel
 import bible.composeapp.generated.resources.chapter
-import bible.composeapp.generated.resources.ok
 import bible.composeapp.generated.resources.search
 import bible.composeapp.generated.resources.verse
 import kotlinx.coroutines.launch
@@ -66,8 +58,7 @@ fun PassageSelectionScreen(
     currentChapter: Int,
     currentVerse: Int,
     initialPage: Int,
-    onPassageSelected: (Book, Int, Int) -> Unit,
-    onDismiss: () -> Unit
+    onPassageSelected: (Book, Int, Int) -> Unit
 ) {
     val pagerState = rememberPagerState(initialPage = initialPage) { 3 }
     val scope = rememberCoroutineScope()
@@ -125,7 +116,6 @@ fun PassageSelectionScreen(
                     onSortClick = { isAlphabeticalOrder = !isAlphabeticalOrder },
                     keyboardType = keyboardType,
                     titleWeight = if (pagerState.currentPage == 0) null else 1.5f,
-                    searchWeight = if (pagerState.currentPage == 0) null else 1f,
                     requestFocus = false
                 )
 
@@ -398,7 +388,6 @@ fun PassageSelectionScreenPreview() {
             currentChapter = 18,
             currentVerse = 1,
             initialPage = 0,
-            onDismiss = {},
             onPassageSelected = { _, _, _ -> }
         )
     }

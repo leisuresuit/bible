@@ -7,7 +7,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -81,7 +80,6 @@ fun App() {
                             isLoading = state.isLoading,
                             isSearchingMore = state.isSearchingMore,
                             hasMoreResults = state.hasMoreSearchResults,
-                            showTopBar = true,
                             onSearchQueryChange = { viewModel.onIntent(BibleIntent.UpdateSearchQuery(it)) },
                             onSearchSortChange = { viewModel.onIntent(BibleIntent.UpdateSearchSort(it)) },
                             onToggleSearchSortVisibility = { viewModel.onIntent(BibleIntent.ToggleSearchSortVisibility) },
@@ -95,8 +93,7 @@ fun App() {
                                     )
                                 )
                                 viewModel.onIntent(BibleIntent.ShowSheet(null))
-                            },
-                            onBack = { viewModel.onIntent(BibleIntent.ShowSheet(null)) }
+                            }
                         )
                     }
 
@@ -109,8 +106,7 @@ fun App() {
                             onPassageSelected = { book, chapter, verse ->
                                 viewModel.onIntent(BibleIntent.SelectPassage(book, chapter, verse))
                                 viewModel.onIntent(BibleIntent.ShowSheet(null))
-                            },
-                            onDismiss = { viewModel.onIntent(BibleIntent.ShowSheet(null)) }
+                            }
                         )
                     }
 
@@ -118,8 +114,7 @@ fun App() {
                         VersionSelectionScreen(
                             versions = state.versions,
                             selectedVersions = state.selectedVersions,
-                            onVersionToggle = { viewModel.onIntent(BibleIntent.ToggleParallelVersion(it)) },
-                            onDismiss = { viewModel.onIntent(BibleIntent.ShowSheet(null)) }
+                            onVersionToggle = { viewModel.onIntent(BibleIntent.ToggleParallelVersion(it)) }
                         )
                     }
 
@@ -147,8 +142,7 @@ fun App() {
                             onDisplayModeChange = { viewModel.onIntent(BibleIntent.UpdateDisplayMode(it)) },
                             onShowWordsOfJesusChange = { viewModel.onIntent(BibleIntent.UpdateShowWordsOfJesus(it)) },
                             onThemeChange = { viewModel.onThemeChange(it) },
-                            onDynamicColorChange = { viewModel.onIntent(BibleIntent.UpdateDynamicColor(it)) },
-                            onDismiss = { viewModel.onIntent(BibleIntent.ShowSheet(null)) }
+                            onDynamicColorChange = { viewModel.onIntent(BibleIntent.UpdateDynamicColor(it)) }
                         )
                     }
                 }

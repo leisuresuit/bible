@@ -22,7 +22,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.sort
+import bible.composeapp.generated.resources.toggle_sort_order
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.presentation.ui.AutoResizedText
 import org.tjc.bible.presentation.ui.ClearableTextField
 
@@ -37,7 +39,6 @@ fun SelectionDialogHeader(
     onSortClick: () -> Unit = {},
     keyboardType: KeyboardType = KeyboardType.Text,
     titleWeight: Float? = null,
-    searchWeight: Float? = null,
     requestFocus: Boolean = true
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -62,7 +63,7 @@ fun SelectionDialogHeader(
                 IconButton(onClick = onSortClick) {
                     Icon(
                         painter = painterResource(Res.drawable.sort),
-                        contentDescription = "Toggle sort order",
+                        contentDescription = stringResource(Res.string.toggle_sort_order),
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }

@@ -1,6 +1,5 @@
 package org.tjc.bible.presentation.bible
 
-import co.touchlab.skie.configuration.annotations.FlowInterop
 import androidx.navigation3.runtime.NavKey
 import org.tjc.bible.domain.model.AppTheme
 import org.tjc.bible.domain.model.BibleVersion
