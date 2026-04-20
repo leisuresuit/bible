@@ -13,6 +13,15 @@ struct PassageSelectionView: View {
     @State private var internalSelectedBook: Book?
     @State private var internalSelectedChapter: Int?
     @State private var internalSelectedVerse: Int?
+    @State private var searchQuery: String = ""
+    
+    var filteredBooks: [Book] {
+        if searchQuery.isEmpty {
+            return allBooks
+        } else {
+            return allBooks.filter { $0.localizedName.localizedCaseInsensitiveContains(searchQuery) }
+        }
+    }
     
     init(allBooks: [Book], selectedBook: Book?, selectedChapter: Int, initialPage: Int, onSelectPassage: @escaping (Book, Int, Int) -> Void, onDismiss: @escaping () -> Void) {
         self.allBooks = allBooks
@@ -29,7 +38,7 @@ struct PassageSelectionView: View {
     
     var body: some View {
         NavigationView {
-            VStack {
+            VStack(spacing: 0) {
                 Picker("Selection", selection: $currentPage) {
                     Text(NSLocalizedString("books", comment: "")).tag(0)
                     Text(NSLocalizedString("chapters", comment: "")).tag(1)
@@ -39,7 +48,30 @@ struct PassageSelectionView: View {
                 .padding()
                 
                 if currentPage == 0 {
-                    BookGridView(allBooks: allBooks, selectedBook: internalSelectedBook) { book in
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.gray)
+                        TextField(NSLocalizedString("search", comment: ""), text: $searchQuery)
+                        if !searchQuery.isEmpty {
+                            Button(action: {
+                                searchQuery = ""
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                    }
+                    .padding(10)
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(10)
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+                }
+                
+                Divider()
+                
+                if currentPage == 0 {
+                    BookGridView(allBooks: filteredBooks, selectedBook: internalSelectedBook) { book in
                         internalSelectedBook = book
                         currentPage = 1
                     }

@@ -18,8 +18,8 @@ struct SearchView: View {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.gray)
                     TextField(NSLocalizedString("search", comment: ""), text: $searchQuery)
-                        .onChange(of: searchQuery) {
-                            onSearchQueryChange(searchQuery)
+                        .onChange(of: searchQuery) { _, newValue in
+                            onSearchQueryChange(newValue)
                         }
                     if isLoading {
                         ProgressView()
@@ -38,6 +38,8 @@ struct SearchView: View {
                 .background(Color(.secondarySystemBackground))
                 .cornerRadius(10)
                 .padding(.horizontal)
+
+                Divider()
 
                 Picker("Sort", selection: Binding(
                     get: { searchSort },
