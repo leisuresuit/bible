@@ -50,13 +50,13 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(NSLocalizedString("settings", comment: ""))
-            .onChange(of: localTheme) { newValue in
+            .onChange(of: localTheme) { _, newValue in
                 onThemeChange(newValue)
             }
-            .onChange(of: localDisplayMode) { newValue in
+            .onChange(of: localDisplayMode) { _, newValue in
                 onDisplayModeChange(newValue)
             }
-            .onChange(of: localShowWordsOfJesus) { newValue in
+            .onChange(of: localShowWordsOfJesus) { _, newValue in
                 onShowWordsOfJesusChange(newValue)
             }
             .preferredColorScheme(localColorScheme)
