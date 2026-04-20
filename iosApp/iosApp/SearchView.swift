@@ -63,14 +63,6 @@ struct SearchView: View {
                 }
             }
             .navigationTitle(NSLocalizedString("search", comment: ""))
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: onBack) {
-                        Image(systemName: "chevron.left")
-                        Text(NSLocalizedString("back", comment: ""))
-                    }
-                }
-            }
         }
     }
 }

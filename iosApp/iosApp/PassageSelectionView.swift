@@ -58,13 +58,6 @@ struct PassageSelectionView: View {
                 }
             }
             .navigationTitle(NSLocalizedString("select_passage", comment: ""))
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(NSLocalizedString("cancel", comment: "")) {
-                        onDismiss()
-                    }
-                }
-            }
         }
     }
 }

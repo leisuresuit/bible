@@ -50,13 +50,6 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(NSLocalizedString("settings", comment: ""))
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(NSLocalizedString("done", comment: "")) {
-                        onDismiss()
-                    }
-                }
-            }
             .onChange(of: localTheme) { newValue in
                 onThemeChange(newValue)
             }
