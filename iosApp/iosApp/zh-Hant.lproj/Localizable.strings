@@ -65,17 +65,16 @@
 "book_jude" = "猶大書";
 "book_revelation" = "啟示錄";
 
+"app_name" = "聖經";
 "versions" = "版本";
 "history" = "歷史記錄";
 "search" = "搜索";
 "settings" = "設置";
-"cancel" = "取消";
-"ok" = "確定";
-"retry" = "重試";
-"error" = "錯誤";
 "no_results_found" = "未找到結果";
 "clear" = "清除";
-"books" = "卷";
+"book" = "卷";
+"chapter" = "章";
+"verse" = "節";
 "chapters" = "章";
 "verses" = "節";
 "select_passage" = "選擇經文";

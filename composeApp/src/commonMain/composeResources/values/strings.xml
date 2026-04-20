@@ -6,10 +6,6 @@
     <string name="theme">Theme</string>
     <string name="dynamic_color">Dynamic Color</string>
     <string name="show_words_of_jesus">Red Letter\n(Words of Jesus)</string>
-    <string name="cancel">Cancel</string>
-    <string name="ok">OK</string>
-    <string name="retry">Retry</string>
-    <string name="error">Error</string>
     <string name="history">History</string>
     <string name="clear">Clear</string>
     <string name="back">Back</string>

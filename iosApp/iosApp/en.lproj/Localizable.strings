@@ -65,17 +65,16 @@
 "book_jude" = "Jude";
 "book_revelation" = "Revelation";
 
+"app_name" = "Bible";
 "versions" = "Versions";
 "history" = "History";
 "search" = "Search";
 "settings" = "Settings";
-"cancel" = "Cancel";
-"ok" = "OK";
-"retry" = "Retry";
-"error" = "Error";
 "no_results_found" = "No results found";
 "clear" = "Clear";
-"books" = "Books";
+"book" = "Book";
+"chapter" = "Chapter";
+"verse" = "Verse";
 "chapters" = "Chapters";
 "verses" = "Verses";
 "select_passage" = "Select Passage";

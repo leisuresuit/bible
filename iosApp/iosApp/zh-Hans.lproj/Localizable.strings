@@ -24,7 +24,7 @@
 "book_jeremiah" = "耶利米书";
 "book_lamentations" = "耶利米哀歌";
 "book_ezekiel" = "以西结书";
-"book_daniel" = "担以理书";
+"book_daniel" = "但以理书";
 "book_hosea" = "何西阿书";
 "book_joel" = "约珥书";
 "book_amos" = "阿摩司书";
@@ -65,17 +65,16 @@
 "book_jude" = "犹大书";
 "book_revelation" = "启示录";
 
+"app_name" = "圣经";
 "versions" = "版本";
 "history" = "历史记录";
 "search" = "搜索";
 "settings" = "设置";
-"cancel" = "取消";
-"ok" = "确定";
-"retry" = "重试";
-"error" = "错误";
 "no_results_found" = "未找到结果";
 "clear" = "清除";
-"books" = "卷";
+"book" = "卷";
+"chapter" = "章";
+"verse" = "节";
 "chapters" = "章";
 "verses" = "节";
 "select_passage" = "选择经文";

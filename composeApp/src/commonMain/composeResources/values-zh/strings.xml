@@ -6,10 +6,6 @@
     <string name="theme">主題</string>
     <string name="dynamic_color">動態配色</string>
     <string name="show_words_of_jesus">紅字 (耶穌的話)</string>
-    <string name="cancel">取消</string>
-    <string name="ok">確定</string>
-    <string name="retry">重試</string>
-    <string name="error">錯誤</string>
     <string name="history">歷史記錄</string>
     <string name="clear">清除</string>
     <string name="back">返回</string>
