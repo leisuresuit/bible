@@ -39,7 +39,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
-import bible.composeapp.generated.resources.back
 import bible.composeapp.generated.resources.book
 import bible.composeapp.generated.resources.chapter
 import bible.composeapp.generated.resources.search
@@ -116,7 +115,21 @@ fun PassageSelectionScreen(
                     onSortClick = { isAlphabeticalOrder = !isAlphabeticalOrder },
                     keyboardType = keyboardType,
                     titleWeight = if (pagerState.currentPage == 0) null else 1.5f,
-                    requestFocus = false
+                    requestFocus = false,
+                    showPreviousButton = true,
+                    previousButtonEnabled = pagerState.currentPage > 0,
+                    onPreviousClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                        }
+                    },
+                    showNextButton = true,
+                    nextButtonEnabled = (pagerState.currentPage == 0 && selectedBook != null) || (pagerState.currentPage == 1 && selectedChapter != 0),
+                    onNextClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                        }
+                    }
                 )
 
                 HorizontalDivider()
@@ -185,26 +198,6 @@ fun PassageSelectionScreen(
                             )
                         }
                     }
-                }
-            }
-        }
-
-        if (pagerState.currentPage > 0) {
-            HorizontalDivider()
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(
-                    onClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                        }
-                    }
-                ) {
-                    Text(stringResource(Res.string.back))
                 }
             }
         }

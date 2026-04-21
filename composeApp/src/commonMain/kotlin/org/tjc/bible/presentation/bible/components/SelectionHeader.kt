@@ -17,6 +17,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
+import bible.composeapp.generated.resources.arrow_back
+import bible.composeapp.generated.resources.arrow_forward
+import bible.composeapp.generated.resources.next
+import bible.composeapp.generated.resources.previous
 import bible.composeapp.generated.resources.sort
 import bible.composeapp.generated.resources.toggle_sort_order
 import org.jetbrains.compose.resources.painterResource
@@ -35,7 +39,13 @@ fun SelectionHeader(
     onSortClick: () -> Unit = {},
     keyboardType: KeyboardType = KeyboardType.Text,
     titleWeight: Float? = null,
-    requestFocus: Boolean = true
+    requestFocus: Boolean = true,
+    showPreviousButton: Boolean = false,
+    previousButtonEnabled: Boolean = true,
+    onPreviousClick: () -> Unit = {},
+    showNextButton: Boolean = false,
+    nextButtonEnabled: Boolean = true,
+    onNextClick: () -> Unit = {}
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -74,7 +84,28 @@ fun SelectionHeader(
                     .weight(1f),
                 focusRequester = focusRequester
             )
+            if (showPreviousButton) {
+                IconButton(
+                    onClick = onPreviousClick,
+                    enabled = previousButtonEnabled
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.arrow_back),
+                        contentDescription = stringResource(Res.string.previous)
+                    )
+                }
+            }
+            if (showNextButton) {
+                IconButton(
+                    onClick = onNextClick,
+                    enabled = nextButtonEnabled
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.arrow_forward),
+                        contentDescription = stringResource(Res.string.next)
+                    )
+                }
+            }
         }
     }
 }
-
