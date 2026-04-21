@@ -2,11 +2,10 @@ package org.tjc.bible.presentation.bible.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,7 +24,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -246,7 +244,8 @@ fun BookSelectionPage(
 
     LazyColumn(
         modifier = Modifier.heightIn(max = maxHeight),
-        state = listState
+        state = listState,
+        contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
     ) {
         items(filteredBooks) { (book, name) ->
             val isSelected = book == selectedBook
@@ -294,14 +293,14 @@ fun ChapterSelectionPage(
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
         modifier = Modifier.heightIn(max = maxHeight),
-        state = gridState
+        state = gridState,
+        contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
     ) {
         items(filteredChapters.size) { index ->
             val chapter = filteredChapters[index]
             val isSelected = chapter == selectedChapter
             Box(
                 modifier = Modifier
-                    .padding(4.dp)
                     .aspectRatio(1f)
                     .background(
                         if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
@@ -347,7 +346,8 @@ fun VerseSelectionPage(
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
         modifier = Modifier.heightIn(max = maxHeight),
-        state = gridState
+        state = gridState,
+        contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
     ) {
         items(filteredVerses.size) { index ->
             val verse = filteredVerses[index]

@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -97,7 +98,8 @@ fun VersionSelectionScreen(
             val maxHeight = maxHeight
             LazyColumn(
                 modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight),
-                state = listState
+                state = listState,
+                contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
             ) {
                 items(filteredVersions) { version ->
                     val isSelected = selectedVersions.any { it.id == version.id }
