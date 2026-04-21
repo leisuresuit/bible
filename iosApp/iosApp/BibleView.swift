@@ -46,19 +46,6 @@ struct BibleView: View {
                 }
                 .navigationTitle(navigationTitleText)
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button(action: {
-                            viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.PassageSelection(initialPage: 0)))
-                        }) {
-                            HStack(spacing: 4) {
-                                Text(navigationTitleText)
-                                    .font(.headline)
-                                Image(systemName: "chevron.down")
-                                    .font(.caption.bold())
-                            }
-                            .foregroundColor(.primary)
-                        }
-                    }
                     ToolbarItem(placement: .navigationBarTrailing) {
                         HStack {
                             Button(action: {
@@ -76,28 +63,45 @@ struct BibleView: View {
                     
                     ToolbarItemGroup(placement: .bottomBar) {
                         Button(action: {
+                            viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.PassageSelection(initialPage: 0)))
+                        }) {
+                            Label(navigationTitleText, systemImage: "chevron.down")
+                        }
+
+                        Spacer()
+
+                        Button(action: {
                             viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.VersionSelection()))
                         }) {
                             Label(NSLocalizedString("versions", comment: ""), systemImage: "books.vertical")
                         }
+
                         Spacer()
+
                         Button(action: {
                             viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.Search()))
                         }) {
                             Label(NSLocalizedString("search", comment: ""), systemImage: "magnifyingglass")
                         }
+                        .labelStyle(.iconOnly)
+
                         Spacer()
+
                         Button(action: {
                             viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.History()))
                         }) {
                             Label(NSLocalizedString("history", comment: ""), systemImage: "clock")
                         }
+                        .labelStyle(.iconOnly)
+
                         Spacer()
+
                         Button(action: {
                             viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.Settings()))
                         }) {
                             Label(NSLocalizedString("settings", comment: ""), systemImage: "gearshape")
                         }
+                        .labelStyle(.iconOnly)
                     }
                 }
             }
