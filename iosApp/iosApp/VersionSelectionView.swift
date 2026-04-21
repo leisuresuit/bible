@@ -77,13 +77,6 @@ struct VersionSelectionView: View {
                     }
                 }
                 .navigationTitle(NSLocalizedString("versions", comment: ""))
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(NSLocalizedString("done", comment: "")) {
-                            onDismiss()
-                        }
-                    }
-                }
             }
         }
     }
