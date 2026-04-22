@@ -22,17 +22,20 @@ class AbsBibleRepository(
         header("api-key", Config.ABS_API_KEY)
     }
 
-    override suspend fun getVersions(language: String?): Result<List<BibleVersion>> = runCatching {
+    override suspend fun getVersions(languages: List<String>): Result<List<BibleVersion>> = runCatching {
         val response = httpClient.get("https://rest.api.bible/v1/bibles") {
             absHeaders()
-            language?.let {
-                parameter("language", it.toIso6393())
-            }
         }.body<AbsVersionsResponse>()
 
-        response.data
+        val versions = response.data
             .map { it.toDomain() }
             .distinctBy { it.abbreviation }
+
+        if (languages.isNotEmpty()) {
+            versions.filter { languages.contains(it.language) }
+        } else {
+            versions
+        }
     }
 
     override suspend fun getVerses(versionId: String, book: Book, chapter: Int): Result<List<Verse>> = runCatching {

@@ -9,15 +9,16 @@ import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.tjc.bible.cache.BibleDatabase
 import org.tjc.bible.data.abs.AbsBibleRepository
+import org.tjc.bible.data.bss.BssBibleRepository
 import org.tjc.bible.data.cache.DriverFactory
 import org.tjc.bible.data.local.PreferenceStorage
 import org.tjc.bible.data.repository.CachedBibleRepository
+import org.tjc.bible.data.repository.CompositeBibleRepository
 import org.tjc.bible.domain.repository.BibleRepository
 import org.tjc.bible.domain.usecase.GetBibleVersionsUseCase
 import org.tjc.bible.domain.usecase.GetVersesUseCase
@@ -52,7 +53,16 @@ val appModule = module {
     singleOf(::PreferenceStorage)
     
     single { AbsBibleRepository(get()) }
-    single { CachedBibleRepository(get<AbsBibleRepository>(), get()) } bind BibleRepository::class
+    single { BssBibleRepository(get()) }
+    single { 
+        CompositeBibleRepository(
+            repositories = listOf(
+                get<AbsBibleRepository>(),
+                get<BssBibleRepository>()
+            )
+        ) 
+    }
+    single { CachedBibleRepository(get<CompositeBibleRepository>(), get()) } bind BibleRepository::class
     
     factoryOf(::GetBibleVersionsUseCase)
     factoryOf(::GetVersesUseCase)

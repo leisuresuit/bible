@@ -21,8 +21,8 @@ class MockBibleRepository : BibleRepository {
         BibleVersion("niv", "New International Version", "English", "NIV")
     )
 
-    override suspend fun getVersions(language: String?): Result<List<BibleVersion>> = Result.success(
-        if (language == null) versions else versions.filter { it.language == language }
+    override suspend fun getVersions(languages: List<String>): Result<List<BibleVersion>> = Result.success(
+        if (languages.isEmpty()) versions else versions.filter { languages.contains(it.language) }
     )
 
     override suspend fun getVerses(versionId: String, book: Book, chapter: Int): Result<List<Verse>> = Result.success(

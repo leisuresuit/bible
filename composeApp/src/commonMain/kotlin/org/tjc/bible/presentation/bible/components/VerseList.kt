@@ -276,6 +276,14 @@ private fun ChapterHeader(book: Book, chapter: Int, onClick: () -> Unit) {
 
 @Composable
 private fun VerseItem(verse: Verse, showWordsOfJesus: Boolean) {
+    val isNonAlphabetLanguage = verse.elements.any { element ->
+        when (element) {
+            is VerseElement.Text -> element.spans.any { it.text.any { char -> char.code in 0x4E00..0x9FFF } }
+            is VerseElement.Heading -> element.spans.any { it.text.any { char -> char.code in 0x4E00..0x9FFF } }
+        }
+    }
+    val defaultFontFamily = if (isNonAlphabetLanguage) FontFamily.SansSerif else FontFamily.Serif
+
     Column {
         if (verse.versionAbbreviation != null) {
             Text(
@@ -292,7 +300,7 @@ private fun VerseItem(verse: Verse, showWordsOfJesus: Boolean) {
                     val headingText = buildAnnotatedString {
                         element.spans.forEach { span ->
                             val text = if (span.style == TextStyle.SMALL_CAPS) span.text.uppercase() else span.text
-                            withStyle(span.style.toSpanStyle(SpanStyle(), showWordsOfJesus)) {
+                            withStyle(span.style.toSpanStyle(SpanStyle(fontFamily = defaultFontFamily), showWordsOfJesus)) {
                                 append(text)
                             }
                         }
@@ -321,7 +329,7 @@ private fun VerseItem(verse: Verse, showWordsOfJesus: Boolean) {
                             }
                         }
 
-                        val baseStyle = SpanStyle(fontFamily = FontFamily.Serif)
+                        val baseStyle = SpanStyle(fontFamily = defaultFontFamily)
                         element.spans.forEach { span ->
                             val text = if (span.style == TextStyle.SMALL_CAPS) span.text.uppercase() else span.text
                             withStyle(span.style.toSpanStyle(baseStyle, showWordsOfJesus)) {

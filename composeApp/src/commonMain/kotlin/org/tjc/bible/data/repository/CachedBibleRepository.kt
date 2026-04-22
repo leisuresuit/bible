@@ -20,8 +20,8 @@ class CachedBibleRepository(
     private val queries = database.bibleDatabaseQueries
     private val json = Json { ignoreUnknownKeys = true }
 
-    override suspend fun getVersions(language: String?): Result<List<BibleVersion>> {
-        val langKey = language ?: "all"
+    override suspend fun getVersions(languages: List<String>): Result<List<BibleVersion>> {
+        val langKey = if (languages.isEmpty()) "all" else languages.sorted().joinToString(",")
         // Try cache first
         val cached = queries.getVersions(langKey).executeAsOneOrNull()
         if (cached != null) {
@@ -29,7 +29,7 @@ class CachedBibleRepository(
         }
 
         // Fetch from network if not in cache
-        val result = delegate.getVersions(language)
+        val result = delegate.getVersions(languages)
 
         // Store in cache if successful
         result.onSuccess { versions ->

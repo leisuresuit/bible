@@ -415,7 +415,7 @@ class BibleViewModel(
     private fun handleLoadInitialData() {
         viewModelScope.launch {
             dispatch(BibleAction.Loading(true))
-            getBibleVersionsUseCase(language = "en").fold(
+            getBibleVersionsUseCase(languages = listOf("en", "zh")).fold(
                 onSuccess = { versions ->
                     // Restore last passage
                     val (lastBook, lastChapter, lastVerse) = preferenceStorage.lastPassage.first()
