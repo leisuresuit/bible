@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
@@ -37,6 +38,8 @@ fun SelectionHeader(
     modifier: Modifier = Modifier,
     showSortButton: Boolean = false,
     onSortClick: () -> Unit = {},
+    sortIcon: Painter? = null,
+    sortDescription: String? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
     titleWeight: Float? = null,
     requestFocus: Boolean = true,
@@ -68,8 +71,8 @@ fun SelectionHeader(
             if (showSortButton) {
                 IconButton(onClick = onSortClick) {
                     Icon(
-                        painter = painterResource(Res.drawable.sort),
-                        contentDescription = stringResource(Res.string.toggle_sort_order),
+                        painter = sortIcon ?: painterResource(Res.drawable.sort),
+                        contentDescription = sortDescription ?: stringResource(Res.string.toggle_sort_order),
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }

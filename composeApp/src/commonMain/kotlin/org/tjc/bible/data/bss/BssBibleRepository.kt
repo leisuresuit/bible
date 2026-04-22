@@ -15,22 +15,17 @@ class BssBibleRepository(
     private val httpClient: HttpClient
 ) : BibleRepository {
 
-    private val baseUrl = "https://api.biblesupersearch.com/api"
-
     override suspend fun getVersions(languages: List<String>): Result<List<BibleVersion>> = runCatching {
-        val response = httpClient.get("$baseUrl/bibles").body<BssVersionsResponse>()
+        val response = httpClient.get("$BASE_URL/bibles").body<BssVersionsResponse>()
         val versions = response.results.values.map { it.toDomain() }
-        
-        if (languages.isNotEmpty()) {
-            versions.filter { languages.contains(it.language) }
-        } else {
-            versions
-        }
+
+        // Use this repo for Chinese versions only
+        versions.filter { it.language == "zh" }
     }
 
     override suspend fun getVerses(versionId: String, book: Book, chapter: Int): Result<List<Verse>> = runCatching {
         val reference = "${book.toBssReferenceName()} $chapter"
-        val response = httpClient.get(baseUrl) {
+        val response = httpClient.get(BASE_URL) {
             parameter("bible", versionId)
             parameter("reference", reference)
         }.body<BssVersesResponse>()
@@ -69,7 +64,7 @@ class BssBibleRepository(
         sort: SearchSort
     ): Result<SearchResponse> = runCatching {
         val page = (offset / limit) + 1
-        val response = httpClient.get(baseUrl) {
+        val response = httpClient.get(BASE_URL) {
             parameter("bible", versionId)
             parameter("search", query)
             parameter("limit", limit)
@@ -82,5 +77,9 @@ class BssBibleRepository(
             offset = offset,
             limit = limit
         )
+    }
+
+    private companion object {
+        const val BASE_URL = "https://api.biblesupersearch.com/api"
     }
 }

@@ -18,12 +18,8 @@ class AbsBibleRepository(
     private val httpClient: HttpClient
 ) : BibleRepository {
 
-    private fun HttpRequestBuilder.absHeaders() {
-        header("api-key", Config.ABS_API_KEY)
-    }
-
     override suspend fun getVersions(languages: List<String>): Result<List<BibleVersion>> = runCatching {
-        val response = httpClient.get("https://rest.api.bible/v1/bibles") {
+        val response = httpClient.get(BASE_URL) {
             absHeaders()
         }.body<AbsVersionsResponse>()
 
@@ -40,7 +36,7 @@ class AbsBibleRepository(
 
     override suspend fun getVerses(versionId: String, book: Book, chapter: Int): Result<List<Verse>> = runCatching {
         val chapterId = "${book.absId}.$chapter"
-        val response = httpClient.get("https://rest.api.bible/v1/bibles/$versionId/chapters/$chapterId") {
+        val response = httpClient.get("$BASE_URL/$versionId/chapters/$chapterId") {
             absHeaders()
             parameter("content-type", "json")
             parameter("include-notes", "false")
@@ -60,7 +56,7 @@ class AbsBibleRepository(
         limit: Int,
         sort: SearchSort
     ): Result<SearchResponse> = runCatching {
-        val response = httpClient.get("https://rest.api.bible/v1/bibles/$versionId/search") {
+        val response = httpClient.get("$BASE_URL/$versionId/search") {
             absHeaders()
             parameter("query", query)
             parameter("sort", when (sort) {
@@ -77,5 +73,13 @@ class AbsBibleRepository(
             offset = response.data.offset,
             limit = response.data.limit
         )
+    }
+
+    private fun HttpRequestBuilder.absHeaders() {
+        header("api-key", Config.ABS_API_KEY)
+    }
+
+    private companion object {
+        const val BASE_URL = "https://rest.api.bible/v1/bibles"
     }
 }

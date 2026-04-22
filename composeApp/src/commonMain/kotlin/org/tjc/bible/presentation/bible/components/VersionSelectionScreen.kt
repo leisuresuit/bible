@@ -1,6 +1,10 @@
 package org.tjc.bible.presentation.bible.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -18,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,7 +39,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.check
+import bible.composeapp.generated.resources.filter
+import bible.composeapp.generated.resources.language_chinese
+import bible.composeapp.generated.resources.language_english
 import bible.composeapp.generated.resources.search
+import bible.composeapp.generated.resources.toggle_filters
 import bible.composeapp.generated.resources.versions
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -46,16 +55,22 @@ import org.tjc.bible.presentation.ui.ThemePreviews
 fun VersionSelectionScreen(
     versions: List<BibleVersion>,
     selectedVersions: List<BibleVersion>,
-    onVersionToggle: (BibleVersion) -> Unit
+    isLanguageFilterVisible: Boolean,
+    selectedLanguages: Set<String>,
+    onVersionToggle: (BibleVersion) -> Unit,
+    onToggleLanguageFilterVisibility: () -> Unit,
+    onSelectedLanguagesChange: (Set<String>) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    val filteredVersions by remember(versions, searchQuery) {
+
+    val filteredVersions by remember(versions, searchQuery, selectedLanguages) {
         derivedStateOf {
             versions
                 .filter {
-                    searchQuery.isEmpty() ||
+                    (selectedLanguages.isEmpty() || selectedLanguages.any { lang -> it.language.contains(lang, ignoreCase = true) }) &&
+                    (searchQuery.isEmpty() ||
                             it.name.contains(searchQuery, ignoreCase = true) ||
-                            it.abbreviation.contains(searchQuery, ignoreCase = true)
+                            it.abbreviation.contains(searchQuery, ignoreCase = true))
                 }
                 .sortedBy { it.abbreviation }
         }
@@ -85,8 +100,23 @@ fun VersionSelectionScreen(
             searchHint = stringResource(Res.string.search),
             searchQuery = searchQuery,
             onSearchQueryChange = { searchQuery = it },
+            showSortButton = true,
+            onSortClick = onToggleLanguageFilterVisibility,
+            sortIcon = painterResource(Res.drawable.filter),
+            sortDescription = stringResource(Res.string.toggle_filters),
             requestFocus = false
         )
+
+        AnimatedVisibility(
+            visible = isLanguageFilterVisible,
+            enter = expandVertically(),
+            exit = shrinkVertically()
+        ) {
+            LanguageFilters(
+                selectedLanguages = selectedLanguages,
+                onSelectedLanguagesChange = onSelectedLanguagesChange
+            )
+        }
 
         HorizontalDivider()
 
@@ -136,6 +166,50 @@ fun VersionSelectionScreen(
     }
 }
 
+@Composable
+private fun LanguageFilters(
+    selectedLanguages: Set<String>,
+    onSelectedLanguagesChange: (Set<String>) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        val languages = listOf(
+            "en" to stringResource(Res.string.language_english),
+            "zh" to stringResource(Res.string.language_chinese)
+        )
+
+        languages.forEach { (langCode, langName) ->
+            val isSelected = selectedLanguages.contains(langCode)
+            FilterChip(
+                selected = isSelected,
+                onClick = {
+                    val nextLanguages = if (isSelected) {
+                        selectedLanguages - langCode
+                    } else {
+                        selectedLanguages + langCode
+                    }
+                    onSelectedLanguagesChange(nextLanguages)
+                },
+                label = { Text(langName) },
+                leadingIcon = if (isSelected) {
+                    {
+                        Icon(
+                            painter = painterResource(Res.drawable.check),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                } else null
+            )
+        }
+    }
+}
+
 @ThemePreviews
 @Composable
 fun VersionSelectionScreenPreview() {
@@ -147,7 +221,11 @@ fun VersionSelectionScreenPreview() {
                 BibleVersion("niv", "New International Version", "English", "NIV")
             ),
             selectedVersions = listOf(BibleVersion("nkjv", "New King James Version", "English", "NKJV")),
-            onVersionToggle = {}
+            isLanguageFilterVisible = true,
+            selectedLanguages = setOf("en"),
+            onVersionToggle = {},
+            onToggleLanguageFilterVisibility = {},
+            onSelectedLanguagesChange = {}
         )
     }
 }

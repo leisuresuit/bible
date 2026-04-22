@@ -16,6 +16,7 @@ import org.tjc.bible.domain.model.BibleVersion
 import org.tjc.bible.domain.model.Book
 import org.tjc.bible.domain.model.HistoryItem
 import org.tjc.bible.presentation.bible.DisplayMode
+import org.tjc.bible.presentation.ui.deviceLanguage
 
 class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
 
@@ -30,6 +31,8 @@ class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
         val SELECTED_VERSIONS = stringPreferencesKey("selected_versions")
         val SHOW_WORDS_OF_JESUS = booleanPreferencesKey("show_words_of_jesus")
         val SEARCH_SORT_VISIBLE = booleanPreferencesKey("search_sort_visible")
+        val VERSION_LANGUAGE_FILTER_VISIBLE = booleanPreferencesKey("version_language_filter_visible")
+        val SELECTED_LANGUAGES = stringPreferencesKey("selected_languages")
     }
 
     val theme: Flow<AppTheme> = dataStore.data
@@ -62,6 +65,27 @@ class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
         .catch { emit(emptyPreferences()) }
         .map { prefs ->
             prefs[Keys.SEARCH_SORT_VISIBLE] ?: true
+        }
+
+    val isVersionLanguageFilterVisible: Flow<Boolean> = dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map { prefs ->
+            prefs[Keys.VERSION_LANGUAGE_FILTER_VISIBLE] ?: true
+        }
+
+    val selectedLanguages: Flow<Set<String>> = dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map { prefs ->
+            val json = prefs[Keys.SELECTED_LANGUAGES]
+            if (json == null) {
+                val defaultLang = if (deviceLanguage.startsWith("zh")) "zh" else "en"
+                return@map setOf(defaultLang)
+            }
+            try {
+                Json.decodeFromString<Set<String>>(json)
+            } catch (e: Exception) {
+                setOf("en")
+            }
         }
 
     val lastPassage: Flow<Triple<Book, Int, Int>> = dataStore.data
@@ -135,5 +159,15 @@ class PreferenceStorage(private val dataStore: DataStore<Preferences>) {
 
     suspend fun setSearchSortVisible(visible: Boolean) {
         dataStore.edit { it[Keys.SEARCH_SORT_VISIBLE] = visible }
+    }
+
+    suspend fun setVersionLanguageFilterVisible(visible: Boolean) {
+        dataStore.edit { it[Keys.VERSION_LANGUAGE_FILTER_VISIBLE] = visible }
+    }
+
+    suspend fun setSelectedLanguages(languages: Set<String>) {
+        dataStore.edit {
+            it[Keys.SELECTED_LANGUAGES] = Json.encodeToString(languages)
+        }
     }
 }

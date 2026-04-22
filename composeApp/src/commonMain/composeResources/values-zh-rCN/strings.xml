@@ -21,10 +21,13 @@
     <string name="previous">上</string>
     <string name="next">下</string>
     <string name="toggle_sort_order">切换排序</string>
+    <string name="toggle_filters">切换过滤器</string>
     <string name="sort_by">排序：</string>
     <string name="sort_relevance">相关性</string>
     <string name="sort_canonical">圣经顺序</string>
     <string name="no_results_found">未找到结果</string>
+    <string name="language_english">英文</string>
+    <string name="language_chinese">中文</string>
 
     <!-- Bible Books -->
     <string name="book_genesis">创世记</string>

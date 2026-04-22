@@ -104,6 +104,8 @@ class BibleViewModel(
             is BibleIntent.UpdateSearchQuery -> handleSearch(intent.query)
             is BibleIntent.UpdateSearchSort -> handleSearchSort(intent.sort)
             is BibleIntent.ToggleSearchSortVisibility -> viewModelScope.launch { preferenceStorage.setSearchSortVisible(!_state.value.isSearchSortVisible) }
+            is BibleIntent.ToggleVersionLanguageFilterVisibility -> viewModelScope.launch { preferenceStorage.setVersionLanguageFilterVisible(!_state.value.isVersionLanguageFilterVisible) }
+            is BibleIntent.UpdateSelectedLanguages -> viewModelScope.launch { preferenceStorage.setSelectedLanguages(intent.languages) }
             is BibleIntent.LoadMoreSearchResults -> handleLoadMoreSearchResults()
             is BibleIntent.RetryOperation -> {
                 when (intent.operation) {
@@ -287,6 +289,18 @@ class BibleViewModel(
                 }
             }
         }
+        viewModelScope.launch {
+            preferenceStorage.isVersionLanguageFilterVisible.collect { filterVisible ->
+                if (filterVisible != _state.value.isVersionLanguageFilterVisible) {
+                    dispatch(BibleAction.VersionLanguageFilterVisibilityToggled)
+                }
+            }
+        }
+        viewModelScope.launch {
+            preferenceStorage.selectedLanguages.collect { languages ->
+                dispatch(BibleAction.SelectedLanguagesChanged(languages))
+            }
+        }
     }
 
     private fun dispatch(action: BibleAction) {
@@ -381,6 +395,8 @@ class BibleViewModel(
             is BibleAction.ShowSheet -> state.copy(activeSheet = action.sheet)
             is BibleAction.SearchSortChanged -> state.copy(searchSort = action.sort)
             is BibleAction.SearchSortVisibilityToggled -> state.copy(isSearchSortVisible = !state.isSearchSortVisible)
+            is BibleAction.VersionLanguageFilterVisibilityToggled -> state.copy(isVersionLanguageFilterVisible = !state.isVersionLanguageFilterVisible)
+            is BibleAction.SelectedLanguagesChanged -> state.copy(selectedLanguages = action.languages)
             is BibleAction.SearchResultsLoaded -> state.copy(
                 searchResults = action.results,
                 hasMoreSearchResults = action.hasMore,

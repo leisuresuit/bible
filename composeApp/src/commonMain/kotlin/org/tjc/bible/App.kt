@@ -114,7 +114,11 @@ fun App() {
                         VersionSelectionScreen(
                             versions = state.versions,
                             selectedVersions = state.selectedVersions,
-                            onVersionToggle = { viewModel.onIntent(BibleIntent.ToggleParallelVersion(it)) }
+                            isLanguageFilterVisible = state.isVersionLanguageFilterVisible,
+                            selectedLanguages = state.selectedLanguages,
+                            onVersionToggle = { viewModel.onIntent(BibleIntent.ToggleParallelVersion(it)) },
+                            onToggleLanguageFilterVisibility = { viewModel.onIntent(BibleIntent.ToggleVersionLanguageFilterVisibility) },
+                            onSelectedLanguagesChange = { viewModel.onIntent(BibleIntent.UpdateSelectedLanguages(it)) }
                         )
                     }
 

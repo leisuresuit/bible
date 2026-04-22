@@ -32,6 +32,8 @@ data class BibleState(
     val searchQuery: String = "",
     val searchSort: SearchSort = SearchSort.RELEVANCE,
     val isSearchSortVisible: Boolean = true,
+    val isVersionLanguageFilterVisible: Boolean = true,
+    val selectedLanguages: Set<String> = emptySet(),
     val displayMode: DisplayMode = DisplayMode.SINGLE_CHAPTER,
     val allBooks: List<Book> = Book.entries,
     val selectionEventId: Long = 0L,
@@ -62,6 +64,8 @@ sealed class BibleIntent {
     data class UpdateSearchQuery(val query: String) : BibleIntent()
     data class UpdateSearchSort(val sort: SearchSort) : BibleIntent()
     object ToggleSearchSortVisibility : BibleIntent()
+    object ToggleVersionLanguageFilterVisibility : BibleIntent()
+    data class UpdateSelectedLanguages(val languages: Set<String>) : BibleIntent()
     object ClearHistory : BibleIntent()
     object LoadMoreSearchResults : BibleIntent()
     data class UpdateTheme(val theme: AppTheme) : BibleIntent()
@@ -100,6 +104,8 @@ internal sealed class BibleAction {
     data class NavigateChapter(val delta: Int) : BibleAction()
     data class HistoryLoaded(val history: List<HistoryItem>) : BibleAction()
     object SearchSortVisibilityToggled : BibleAction()
+    object VersionLanguageFilterVisibilityToggled : BibleAction()
+    data class SelectedLanguagesChanged(val languages: Set<String>) : BibleAction()
     data class SearchQueryChanged(val query: String) : BibleAction()
     data class SearchSortChanged(val sort: SearchSort) : BibleAction()
     data class SearchResultsLoaded(val results: List<SearchResult>, val hasMore: Boolean) : BibleAction()
