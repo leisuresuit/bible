@@ -16,11 +16,16 @@ class BssBibleRepository(
 ) : BibleRepository {
 
     override suspend fun getVersions(languages: List<String>): Result<List<BibleVersion>> = runCatching {
-        val response = httpClient.get("$BASE_URL/bibles").body<BssVersionsResponse>()
-        val versions = response.results.values.map { it.toDomain() }
-
-        // Use this repo for Chinese versions only
-        versions.filter { it.language == "zh" }
+        httpClient.get("$BASE_URL/bibles").body<BssVersionsResponse>()
+            .results.values.map { it.toDomain() }
+            .filter { it.isSupported() }
+            .let { versions ->
+                if (languages.isNotEmpty()) {
+                    versions.filter { languages.contains(it.language) }
+                } else {
+                    versions
+                }
+            }
     }
 
     override suspend fun getVerses(versionId: String, book: Book, chapter: Int): Result<List<Verse>> = runCatching {
@@ -78,6 +83,14 @@ class BssBibleRepository(
             limit = limit
         )
     }
+
+    private fun BibleVersion.isSupported(): Boolean =
+        // Use this repo for Chinese versions only
+        language == "zh" &&
+        // Filter unwanted versions
+        !id.startsWith("ckjv_sd") &&
+        !id.startsWith(("chinese_union_simp_")) &&
+        !id.startsWith(("chinese_union_trad_"))
 
     private companion object {
         const val BASE_URL = "https://api.biblesupersearch.com/api"

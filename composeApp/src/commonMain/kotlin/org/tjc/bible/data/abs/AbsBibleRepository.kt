@@ -7,6 +7,9 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import org.tjc.bible.Config
+import org.tjc.bible.data.bss.BssBibleRepository
+import org.tjc.bible.data.bss.BssVersionsResponse
+import org.tjc.bible.data.bss.toDomain
 import org.tjc.bible.domain.model.BibleVersion
 import org.tjc.bible.domain.model.Book
 import org.tjc.bible.domain.model.SearchResponse
@@ -19,18 +22,18 @@ class AbsBibleRepository(
 ) : BibleRepository {
 
     override suspend fun getVersions(languages: List<String>): Result<List<BibleVersion>> = runCatching {
-        val response = httpClient.get(BASE_URL) {
+        httpClient.get(BASE_URL) {
             absHeaders()
-        }.body<AbsVersionsResponse>()
-
-        val versions = response.data
-            .map { it.toDomain() }
-            .distinctBy { it.abbreviation }
-
-        if (languages.isNotEmpty()) {
-            versions.filter { languages.contains(it.language) }
-        } else {
-            versions
+            // Use this repo for English versions only
+            parameter("language", "eng")
+        }.body<AbsVersionsResponse>().data.map { it.toDomain() }
+        .distinctBy { it.abbreviation }
+        .let { versions ->
+            if (languages.isNotEmpty()) {
+                versions.filter { languages.contains(it.language) }
+            } else {
+                versions
+            }
         }
     }
 

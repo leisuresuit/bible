@@ -71,6 +71,7 @@ internal fun String.toIso6391(): String =
     when (this.lowercase()) {
         "eng" -> "en"
         "zho" -> "zh"
+        "cmn" -> "zh"
         "jpn" -> "ja"
         "kor" -> "ko"
         "spa" -> "es"
@@ -82,7 +83,7 @@ internal fun String.toIso6391(): String =
 internal fun String.toIso6393(): String =
     when (this.lowercase()) {
         "en" -> "eng"
-        "zh" -> "zho"
+        "zh" -> "cmn"
         "ja" -> "jpn"
         "ko" -> "kor"
         "es" -> "spa"
