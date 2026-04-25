@@ -22,6 +22,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -171,17 +172,19 @@ fun HistoryHeader(
 @Composable
 fun HistoryScreenPreview() {
     BibleTheme {
-        HistoryScreen(
-            history = listOf(
-                HistoryItem(Book.Luke, 18, 1),
-                HistoryItem(Book.Luke, 24, 1),
-                HistoryItem(Book.Matthew, 5, 1)
-            ),
-            currentBook = Book.Luke,
-            currentChapter = 18,
-            currentVerse = 1,
-            onItemClick = {},
-            onClear = {}
-        )
+        Surface {
+            HistoryScreen(
+                history = listOf(
+                    HistoryItem(Book.Luke, 18, 1),
+                    HistoryItem(Book.Luke, 24, 1),
+                    HistoryItem(Book.Matthew, 5, 1)
+                ),
+                currentBook = Book.Luke,
+                currentChapter = 18,
+                currentVerse = 1,
+                onItemClick = {},
+                onClear = {}
+            )
+        }
     }
 }

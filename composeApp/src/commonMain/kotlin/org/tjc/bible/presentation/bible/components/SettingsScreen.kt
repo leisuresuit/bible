@@ -207,16 +207,18 @@ fun SettingsHeader() {
 @Composable
 fun SettingsScreenPreview() {
     BibleTheme {
-        SettingsScreen(
-            displayMode = DisplayMode.SINGLE_CHAPTER,
-            showWordsOfJesus = true,
-            theme = AppTheme.SYSTEM,
-            isDynamicColor = true,
-            supportsDynamicColor = true,
-            onDisplayModeChange = {},
-            onShowWordsOfJesusChange = {},
-            onThemeChange = {},
-            onDynamicColorChange = {}
-        )
+        Surface {
+            SettingsScreen(
+                displayMode = DisplayMode.SINGLE_CHAPTER,
+                showWordsOfJesus = true,
+                theme = AppTheme.SYSTEM,
+                isDynamicColor = true,
+                supportsDynamicColor = true,
+                onDisplayModeChange = {},
+                onShowWordsOfJesusChange = {},
+                onThemeChange = {},
+                onDynamicColorChange = {}
+            )
+        }
     }
 }

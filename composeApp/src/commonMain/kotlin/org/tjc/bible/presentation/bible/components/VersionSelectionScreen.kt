@@ -26,6 +26,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -214,18 +215,27 @@ private fun LanguageFilters(
 @Composable
 fun VersionSelectionScreenPreview() {
     BibleTheme {
-        VersionSelectionScreen(
-            versions = listOf(
-                BibleVersion("nkjv", "New King James Version", "English", "NKJV"),
-                BibleVersion("kjv", "King King James Version", "English", "KJV"),
-                BibleVersion("niv", "New International Version", "English", "NIV")
-            ),
-            selectedVersions = listOf(BibleVersion("nkjv", "New King James Version", "English", "NKJV")),
-            isLanguageFilterVisible = true,
-            selectedLanguages = setOf("en"),
-            onVersionToggle = {},
-            onToggleLanguageFilterVisibility = {},
-            onSelectedLanguagesChange = {}
-        )
+        Surface {
+            VersionSelectionScreen(
+                versions = listOf(
+                    BibleVersion("nkjv", "New King James Version", "English", "NKJV"),
+                    BibleVersion("kjv", "King King James Version", "English", "KJV"),
+                    BibleVersion("niv", "New International Version", "English", "NIV")
+                ),
+                selectedVersions = listOf(
+                    BibleVersion(
+                        "nkjv",
+                        "New King James Version",
+                        "English",
+                        "NKJV"
+                    )
+                ),
+                isLanguageFilterVisible = true,
+                selectedLanguages = setOf("en"),
+                onVersionToggle = {},
+                onToggleLanguageFilterVisibility = {},
+                onSelectedLanguagesChange = {}
+            )
+        }
     }
 }
