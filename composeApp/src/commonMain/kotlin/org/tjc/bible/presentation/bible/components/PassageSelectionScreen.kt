@@ -272,7 +272,7 @@ fun ChapterSelectionPage(
     val chapters = (1..chaptersCount).toList()
     val filteredChapters = remember(chaptersCount, searchQuery) {
         if (searchQuery.isEmpty()) chapters
-        else chapters.filter { it.toString().contains(searchQuery) }
+        else chapters.filter { it.toString().startsWith(searchQuery) }
     }
 
     val gridState = rememberLazyGridState()
@@ -325,7 +325,7 @@ fun VerseSelectionPage(
     val verses = (1..versesCount).toList()
     val filteredVerses = remember(versesCount, searchQuery) {
         if (searchQuery.isEmpty()) verses
-        else verses.filter { it.toString().contains(searchQuery) }
+        else verses.filter { it.toString().startsWith(searchQuery) }
     }
 
     val gridState = rememberLazyGridState()
