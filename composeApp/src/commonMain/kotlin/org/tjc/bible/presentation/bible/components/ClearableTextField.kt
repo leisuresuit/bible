@@ -1,11 +1,10 @@
-package org.tjc.bible.presentation.ui
+package org.tjc.bible.presentation.bible.components
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -18,6 +17,7 @@ import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.clear
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.tjc.bible.presentation.ui.AutoResizedText
 
 @Composable
 fun ClearableTextField(

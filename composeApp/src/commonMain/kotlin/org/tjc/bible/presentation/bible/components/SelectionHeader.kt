@@ -27,7 +27,6 @@ import bible.composeapp.generated.resources.toggle_sort_order
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.presentation.ui.AutoResizedText
-import org.tjc.bible.presentation.ui.ClearableTextField
 
 @Composable
 fun SelectionHeader(
