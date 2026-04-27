@@ -11,8 +11,6 @@
     <string name="search">Search</string>
     <string name="versions">Versions</string>
     <string name="book">Book</string>
-    <string name="chapter">Chapter</string>
-    <string name="verse">Verse</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>

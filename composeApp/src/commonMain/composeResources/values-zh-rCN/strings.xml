@@ -11,8 +11,6 @@
     <string name="search">搜索</string>
     <string name="versions">版本</string>
     <string name="book">卷</string>
-    <string name="chapter">章</string>
-    <string name="verse">节</string>
     <string name="theme_system">系统</string>
     <string name="theme_light">浅色</string>
     <string name="theme_dark">深色</string>

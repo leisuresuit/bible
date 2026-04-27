@@ -3,7 +3,6 @@ package org.tjc.bible.presentation.bible.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
@@ -39,9 +38,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
 import bible.composeapp.generated.resources.book
-import bible.composeapp.generated.resources.chapter
 import bible.composeapp.generated.resources.search
-import bible.composeapp.generated.resources.verse
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.tjc.bible.domain.model.Book
@@ -84,10 +81,12 @@ fun PassageSelectionScreen(
         // Stationary Header
         val title = when (pagerState.currentPage) {
             0 -> stringResource(Res.string.book)
-            1 -> selectedBook?.let { stringResource(it.nameResource) } ?: stringResource(Res.string.chapter)
+            1 -> selectedBook?.let { stringResource(it.nameResource) }.orEmpty()
             else -> {
-                val bookName = selectedBook?.let { stringResource(it.nameResource) } ?: ""
-                if (bookName.isNotEmpty()) "$bookName $selectedChapter" else stringResource(Res.string.verse)
+                selectedBook?.let {
+                    val bookName = stringResource(it.nameResource)
+                    "$bookName $selectedChapter"
+                }.orEmpty()
             }
         }
 
@@ -95,8 +94,7 @@ fun PassageSelectionScreen(
 
         val searchHint = when (pagerState.currentPage) {
             0 -> stringResource(Res.string.search)
-            1 -> stringResource(Res.string.chapter)
-            else -> stringResource(Res.string.verse)
+            else -> "#"
         }
 
         SelectionHeader(
