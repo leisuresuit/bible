@@ -45,9 +45,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-@Preview
-@Composable
-fun AppAndroidPreview() {
-    App()
-}
