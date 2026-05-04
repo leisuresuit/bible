@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
@@ -231,29 +232,33 @@ private fun VerseListContent(
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val maxColumnWidth = if (maxWidth > 600.dp) 600.dp else maxWidth
         
-        LazyColumn(
-            state = lazyListState,
+        SelectionContainer(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .widthIn(max = maxColumnWidth)
-                .fillMaxSize()
-                .then(if (nestedScrollConnection != null) Modifier.nestedScroll(nestedScrollConnection) else Modifier),
-            contentPadding = PaddingValues(
-                start = 16.dp + contentPadding.calculateStartPadding(LayoutDirection.Ltr),
-                top = contentPadding.calculateTopPadding(),
-                end = 16.dp + contentPadding.calculateEndPadding(LayoutDirection.Ltr),
-                bottom = 256.dp + contentPadding.calculateBottomPadding()
-            ),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-                ChapterHeader(book, chapter) {
-                    onShowPassageSelection(0)
+            LazyColumn(
+                state = lazyListState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(if (nestedScrollConnection != null) Modifier.nestedScroll(nestedScrollConnection) else Modifier),
+                contentPadding = PaddingValues(
+                    start = 16.dp + contentPadding.calculateStartPadding(LayoutDirection.Ltr),
+                    top = contentPadding.calculateTopPadding(),
+                    end = 16.dp + contentPadding.calculateEndPadding(LayoutDirection.Ltr),
+                    bottom = 256.dp + contentPadding.calculateBottomPadding()
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    ChapterHeader(book, chapter) {
+                        onShowPassageSelection(0)
+                    }
                 }
-            }
 
-            items(verses, key = { "${it.number}_${it.versionAbbreviation.orEmpty()}" }) { verse ->
-                VerseItem(verse, showWordsOfJesus)
+                items(verses, key = { "${it.number}_${it.versionAbbreviation.orEmpty()}" }) { verse ->
+                    VerseItem(verse, showWordsOfJesus)
+                }
             }
         }
     }
