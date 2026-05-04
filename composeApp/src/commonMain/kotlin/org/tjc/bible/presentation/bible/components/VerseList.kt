@@ -325,7 +325,7 @@ private fun VerseItem(verse: Verse, showWordsOfJesus: Boolean) {
                         // Only show verse number on the first text element of the verse
                         if (element == verse.elements.firstOrNull { it is VerseElement.Text }) {
                             withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                                append("${verse.number} ")
+                                append("${verse.number}  ")
                             }
                         }
 
