@@ -20,7 +20,7 @@ val localProperties = Properties().apply {
 val absApiKey = localProperties.getProperty("abs.api.key") ?: ""
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "org.tjc.bible"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         
@@ -31,6 +31,8 @@ kotlin {
         androidResources {
             enable = true
         }
+
+        withHostTest {}
     }
 
     listOf(
