@@ -19,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -60,7 +62,8 @@ fun SearchScreen(
     onSearchSortChange: (SearchSort) -> Unit = {},
     onToggleSearchSortVisibility: () -> Unit = {},
     onLoadMore: () -> Unit,
-    onResultClick: (SearchResult) -> Unit
+    onResultClick: (SearchResult) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val focusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
@@ -96,9 +99,8 @@ fun SearchScreen(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.8f)
             .navigationBarsPadding()
             .imePadding()
     ) {
@@ -296,6 +298,7 @@ private fun SearchItem(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
+            .pointerHoverIcon(PointerIcon.Hand)
             .padding(12.dp)
     ) {
         Text(

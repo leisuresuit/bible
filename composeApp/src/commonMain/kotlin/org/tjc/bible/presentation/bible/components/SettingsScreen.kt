@@ -42,12 +42,12 @@ fun SettingsScreen(
     onDisplayModeChange: (DisplayMode) -> Unit,
     onShowWordsOfJesusChange: (Boolean) -> Unit,
     onThemeChange: (AppTheme) -> Unit,
-    onDynamicColorChange: (Boolean) -> Unit
+    onDynamicColorChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.8f)
             .navigationBarsPadding()
             .imePadding()
     ) {

@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -79,7 +81,8 @@ fun BibleTopBar(
                         Modifier.width(0.dp).weight(1f)
                     ) {
                         TextButton(
-                            onClick = { onShowPassageSelection(0) }
+                            onClick = { onShowPassageSelection(0) },
+                            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
                         ) {
                             AutoResizedText(
                                 text = "${stringResource(book.nameResource)} $currentChapter",
@@ -90,7 +93,8 @@ fun BibleTopBar(
                     }
                 }
                 TextButton(
-                    onClick = onShowVersionSelection
+                    onClick = onShowVersionSelection,
+                    modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
                 ) {
                     val versionText = if (selectedVersions.size > 1) {
                         stringResource(Res.string.versions)
@@ -105,19 +109,28 @@ fun BibleTopBar(
             }
         },
         actions = {
-            IconButton(onClick = onShowSearch) {
+            IconButton(
+                onClick = onShowSearch,
+                modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
+            ) {
                 Icon(
                     painter = painterResource(Res.drawable.search),
                     contentDescription = stringResource(Res.string.search)
                 )
             }
-            IconButton(onClick = onShowHistory) {
+            IconButton(
+                onClick = onShowHistory,
+                modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
+            ) {
                 Icon(
                     painter = painterResource(Res.drawable.history),
                     contentDescription = stringResource(Res.string.history)
                 )
             }
-            IconButton(onClick = onShowSettings) {
+            IconButton(
+                onClick = onShowSettings,
+                modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
+            ) {
                 Icon(
                     painter = painterResource(Res.drawable.settings),
                     contentDescription = stringResource(Res.string.settings)

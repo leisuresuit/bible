@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import bible.composeapp.generated.resources.Res
@@ -68,7 +70,10 @@ fun SelectionHeader(
                 modifier = if (titleWeight != null) Modifier.weight(titleWeight) else Modifier
             )
             if (showSortButton) {
-                IconButton(onClick = onSortClick) {
+                IconButton(
+                    onClick = onSortClick,
+                    modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
+                ) {
                     Icon(
                         painter = sortIcon ?: painterResource(Res.drawable.sort),
                         contentDescription = sortDescription ?: stringResource(Res.string.toggle_sort_order),
@@ -89,7 +94,8 @@ fun SelectionHeader(
             if (showPreviousButton) {
                 IconButton(
                     onClick = onPreviousClick,
-                    enabled = previousButtonEnabled
+                    enabled = previousButtonEnabled,
+                    modifier = Modifier.pointerHoverIcon(if (previousButtonEnabled) PointerIcon.Hand else PointerIcon.Default)
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.arrow_back),
@@ -100,7 +106,8 @@ fun SelectionHeader(
             if (showNextButton) {
                 IconButton(
                     onClick = onNextClick,
-                    enabled = nextButtonEnabled
+                    enabled = nextButtonEnabled,
+                    modifier = Modifier.pointerHoverIcon(if (nextButtonEnabled) PointerIcon.Hand else PointerIcon.Default)
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.arrow_forward),

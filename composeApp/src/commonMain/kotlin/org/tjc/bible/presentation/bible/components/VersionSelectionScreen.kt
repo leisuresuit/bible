@@ -60,7 +60,8 @@ fun VersionSelectionScreen(
     selectedLanguages: Set<String>,
     onVersionToggle: (BibleVersion) -> Unit,
     onToggleLanguageFilterVisibility: () -> Unit,
-    onSelectedLanguagesChange: (Set<String>) -> Unit
+    onSelectedLanguagesChange: (Set<String>) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
 
@@ -89,9 +90,8 @@ fun VersionSelectionScreen(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.8f)
             .navigationBarsPadding()
             .imePadding()
     ) {

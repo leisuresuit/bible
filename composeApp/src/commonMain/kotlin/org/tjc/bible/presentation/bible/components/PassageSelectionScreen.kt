@@ -53,7 +53,8 @@ fun PassageSelectionScreen(
     currentChapter: Int,
     currentVerse: Int,
     initialPage: Int,
-    onPassageSelected: (Book, Int, Int) -> Unit
+    onPassageSelected: (Book, Int, Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val pagerState = rememberPagerState(initialPage = initialPage) { 3 }
     val scope = rememberCoroutineScope()
@@ -71,9 +72,8 @@ fun PassageSelectionScreen(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.8f)
             .navigationBarsPadding()
             .imePadding()
             .padding(horizontal = 16.dp)

@@ -33,10 +33,11 @@ import org.tjc.bible.presentation.bible.components.VerseList
 @Composable
 fun BibleScreen(
     viewModel: BibleViewModel,
-    onNavigate: (NavKey) -> Unit
+    onNavigate: (NavKey) -> Unit,
+    showTopBar: Boolean = true
 ) {
     val state by viewModel.state.collectAsState()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = if (showTopBar) TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState()) else null
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel.effects) {
@@ -59,28 +60,32 @@ fun BibleScreen(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
+            .then(if (scrollBehavior != null) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier),
         topBar = {
-            BibleTopBar(
-                currentBook = state.currentBook,
-                currentChapter = state.currentChapter,
-                selectedVersions = state.selectedVersions,
-                onShowSearch = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.Search)) },
-                onShowPassageSelection = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.PassageSelection(it))) },
-                onShowVersionSelection = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.VersionSelection)) },
-                onShowHistory = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.History)) },
-                onShowSettings = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.Settings)) },
-                scrollBehavior = scrollBehavior
-            )
+            if (showTopBar) {
+                BibleTopBar(
+                    currentBook = state.currentBook,
+                    currentChapter = state.currentChapter,
+                    selectedVersions = state.selectedVersions,
+                    onShowSearch = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.Search)) },
+                    onShowPassageSelection = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.PassageSelection(it))) },
+                    onShowVersionSelection = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.VersionSelection)) },
+                    onShowHistory = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.History)) },
+                    onShowSettings = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.Settings)) },
+                    scrollBehavior = scrollBehavior
+                )
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
-                    .windowInsetsBottomHeight(WindowInsets.navigationBars)
-            )
+            if (showTopBar) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                        .windowInsetsBottomHeight(WindowInsets.navigationBars)
+                )
+            }
         }
     ) { padding ->
         VerseList(
@@ -111,7 +116,7 @@ fun BibleScreen(
                 )
             },
             contentPadding = padding,
-            nestedScrollConnection = scrollBehavior.nestedScrollConnection
+            nestedScrollConnection = scrollBehavior?.nestedScrollConnection
         )
     }
 }

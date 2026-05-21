@@ -30,6 +30,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -56,7 +58,8 @@ fun HistoryScreen(
     currentChapter: Int,
     currentVerse: Int?,
     onItemClick: (HistoryItem) -> Unit,
-    onClear: () -> Unit
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val currentIndex = history.indexOfFirst {
         it.book == currentBook && it.chapter == currentChapter && it.verse == currentVerse
@@ -71,9 +74,8 @@ fun HistoryScreen(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.8f)
             .navigationBarsPadding()
             .imePadding()
     ) {
@@ -111,6 +113,7 @@ fun HistoryScreen(
                             .fillMaxWidth()
                             .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                             .clickable { onItemClick(item) }
+                            .pointerHoverIcon(PointerIcon.Hand)
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         style = if (isSelected) MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold) else MaterialTheme.typography.bodyLarge,
                         color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,

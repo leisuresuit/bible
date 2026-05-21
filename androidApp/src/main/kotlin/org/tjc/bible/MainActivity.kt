@@ -6,6 +6,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
@@ -18,11 +20,13 @@ import org.tjc.bible.domain.model.AppTheme
 import org.tjc.bible.presentation.bible.BibleViewModel
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         setContent {
+            val windowSizeClass = calculateWindowSizeClass(this)
             val viewModel: BibleViewModel = koinViewModel()
             val state by viewModel.state.collectAsState()
             val darkTheme = when (state.theme) {
@@ -41,7 +45,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            App()
+            App(windowSizeClass = windowSizeClass)
         }
     }
 }

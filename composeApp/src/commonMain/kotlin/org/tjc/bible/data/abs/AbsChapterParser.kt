@@ -95,44 +95,13 @@ internal class AbsChapterParser {
      * Core logic for appending text to a list of spans, handling smart spacing and structural breaks.
      */
     private fun appendTextToSpans(spans: MutableList<TextSpan>, text: String, style: TextStyle, addNewline: Boolean) {
-        val textToAdd = if (!pendingBreak && spans.isNotEmpty() && shouldAddSpace(spans.last().text, text)) {
-            " $text"
-        } else {
-            text
-        }
-
         if (pendingBreak && spans.isNotEmpty() && addNewline) {
             spans.add(TextSpan("\n", TextStyle.NORMAL))
         }
 
         pendingBreak = false
-        spans.add(TextSpan(textToAdd, style))
+        spans.add(TextSpan(text, style))
     }
-
-    /**
-     * Determines if a space should be inserted between two text segments based on punctuation and language.
-     */
-    private fun shouldAddSpace(prev: String, next: String): Boolean {
-        if (prev.isEmpty() || next.isEmpty()) return false
-        val lastChar = prev.last()
-        val firstChar = next.first()
-
-        if (lastChar.isWhitespace() || firstChar.isWhitespace()) return false
-        if (",.?!:;)]}\"".contains(firstChar)) return false
-        if ("([{".contains(lastChar)) return false
-
-        // Only add space for "character-based" (alphabetical) languages, not ideographic ones.
-        return !lastChar.isIdeographic() && !firstChar.isIdeographic()
-    }
-
-    /**
-     * Checks if a character belongs to a CJK (Chinese, Japanese, Korean) ideographic range.
-     */
-    private fun Char.isIdeographic(): Boolean =
-        code in 0x4E00..0x9FFF || // CJK Unified Ideographs
-        code in 0x3400..0x4DBF || // CJK Unified Ideographs Extension A
-        code in 0x3040..0x30FF || // Japanese Hiragana and Katakana
-        code in 0xAC00..0xD7AF    // Korean Hangul Syllables
 
     /**
      * Moves any headings collected since the last verse and attaches them to the specified verse number.
