@@ -95,12 +95,47 @@ internal class AbsChapterParser {
      * Core logic for appending text to a list of spans, handling smart spacing and structural breaks.
      */
     private fun appendTextToSpans(spans: MutableList<TextSpan>, text: String, style: TextStyle, addNewline: Boolean) {
+        val rawCleaned = text.replace("\u00B6", "").replace("\r", "")
+        if (rawCleaned.isEmpty()) return
+
         if (pendingBreak && spans.isNotEmpty() && addNewline) {
             spans.add(TextSpan("\n", TextStyle.NORMAL))
         }
-
         pendingBreak = false
-        spans.add(TextSpan(text, style))
+
+        val lastSpan = spans.lastOrNull()
+        val lastText = lastSpan?.text ?: ""
+        val lastChar = lastText.lastOrNull() ?: '\u0000'
+        
+        // 1. Avoid double spaces between different spans/tags
+        var textToAdd = rawCleaned
+        if (lastChar.isWhitespace() && rawCleaned.first().isWhitespace()) {
+            textToAdd = rawCleaned.trimStart()
+        }
+        
+        if (textToAdd.isEmpty()) return
+
+        // 2. Add a space ONLY if it is clearly missing between two words at a tag boundary
+        if (spans.isNotEmpty() && addNewline) {
+            val firstChar = textToAdd.first()
+            if (!lastChar.isWhitespace() && !firstChar.isWhitespace() &&
+                !isLeadingPunctuation(firstChar) && !isOpeningPunctuation(lastChar)) {
+                spans.add(TextSpan(" ", style))
+            }
+        }
+
+        spans.add(TextSpan(textToAdd, style))
+    }
+
+    private fun isLeadingPunctuation(c: Char): Boolean {
+        return c == ',' || c == '.' || c == ';' || c == ':' || c == '?' || c == '!' || 
+               c == ')' || c == ']' || c == '}' || c == '\'' || c == '"' || c == '»' ||
+               c == '—' || c == '–' || c == '’' || c == '”'
+    }
+
+    private fun isOpeningPunctuation(c: Char): Boolean {
+        return c == '(' || c == '[' || c == '{' || c == '«' || c == '‘' || c == '“' || c == '"' || c == '\'' ||
+               c == '—' || c == '–'
     }
 
     /**
