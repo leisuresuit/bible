@@ -139,17 +139,53 @@ internal class AbsChapterParser {
     /**
      * Maps ABS style attributes to domain [TextStyle] constants.
      */
-    private fun AbsContentItemDto.getStyle(inherited: TextStyle): TextStyle = when {
-        attrs?.style == "bd" || attrs?.style == "nd" || attrs?.style == "d" -> TextStyle.BOLD
-        attrs?.style == "it" -> TextStyle.ITALIC
-        attrs?.style == "itbd" -> TextStyle.ITALIC_BOLD
-        attrs?.style?.startsWith("sc") == true -> TextStyle.SMALL_CAPS
-        attrs?.style == "wj" -> TextStyle.WORDS_OF_JESUS
-        attrs?.style?.let { s ->
-            (s.startsWith("s") && !s.startsWith("sc")) || s.startsWith("ms") || s == "qa" || s == "sp"
-        } == true -> TextStyle.HEADING
-        else -> inherited
+    private fun AbsContentItemDto.getStyle(inherited: TextStyle): TextStyle {
+        val current = when {
+            attrs?.style == "bd" || attrs?.style == "nd" || attrs?.style == "d" -> TextStyle.BOLD
+            attrs?.style == "it" || attrs?.style == "add" -> TextStyle.ITALIC
+            attrs?.style == "itbd" -> TextStyle.ITALIC_BOLD
+            attrs?.style?.startsWith("sc") == true -> TextStyle.SMALL_CAPS
+            attrs?.style == "wj" -> TextStyle.WORDS_OF_JESUS
+            attrs?.style?.let { s ->
+                (s.startsWith("s") && !s.startsWith("sc")) || s.startsWith("ms") || s == "qa" || s == "sp"
+            } == true -> TextStyle.HEADING
+            else -> return inherited
+        }
+
+        return combineStyles(inherited, current)
     }
+
+    private fun combineStyles(inherited: TextStyle, current: TextStyle): TextStyle {
+        val isJesus = inherited.isJesus() || current.isJesus()
+        val isItalic = inherited.isItalic() || current.isItalic()
+        val isBold = inherited.isBold() || current.isBold()
+
+        return when {
+            isJesus && isItalic && isBold -> TextStyle.WORDS_OF_JESUS_ITALIC_BOLD
+            isJesus && isItalic -> TextStyle.WORDS_OF_JESUS_ITALIC
+            isJesus && isBold -> TextStyle.WORDS_OF_JESUS_BOLD
+            isJesus -> TextStyle.WORDS_OF_JESUS
+            isItalic && isBold -> TextStyle.ITALIC_BOLD
+            isItalic -> TextStyle.ITALIC
+            isBold -> TextStyle.BOLD
+            else -> current
+        }
+    }
+
+    private fun TextStyle.isJesus() = this == TextStyle.WORDS_OF_JESUS ||
+            this == TextStyle.WORDS_OF_JESUS_BOLD ||
+            this == TextStyle.WORDS_OF_JESUS_ITALIC ||
+            this == TextStyle.WORDS_OF_JESUS_ITALIC_BOLD
+
+    private fun TextStyle.isItalic() = this == TextStyle.ITALIC ||
+            this == TextStyle.ITALIC_BOLD ||
+            this == TextStyle.WORDS_OF_JESUS_ITALIC ||
+            this == TextStyle.WORDS_OF_JESUS_ITALIC_BOLD
+
+    private fun TextStyle.isBold() = this == TextStyle.BOLD ||
+            this == TextStyle.ITALIC_BOLD ||
+            this == TextStyle.WORDS_OF_JESUS_BOLD ||
+            this == TextStyle.WORDS_OF_JESUS_ITALIC_BOLD
 
     /**
      * Identifies if a content item represents a structural block (like a paragraph or heading).

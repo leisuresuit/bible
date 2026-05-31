@@ -387,6 +387,24 @@ private fun TextStyle.toSpanStyle(baseStyle: SpanStyle, showWordsOfJesus: Boolea
             baseStyle
         }
 
+        TextStyle.WORDS_OF_JESUS_BOLD -> if (showWordsOfJesus) {
+            baseStyle.copy(color = Color.Red, fontWeight = FontWeight.Bold)
+        } else {
+            baseStyle.copy(fontWeight = FontWeight.Bold)
+        }
+
+        TextStyle.WORDS_OF_JESUS_ITALIC -> if (showWordsOfJesus) {
+            baseStyle.copy(color = Color.Red, fontStyle = FontStyle.Italic)
+        } else {
+            baseStyle.copy(fontStyle = FontStyle.Italic)
+        }
+
+        TextStyle.WORDS_OF_JESUS_ITALIC_BOLD -> if (showWordsOfJesus) {
+            baseStyle.copy(color = Color.Red, fontStyle = FontStyle.Italic, fontWeight = FontWeight.Bold)
+        } else {
+            baseStyle.copy(fontStyle = FontStyle.Italic, fontWeight = FontWeight.Bold)
+        }
+
         TextStyle.NORMAL -> baseStyle
     }
 
