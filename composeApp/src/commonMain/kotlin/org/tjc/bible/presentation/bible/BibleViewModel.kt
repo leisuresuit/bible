@@ -173,12 +173,12 @@ class BibleViewModel(
     private var loadMoreJob: kotlinx.coroutines.Job? = null
 
     private fun handleSearch(query: String) {
-        val trimmedQuery = query.trim()
         dispatch(BibleAction.SearchQueryChanged(query))
         
         searchJob?.cancel()
         loadMoreJob?.cancel()
         
+        val trimmedQuery = query.trim()
         if (trimmedQuery.length < 3) {
             dispatch(BibleAction.SearchResultsLoaded(emptyList(), hasMore = false))
             dispatch(BibleAction.Loading(false))

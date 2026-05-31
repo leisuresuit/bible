@@ -267,12 +267,13 @@ private fun SearchItem(
     val annotatedText = remember(result.text, searchQuery, highlightColor, onHighlightColor) {
         buildAnnotatedString {
             val text = result.text
-            if (searchQuery.isBlank() || searchQuery.length < 3) {
+            val trimmedQuery = searchQuery.trim()
+            if (trimmedQuery.isBlank() || trimmedQuery.length < 3) {
                 append(text)
             } else {
                 var start = 0
                 while (true) {
-                    val index = text.indexOf(searchQuery, start, ignoreCase = true)
+                    val index = text.indexOf(trimmedQuery, start, ignoreCase = true)
                     if (index == -1) {
                         append(text.substring(start))
                         break
@@ -285,9 +286,9 @@ private fun SearchItem(
                             fontWeight = FontWeight.Bold
                         )
                     ) {
-                        append(text.substring(index, index + searchQuery.length))
+                        append(text.substring(index, index + trimmedQuery.length))
                     }
-                    start = index + searchQuery.length
+                    start = index + trimmedQuery.length
                 }
             }
         }
