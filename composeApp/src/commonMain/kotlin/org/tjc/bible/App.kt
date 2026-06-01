@@ -120,20 +120,17 @@ fun App(windowSizeClass: WindowSizeClass) {
                         NavigationRailItem(
                             selected = state.activeSheet is ActiveSheet.Search,
                             onClick = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.Search)) },
-                            icon = { Icon(painterResource(Res.drawable.search), contentDescription = stringResource(Res.string.search)) },
-                            label = { Text(stringResource(Res.string.search)) }
+                            icon = { Icon(painterResource(Res.drawable.search), contentDescription = stringResource(Res.string.search)) }
                         )
                         NavigationRailItem(
                             selected = state.activeSheet is ActiveSheet.History,
                             onClick = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.History)) },
-                            icon = { Icon(painterResource(Res.drawable.history), contentDescription = stringResource(Res.string.history)) },
-                            label = { Text(stringResource(Res.string.history)) }
+                            icon = { Icon(painterResource(Res.drawable.history), contentDescription = stringResource(Res.string.history)) }
                         )
                         NavigationRailItem(
                             selected = state.activeSheet is ActiveSheet.Settings,
                             onClick = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.Settings)) },
-                            icon = { Icon(painterResource(Res.drawable.settings), contentDescription = stringResource(Res.string.settings)) },
-                            label = { Text(stringResource(Res.string.settings)) }
+                            icon = { Icon(painterResource(Res.drawable.settings), contentDescription = stringResource(Res.string.settings)) }
                         )
                     }
                     VerticalDivider()
