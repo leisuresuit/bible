@@ -49,7 +49,9 @@ fun SelectionHeader(
     onPreviousClick: () -> Unit = {},
     showNextButton: Boolean = false,
     nextButtonEnabled: Boolean = true,
-    onNextClick: () -> Unit = {}
+    onNextClick: () -> Unit = {},
+    showTitleIcon: Boolean = false,
+    titleIcon: Painter? = null
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -64,6 +66,13 @@ fun SelectionHeader(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
+            if (showTitleIcon && titleIcon != null) {
+                Icon(
+                    painter = titleIcon,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
             AutoResizedText(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall,

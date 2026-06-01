@@ -59,7 +59,8 @@ fun HistoryScreen(
     currentVerse: Int?,
     onItemClick: (HistoryItem) -> Unit,
     onClear: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSidePanel: Boolean = false
 ) {
     val currentIndex = history.indexOfFirst {
         it.book == currentBook && it.chapter == currentChapter && it.verse == currentVerse
@@ -83,7 +84,8 @@ fun HistoryScreen(
             history = history,
             currentIndex = currentIndex,
             onItemClick = onItemClick,
-            onClear = onClear
+            onClear = onClear,
+            showIcon = !isSidePanel
         )
 
         HorizontalDivider()
@@ -130,7 +132,8 @@ fun HistoryHeader(
     history: List<HistoryItem>,
     currentIndex: Int,
     onItemClick: (HistoryItem) -> Unit,
-    onClear: () -> Unit
+    onClear: () -> Unit,
+    showIcon: Boolean
 ) {
     Row(
         Modifier
@@ -139,10 +142,12 @@ fun HistoryHeader(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(painterResource(Res.drawable.history), contentDescription = null)
+        if (showIcon) {
+            Icon(painterResource(Res.drawable.history), contentDescription = null)
+        }
         Text(
             text = stringResource(Res.string.history),
-            Modifier.padding(start = 8.dp),
+            Modifier.padding(start = if (showIcon) 8.dp else 0.dp),
             style = MaterialTheme.typography.headlineSmall
         )
         Spacer(Modifier.weight(1f))

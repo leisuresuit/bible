@@ -43,7 +43,8 @@ fun SettingsScreen(
     onShowWordsOfJesusChange: (Boolean) -> Unit,
     onThemeChange: (AppTheme) -> Unit,
     onDynamicColorChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSidePanel: Boolean = false
 ) {
     Column(
         modifier = modifier
@@ -51,7 +52,7 @@ fun SettingsScreen(
             .navigationBarsPadding()
             .imePadding()
     ) {
-        SettingsHeader()
+        SettingsHeader(showIcon = !isSidePanel)
 
         HorizontalDivider()
 
@@ -185,7 +186,7 @@ fun SettingsScreen(
 }
 
 @Composable
-fun SettingsHeader() {
+fun SettingsHeader(showIcon: Boolean) {
     Row(
         Modifier
             .wrapContentHeight()
@@ -193,10 +194,12 @@ fun SettingsHeader() {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(painterResource(Res.drawable.settings), contentDescription = null)
+        if (showIcon) {
+            Icon(painterResource(Res.drawable.settings), contentDescription = null)
+        }
         Text(
             text = stringResource(Res.string.settings),
-            Modifier.padding(start = 8.dp),
+            Modifier.padding(start = if (showIcon) 8.dp else 0.dp),
             style = MaterialTheme.typography.headlineSmall
         )
         Spacer(Modifier.weight(1f))

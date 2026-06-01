@@ -297,7 +297,8 @@ private fun SheetContent(
                         viewModel.onIntent(BibleIntent.ShowSheet(null))
                     }
                 },
-                modifier = modifier
+                modifier = modifier,
+                isSidePanel = isSidePanel
             )
         }
 
@@ -341,7 +342,8 @@ private fun SheetContent(
                     }
                 },
                 onClear = { viewModel.onIntent(BibleIntent.ClearHistory) },
-                modifier = modifier
+                modifier = modifier,
+                isSidePanel = isSidePanel
             )
         }
 
@@ -356,7 +358,8 @@ private fun SheetContent(
                 onShowWordsOfJesusChange = { viewModel.onIntent(BibleIntent.UpdateShowWordsOfJesus(it)) },
                 onThemeChange = { viewModel.onThemeChange(it) },
                 onDynamicColorChange = { viewModel.onIntent(BibleIntent.UpdateDynamicColor(it)) },
-                modifier = modifier
+                modifier = modifier,
+                isSidePanel = isSidePanel
             )
         }
     }

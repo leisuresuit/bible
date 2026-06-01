@@ -63,7 +63,8 @@ fun SearchScreen(
     onToggleSearchSortVisibility: () -> Unit = {},
     onLoadMore: () -> Unit,
     onResultClick: (SearchResult) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSidePanel: Boolean = false
 ) {
     val focusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
@@ -110,7 +111,8 @@ fun SearchScreen(
             isSearchSortVisible = isSearchSortVisible,
             onSearchQueryChange = onSearchQueryChange,
             onSearchSortChange = onSearchSortChange,
-            onToggleSearchSortVisibility = onToggleSearchSortVisibility
+            onToggleSearchSortVisibility = onToggleSearchSortVisibility,
+            showIcon = !isSidePanel
         )
 
         HorizontalDivider()
@@ -178,7 +180,8 @@ private fun SearchHeader(
     isSearchSortVisible: Boolean,
     onSearchQueryChange: (String) -> Unit,
     onSearchSortChange: (SearchSort) -> Unit,
-    onToggleSearchSortVisibility: () -> Unit
+    onToggleSearchSortVisibility: () -> Unit,
+    showIcon: Boolean
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -190,7 +193,9 @@ private fun SearchHeader(
             onSearchQueryChange = onSearchQueryChange,
             showSortButton = true,
             onSortClick = onToggleSearchSortVisibility,
-            requestFocus = false // Focus managed by SearchScreen's LaunchedEffect
+            requestFocus = false, // Focus managed by SearchScreen's LaunchedEffect
+            showTitleIcon = showIcon,
+            titleIcon = painterResource(Res.drawable.search)
         )
         AnimatedVisibility(
             visible = isSearchSortVisible,
