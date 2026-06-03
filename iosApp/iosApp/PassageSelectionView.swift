@@ -8,6 +8,7 @@ struct PassageSelectionView: View {
     let initialPage: Int
     let onSelectPassage: (Book, Int, Int) -> Void
     let onDismiss: () -> Void
+    let isSidePanel: Bool
     
     @State private var currentPage: Int
     @State private var internalSelectedBook: Book?
@@ -51,13 +52,14 @@ struct PassageSelectionView: View {
         }
     }
     
-    init(allBooks: [Book], selectedBook: Book?, selectedChapter: Int, initialPage: Int, onSelectPassage: @escaping (Book, Int, Int) -> Void, onDismiss: @escaping () -> Void) {
+    init(allBooks: [Book], selectedBook: Book?, selectedChapter: Int, initialPage: Int, onSelectPassage: @escaping (Book, Int, Int) -> Void, onDismiss: @escaping () -> Void, isSidePanel: Bool = false) {
         self.allBooks = allBooks
         self.selectedBook = selectedBook
         self.selectedChapter = selectedChapter
         self.initialPage = initialPage
         self.onSelectPassage = onSelectPassage
         self.onDismiss = onDismiss
+        self.isSidePanel = isSidePanel
         self._currentPage = State(initialValue: initialPage)
         self._internalSelectedBook = State(initialValue: selectedBook)
         self._internalSelectedChapter = State(initialValue: selectedChapter)
@@ -65,7 +67,27 @@ struct PassageSelectionView: View {
     }
     
     var body: some View {
-        NavigationView {
+        if isSidePanel {
+            content
+        } else {
+            NavigationView {
+                content
+            }
+        }
+    }
+    
+    private var content: some View {
+        VStack(spacing: 0) {
+            if isSidePanel {
+                HStack {
+                    Text(navigationTitleText)
+                        .font(.headline)
+                    Spacer()
+                    headerActions
+                }
+                .padding()
+            }
+            
             VStack(spacing: 0) {
                 HStack {
                     Image(systemName: "magnifyingglass")
@@ -119,31 +141,39 @@ struct PassageSelectionView: View {
                     }
                 }
             }
-            .navigationTitle(navigationTitleText)
-            .toolbar {
-                ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        if currentPage > 0 {
-                            currentPage -= 1
-                        }
-                    }) {
-                        Image(systemName: "chevron.left")
-                    }
-                    .disabled(currentPage == 0)
-
-                    Button(action: {
-                        if currentPage < 2 {
-                            currentPage += 1
-                        }
-                    }) {
-                        Image(systemName: "chevron.right")
-                    }
-                    .disabled(!((currentPage == 0 && internalSelectedBook != nil) || (currentPage == 1 && internalSelectedChapter != nil)))
+        }
+        .navigationTitle(navigationTitleText)
+        .toolbar {
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                if !isSidePanel {
+                    headerActions
                 }
             }
-            .onChange(of: currentPage) { _, _ in
-                searchQuery = ""
+        }
+        .onChange(of: currentPage) { _, _ in
+            searchQuery = ""
+        }
+    }
+    
+    private var headerActions: some View {
+        HStack {
+            Button(action: {
+                if currentPage > 0 {
+                    currentPage -= 1
+                }
+            }) {
+                Image(systemName: "chevron.left")
             }
+            .disabled(currentPage == 0)
+
+            Button(action: {
+                if currentPage < 2 {
+                    currentPage += 1
+                }
+            }) {
+                Image(systemName: "chevron.right")
+            }
+            .disabled(!((currentPage == 0 && internalSelectedBook != nil) || (currentPage == 1 && internalSelectedChapter != nil)))
         }
     }
 }

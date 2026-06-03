@@ -6,6 +6,7 @@ struct VersionSelectionView: View {
     let selectedVersions: [BibleVersion]
     let onToggleVersion: (BibleVersion) -> Void
     let onDismiss: () -> Void
+    let isSidePanel: Bool
 
     @State private var searchQuery: String = ""
 
@@ -24,9 +25,36 @@ struct VersionSelectionView: View {
             }
         }
     }
+    
+    init(versions: [BibleVersion], selectedVersions: [BibleVersion], onToggleVersion: @escaping (BibleVersion) -> Void, onDismiss: @escaping () -> Void, isSidePanel: Bool = false) {
+        self.versions = versions
+        self.selectedVersions = selectedVersions
+        self.onToggleVersion = onToggleVersion
+        self.onDismiss = onDismiss
+        self.isSidePanel = isSidePanel
+    }
 
     var body: some View {
-        NavigationView {
+        if isSidePanel {
+            content
+        } else {
+            NavigationView {
+                content
+            }
+        }
+    }
+    
+    private var content: some View {
+        VStack(spacing: 0) {
+            if isSidePanel {
+                HStack {
+                    Text(NSLocalizedString("versions", comment: ""))
+                        .font(.headline)
+                    Spacer()
+                }
+                .padding()
+            }
+
             VStack(spacing: 0) {
                 HStack {
                     Image(systemName: "magnifyingglass")
