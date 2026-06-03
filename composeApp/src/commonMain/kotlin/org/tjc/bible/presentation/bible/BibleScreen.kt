@@ -1,20 +1,8 @@
 package org.tjc.bible.presentation.bible
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.windowInsetsBottomHeight
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -23,22 +11,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.navigation3.runtime.NavKey
-import org.tjc.bible.presentation.bible.ActiveSheet
-import org.tjc.bible.presentation.bible.BibleIntent
-import org.tjc.bible.presentation.bible.BibleViewModel
 import org.tjc.bible.presentation.bible.components.BibleTopBar
 import org.tjc.bible.presentation.bible.components.VerseList
+import org.tjc.bible.LocalShowTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BibleScreen(
     viewModel: BibleViewModel,
     onNavigate: (NavKey) -> Unit,
-    showTopBar: Boolean = true
+    modifier: Modifier = Modifier
 ) {
     val state by viewModel.state.collectAsState()
-    val scrollBehavior = if (showTopBar) TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState()) else null
+    val isTopBarVisible = LocalShowTopBar.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val scrollBehavior = if (isTopBarVisible) {
+        TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    } else {
+        null
+    }
 
     LaunchedEffect(viewModel.effects) {
         viewModel.effects.collect { effect ->
@@ -58,11 +49,11 @@ fun BibleScreen(
     }
 
     Scaffold(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .then(if (scrollBehavior != null) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier),
         topBar = {
-            if (showTopBar) {
+            if (isTopBarVisible) {
                 BibleTopBar(
                     currentBook = state.currentBook,
                     currentChapter = state.currentChapter,
@@ -74,18 +65,23 @@ fun BibleScreen(
                     onShowSettings = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.Settings)) },
                     scrollBehavior = scrollBehavior
                 )
+            } else {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+                        .statusBarsPadding()
+                )
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
-            if (showTopBar) {
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
-                        .windowInsetsBottomHeight(WindowInsets.navigationBars)
-                )
-            }
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                    .windowInsetsBottomHeight(WindowInsets.navigationBars)
+            )
         }
     ) { padding ->
         VerseList(

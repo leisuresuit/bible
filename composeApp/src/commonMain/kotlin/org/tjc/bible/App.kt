@@ -6,11 +6,10 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.*
@@ -46,6 +45,8 @@ import org.tjc.bible.presentation.ui.nameResource
 import org.tjc.bible.presentation.ui.navConfig
 import org.tjc.bible.presentation.ui.supportsDynamicColor
 
+val LocalShowTopBar = compositionLocalOf { true }
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun App(windowSizeClass: WindowSizeClass) {
@@ -60,7 +61,12 @@ fun App(windowSizeClass: WindowSizeClass) {
         AppTheme.DARK -> true
     }
 
-    val useSidePanel = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
+    val useSidePanel by remember(windowSizeClass) {
+        derivedStateOf {
+            windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact ||
+                    windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact
+        }
+    }
 
     BibleTheme(
         darkTheme = darkTheme,
@@ -189,20 +195,21 @@ fun App(windowSizeClass: WindowSizeClass) {
                     }
                 }
 
-                NavDisplay(
-                    backStack = backStack,
-                    modifier = Modifier.weight(1f)
-                ) { route ->
-                    when (route) {
-                        is Bible -> NavEntry(route) {
-                            BibleScreen(
-                                viewModel = viewModel,
-                                onNavigate = { backStack.add(it) },
-                                showTopBar = !useSidePanel
-                            )
-                        }
+                CompositionLocalProvider(LocalShowTopBar provides !useSidePanel) {
+                    NavDisplay(
+                        backStack = backStack,
+                        modifier = Modifier.weight(1f)
+                    ) { route ->
+                        when (route) {
+                            is Bible -> NavEntry(route) {
+                                BibleScreen(
+                                    viewModel = viewModel,
+                                    onNavigate = { backStack.add(it) }
+                                )
+                            }
 
-                        else -> NavEntry(route) { Text("Unknown route: $route") }
+                            else -> NavEntry(route) { Text("Unknown route: $route") }
+                        }
                     }
                 }
             }
