@@ -87,3 +87,5 @@
 "mode_single" = "單章";
 "mode_contiguous" = "連續";
 "show_words_of_jesus" = "紅字 (耶穌的話)";
+"sort_relevance" = "相關性";
+"sort_canonical" = "聖經順序";

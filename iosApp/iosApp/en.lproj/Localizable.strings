@@ -87,3 +87,5 @@
 "mode_single" = "Single Chapter";
 "mode_contiguous" = "Contiguous";
 "show_words_of_jesus" = "Red Letter\n(Words of Jesus)";
+"sort_relevance" = "Relevance";
+"sort_canonical" = "Bible Order";

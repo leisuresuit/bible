@@ -87,3 +87,5 @@
 "mode_single" = "单章";
 "mode_contiguous" = "连续";
 "show_words_of_jesus" = "红字 (耶稣的话)";
+"sort_relevance" = "相关性";
+"sort_canonical" = "圣经顺序";
