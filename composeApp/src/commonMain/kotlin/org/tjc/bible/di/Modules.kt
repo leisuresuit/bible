@@ -21,6 +21,7 @@ import org.tjc.bible.data.repository.CachedBibleRepository
 import org.tjc.bible.data.repository.CompositeBibleRepository
 import org.tjc.bible.domain.repository.BibleRepository
 import org.tjc.bible.domain.usecase.GetBibleVersionsUseCase
+import org.tjc.bible.domain.usecase.GetParallelVersesUseCase
 import org.tjc.bible.domain.usecase.GetVersesUseCase
 import org.tjc.bible.domain.usecase.SearchUseCase
 import org.tjc.bible.presentation.bible.BibleViewModel
@@ -58,7 +59,7 @@ val appModule = module {
         CompositeBibleRepository(
             repositories = listOf(
                 get<AbsBibleRepository>(),
-                get<BssBibleRepository>()
+                get<BssBibleRepository>(),
             )
         ) 
     }
@@ -66,6 +67,7 @@ val appModule = module {
     
     factoryOf(::GetBibleVersionsUseCase)
     factoryOf(::GetVersesUseCase)
+    factoryOf(::GetParallelVersesUseCase)
     factoryOf(::SearchUseCase)
 
     singleOf(::BibleViewModel)
