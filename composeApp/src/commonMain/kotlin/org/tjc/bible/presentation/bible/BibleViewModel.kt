@@ -62,6 +62,11 @@ class BibleViewModel(
                     dispatch(BibleAction.SearchResultsLoaded(emptyList(), hasMore = false))
                 }
             }
+            is BibleIntent.ToggleSheet -> {
+                val current = _state.value.activeSheet
+                val next = if (current != null && current::class == intent.sheet::class) null else intent.sheet
+                onIntent(BibleIntent.ShowSheet(next))
+            }
             is BibleIntent.SelectVersions -> handleSelectVersions(intent.versions)
             is BibleIntent.ToggleParallelVersion -> handleToggleParallelVersion(intent.version)
             is BibleIntent.SelectBook -> dispatch(BibleAction.BookSelected(intent.book))

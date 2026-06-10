@@ -72,6 +72,7 @@ sealed class BibleIntent {
     data class UpdateDynamicColor(val enabled: Boolean) : BibleIntent()
     data class UpdateShowWordsOfJesus(val enabled: Boolean) : BibleIntent()
     data class ShowSheet(val sheet: ActiveSheet?) : BibleIntent()
+    data class ToggleSheet(val sheet: ActiveSheet) : BibleIntent()
     data class NavigateToHistoryItem(val item: HistoryItem) : BibleIntent()
     data class UpdateDisplayMode(val mode: DisplayMode) : BibleIntent()
     object NextChapter : BibleIntent()

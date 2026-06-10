@@ -91,7 +91,7 @@ struct BibleView: View {
             // Navigation Rail
             VStack(spacing: 20) {
                 Button(action: {
-                    viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.PassageSelection(initialPage: 0)))
+                    viewModel.onIntent(intent: BibleIntent.ToggleSheet(sheet: ActiveSheet.PassageSelection(initialPage: 0)))
                 }) {
                     VStack {
                         Text(state.currentBook.localizedName)
@@ -105,7 +105,7 @@ struct BibleView: View {
                 .padding(.top, 40)
                 
                 Button(action: {
-                    viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.VersionSelection()))
+                    viewModel.onIntent(intent: BibleIntent.ToggleSheet(sheet: ActiveSheet.VersionSelection()))
                 }) {
                     Text(selectedVersionAbbreviation)
                         .font(.caption)
@@ -231,7 +231,7 @@ struct BibleView: View {
     private func railIconButton(systemName: String, title: String, sheet: ActiveSheet) -> some View {
         let isSelected = state.activeSheet != nil && type(of: state.activeSheet!) == type(of: sheet)
         return Button(action: {
-            viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: isSelected ? nil : sheet))
+            viewModel.onIntent(intent: BibleIntent.ToggleSheet(sheet: sheet))
         }) {
             Image(systemName: systemName)
                 .font(.title3)

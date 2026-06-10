@@ -84,19 +84,19 @@ fun App(windowSizeClass: WindowSizeClass) {
                             val isCtrlOrCmd = keyEvent.isCtrlPressed || keyEvent.isMetaPressed
                             when {
                                 isCtrlOrCmd && keyEvent.key == Key.F -> {
-                                    viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.Search))
+                                    viewModel.onIntent(BibleIntent.ToggleSheet(ActiveSheet.Search))
                                     true
                                 }
                                 isCtrlOrCmd && keyEvent.key == Key.H -> {
-                                    viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.History))
+                                    viewModel.onIntent(BibleIntent.ToggleSheet(ActiveSheet.History))
                                     true
                                 }
                                 isCtrlOrCmd && keyEvent.key == Key.Comma -> {
-                                    viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.Settings))
+                                    viewModel.onIntent(BibleIntent.ToggleSheet(ActiveSheet.Settings))
                                     true
                                 }
                                 isCtrlOrCmd && keyEvent.key == Key.V -> {
-                                    viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.VersionSelection))
+                                    viewModel.onIntent(BibleIntent.ToggleSheet(ActiveSheet.VersionSelection))
                                     true
                                 }
                                 keyEvent.key == Key.Escape -> {
@@ -116,26 +116,26 @@ fun App(windowSizeClass: WindowSizeClass) {
                     ) {
                         Spacer(Modifier.statusBarsPadding())
                         CurrentBookHeader(state.currentBook, state.currentChapter) {
-                            viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.PassageSelection(0)))
+                            viewModel.onIntent(BibleIntent.ToggleSheet(ActiveSheet.PassageSelection(0)))
                         }
 
                         VersionButton(state.selectedVersions) {
-                            viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.VersionSelection))
+                            viewModel.onIntent(BibleIntent.ToggleSheet(ActiveSheet.VersionSelection))
                         }
 
                         NavigationRailItem(
                             selected = state.activeSheet is ActiveSheet.Search,
-                            onClick = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.Search)) },
+                            onClick = { viewModel.onIntent(BibleIntent.ToggleSheet(ActiveSheet.Search)) },
                             icon = { Icon(painterResource(Res.drawable.search), contentDescription = stringResource(Res.string.search)) }
                         )
                         NavigationRailItem(
                             selected = state.activeSheet is ActiveSheet.History,
-                            onClick = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.History)) },
+                            onClick = { viewModel.onIntent(BibleIntent.ToggleSheet(ActiveSheet.History)) },
                             icon = { Icon(painterResource(Res.drawable.history), contentDescription = stringResource(Res.string.history)) }
                         )
                         NavigationRailItem(
                             selected = state.activeSheet is ActiveSheet.Settings,
-                            onClick = { viewModel.onIntent(BibleIntent.ShowSheet(ActiveSheet.Settings)) },
+                            onClick = { viewModel.onIntent(BibleIntent.ToggleSheet(ActiveSheet.Settings)) },
                             icon = { Icon(painterResource(Res.drawable.settings), contentDescription = stringResource(Res.string.settings)) }
                         )
                     }
