@@ -107,7 +107,7 @@ internal class AbsChapterParser {
         val lastText = lastSpan?.text ?: ""
         val lastChar = lastText.lastOrNull() ?: '\u0000'
         
-        // 1. Avoid double spaces between different spans/tags
+        // Avoid double spaces between different spans/tags
         var textToAdd = rawCleaned
         if (lastChar.isWhitespace() && rawCleaned.first().isWhitespace()) {
             textToAdd = rawCleaned.trimStart()
@@ -115,32 +115,9 @@ internal class AbsChapterParser {
         
         if (textToAdd.isEmpty()) return
 
-        // 2. Add a space ONLY if it is clearly missing between two words at a tag boundary
-        if (spans.isNotEmpty() && addNewline) {
-            val firstChar = textToAdd.first()
-            if (!lastChar.isWhitespace() && !firstChar.isWhitespace() &&
-                !isLeadingPunctuation(firstChar) && !isOpeningPunctuation(lastChar)) {
-                spans.add(TextSpan(" ", style))
-            }
-        }
-
         spans.add(TextSpan(textToAdd, style))
     }
 
-    private fun isLeadingPunctuation(c: Char): Boolean {
-        return c == ',' || c == '.' || c == ';' || c == ':' || c == '?' || c == '!' || 
-               c == ')' || c == ']' || c == '}' || c == '\'' || c == '"' || c == '»' ||
-               c == '—' || c == '–' || c == '’' || c == '”'
-    }
-
-    private fun isOpeningPunctuation(c: Char): Boolean {
-        return c == '(' || c == '[' || c == '{' || c == '«' || c == '‘' || c == '“' || c == '"' || c == '\'' ||
-               c == '—' || c == '–'
-    }
-
-    /**
-     * Moves any headings collected since the last verse and attaches them to the specified verse number.
-     */
     private fun attachPendingHeadings(verseNumber: Int) {
         if (currentHeadings.isNotEmpty()) {
             val elements = verseElementsMap.getOrPut(verseNumber) { mutableListOf() }
@@ -176,10 +153,10 @@ internal class AbsChapterParser {
      */
     private fun AbsContentItemDto.getStyle(inherited: TextStyle): TextStyle {
         val current = when {
-            attrs?.style == "bd" || attrs?.style == "nd" || attrs?.style == "d" -> TextStyle.BOLD
+            attrs?.style == "bd" || attrs?.style == "d" -> TextStyle.BOLD
+            attrs?.style == "nd" || attrs?.style?.startsWith("sc") == true -> TextStyle.SMALL_CAPS
             attrs?.style == "it" || attrs?.style == "add" -> TextStyle.ITALIC
             attrs?.style == "itbd" -> TextStyle.ITALIC_BOLD
-            attrs?.style?.startsWith("sc") == true -> TextStyle.SMALL_CAPS
             attrs?.style == "wj" -> TextStyle.WORDS_OF_JESUS
             attrs?.style?.let { s ->
                 (s.startsWith("s") && !s.startsWith("sc")) || s.startsWith("ms") || s == "qa" || s == "sp"
