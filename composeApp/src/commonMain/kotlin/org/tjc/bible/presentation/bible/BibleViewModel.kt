@@ -79,10 +79,6 @@ class BibleViewModel(
 
     private fun handleShowSheet(sheet: ActiveSheet?) {
         dispatch(BibleAction.ShowSheet(sheet))
-        if (sheet == null) {
-            dispatch(BibleAction.SearchQueryChanged(""))
-            dispatch(BibleAction.SearchResultsLoaded(emptyList(), hasMore = false))
-        }
     }
 
     private fun handleToggleSheet(sheet: ActiveSheet) {
