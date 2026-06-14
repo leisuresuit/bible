@@ -17,10 +17,11 @@ struct PassageSelectionView: View {
     @State private var searchQuery: String = ""
     
     var filteredBooks: [Book] {
-        if searchQuery.isEmpty {
+        let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespaces)
+        if trimmedQuery.isEmpty {
             return allBooks
         } else {
-            return allBooks.filter { $0.localizedName.localizedCaseInsensitiveContains(searchQuery) }
+            return allBooks.filter { $0.localizedName.localizedCaseInsensitiveContains(trimmedQuery) }
         }
     }
     
@@ -92,7 +93,18 @@ struct PassageSelectionView: View {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.gray)
-                    TextField(searchPlaceholder, text: $searchQuery)
+                    TextField(searchPlaceholder, text: Binding(
+                        get: { searchQuery },
+                        set: { newValue in
+                            if currentPage == 0 {
+                                if !newValue.hasSuffix("  ") {
+                                    searchQuery = newValue
+                                }
+                            } else {
+                                searchQuery = newValue.replacingOccurrences(of: " ", with: "")
+                            }
+                        }
+                    ))
                     if !searchQuery.isEmpty {
                         Button(action: {
                             searchQuery = ""

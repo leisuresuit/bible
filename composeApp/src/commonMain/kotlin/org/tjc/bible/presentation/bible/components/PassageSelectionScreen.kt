@@ -101,7 +101,13 @@ fun PassageSelectionScreen(
             title = title,
             searchHint = searchHint,
             searchQuery = searchQuery,
-            onSearchQueryChange = { searchQuery = it.trim() },
+            onSearchQueryChange = { input ->
+                searchQuery = if (pagerState.currentPage == 0) {
+                    if (input.endsWith("  ")) searchQuery else input
+                } else {
+                    input.replace(" ", "")
+                }
+            },
             showSortButton = pagerState.currentPage == 0,
             onSortClick = { isAlphabeticalOrder = !isAlphabeticalOrder },
             keyboardType = keyboardType,
