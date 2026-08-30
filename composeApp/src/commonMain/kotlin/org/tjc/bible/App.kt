@@ -1,7 +1,6 @@
 package org.tjc.bible
 
 import androidx.compose.animation.*
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -17,12 +16,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import bible.composeapp.generated.resources.Res
-import bible.composeapp.generated.resources.close
 import bible.composeapp.generated.resources.history
 import bible.composeapp.generated.resources.search
 import bible.composeapp.generated.resources.settings
@@ -171,25 +168,10 @@ fun App(windowSizeClass: WindowSizeClass) {
                                             activeSheet,
                                             state,
                                             viewModel,
-                                            isSidePanel = true,
-                                            Modifier.fillMaxSize().padding(top = 48.dp)
+                                            isSidePanel = true
                                         )
-
-                                        IconButton(
-                                            onClick = { viewModel.onIntent(BibleIntent.ShowSheet(null)) },
-                                            modifier = Modifier
-                                                .align(Alignment.TopEnd)
-                                                .padding(4.dp)
-                                                .zIndex(99f)
-                                        ) {
-                                            Icon(
-                                                painterResource(Res.drawable.close),
-                                                contentDescription = "Close"
-                                            )
-                                        }
                                     }
                                 }
-                                VerticalDivider()
                             }
                         }
                     }
