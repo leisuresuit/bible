@@ -112,13 +112,21 @@ fun App(windowSizeClass: WindowSizeClass) {
                         contentColor = MaterialTheme.colorScheme.onSurface,
                     ) {
                         Spacer(Modifier.statusBarsPadding())
-                        CurrentBookHeader(state.currentBook, state.currentChapter) {
-                            viewModel.onIntent(BibleIntent.ToggleSheet(ActiveSheet.PassageSelection(0)))
-                        }
+                        NavigationRailItem(
+                            selected = state.activeSheet is ActiveSheet.PassageSelection,
+                            onClick = { viewModel.onIntent(BibleIntent.ToggleSheet(ActiveSheet.PassageSelection(0))) },
+                            icon = {
+                                CurrentBookHeader(state.currentBook, state.currentChapter)
+                            }
+                        )
 
-                        VersionButton(state.selectedVersions) {
-                            viewModel.onIntent(BibleIntent.ToggleSheet(ActiveSheet.VersionSelection))
-                        }
+                        NavigationRailItem(
+                            selected = state.activeSheet is ActiveSheet.VersionSelection,
+                            onClick = { viewModel.onIntent(BibleIntent.ToggleSheet(ActiveSheet.VersionSelection)) },
+                            icon = {
+                                VersionButton(state.selectedVersions)
+                            }
+                        )
 
                         NavigationRailItem(
                             selected = state.activeSheet is ActiveSheet.Search,
@@ -211,45 +219,41 @@ fun App(windowSizeClass: WindowSizeClass) {
 }
 
 @Composable
-private fun CurrentBookHeader(book: Book?, chapter: Int, onClick: () -> Unit) {
+private fun CurrentBookHeader(book: Book?, chapter: Int) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .padding(vertical = 8.dp)
-            .clickable(onClick = onClick)
-            .padding(8.dp)
+        modifier = Modifier.padding(vertical = 4.dp)
     ) {
         Text(
             text = book?.let { stringResource(it.nameResource) } ?: "",
-            style = MaterialTheme.typography.labelMedium,
-            textAlign = TextAlign.Center
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Text(
             text = chapter.toString(),
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
     }
 }
 
 @Composable
-private fun VersionButton(selectedVersions: List<BibleVersion>, onClick: () -> Unit) {
-    TextButton(
-        onClick = onClick,
-        modifier = Modifier.padding(horizontal = 4.dp)
-    ) {
-        val versionText = if (selectedVersions.size > 1) {
-            stringResource(Res.string.versions)
-        } else {
-            selectedVersions.firstOrNull()?.abbreviation ?: stringResource(Res.string.versions)
-        }
-        Text(
-            text = versionText,
-            style = MaterialTheme.typography.labelLarge,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+private fun VersionButton(selectedVersions: List<BibleVersion>) {
+    val versionText = if (selectedVersions.size > 1) {
+        stringResource(Res.string.versions)
+    } else {
+        selectedVersions.firstOrNull()?.abbreviation ?: stringResource(Res.string.versions)
     }
+    Text(
+        text = versionText,
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.Bold,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.padding(vertical = 4.dp)
+    )
 }
 
 @Composable
