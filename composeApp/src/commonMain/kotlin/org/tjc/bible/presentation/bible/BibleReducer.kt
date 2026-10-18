@@ -14,7 +14,6 @@ internal fun bibleReducer(state: BibleState, action: BibleAction): BibleState {
             isLoading = false,
         )
         is BibleAction.VersesLoaded -> state.copy(
-            verses = action.verses,
             chaptersVerses = state.chaptersVerses + (getGlobalIndex(state.currentBook, state.currentChapter) to action.verses)
         )
         is BibleAction.ChapterVersesLoaded -> state.copy(
