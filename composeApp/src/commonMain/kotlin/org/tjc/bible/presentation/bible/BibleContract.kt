@@ -19,7 +19,6 @@ data class BibleState(
     val currentBook: Book = Book.Genesis,
     val currentChapter: Int = 1,
     val currentVerse: Int = 1,
-    val verses: List<Verse> = emptyList(),
     val chaptersVerses: Map<Int, List<Verse>> = emptyMap(),
     val history: List<HistoryItem> = emptyList(),
     val isLoading: Boolean = false,

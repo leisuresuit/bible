@@ -88,7 +88,6 @@ fun BibleScreen(
             currentBook = state.currentBook,
             currentChapter = state.currentChapter,
             currentVerse = state.currentVerse,
-            verses = state.verses,
             chaptersVerses = state.chaptersVerses,
             displayMode = state.displayMode,
             showWordsOfJesus = state.showWordsOfJesus,
