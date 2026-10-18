@@ -121,7 +121,7 @@ kotlin.sourceSets.commonMain {
     kotlin.srcDir(layout.buildDirectory.dir("generated/kotlin/config/commonMain/kotlin"))
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+tasks.matching { it.name.startsWith("compileKotlin") }.configureEach {
     dependsOn(generateConfig)
 }
 

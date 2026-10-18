@@ -37,6 +37,7 @@ internal data class AbsContentAttrsDto(
     val style: String? = null,
     val verseId: String? = null,
     val vid: String? = null,
+    val sid: String? = null,
     val number: String? = null,
     val verseOrgIds: List<String>? = null
 )

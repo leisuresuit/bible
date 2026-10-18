@@ -45,7 +45,7 @@ class AbsBibleRepository(
             parameter("include-notes", "false")
             parameter("include-titles", "false")
             parameter("include-chapter-numbers", "false")
-            parameter("include-verse-numbers", "false")
+            parameter("include-verse-numbers", "true")
             parameter("include-verse-spans", "false")
         }.body<AbsChapterResponse>()
 

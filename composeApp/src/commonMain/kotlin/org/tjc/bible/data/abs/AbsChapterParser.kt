@@ -17,16 +17,24 @@ internal class AbsChapterParser {
      * Parses the ABS chapter content DTO into a list of domain [Verse] objects.
      */
     fun parse(dto: AbsChapterContentDto): List<Verse> {
-        dto.content.forEach { process(it, null, TextStyle.NORMAL, false) }
+        var activeVerseId: String? = null
+        dto.content.forEach { item ->
+            activeVerseId = process(item, activeVerseId, TextStyle.NORMAL, false)
+        }
         return buildVerses()
     }
 
     /**
      * Recursively processes each content item, maintaining state for verse IDs, styles, and heading status.
+     * Returns the updated active verse ID.
      */
-    private fun process(item: AbsContentItemDto, inheritedVerseId: String?, inheritedStyle: TextStyle, inHeading: Boolean) {
+    private fun process(item: AbsContentItemDto, inheritedVerseId: String?, inheritedStyle: TextStyle, inHeading: Boolean): String? {
         val style = item.getStyle(inheritedStyle)
-        val currentVerseId = item.attrs?.verseId ?: item.attrs?.vid ?: inheritedVerseId
+        var currentVerseId = item.attrs?.verseId
+            ?: item.attrs?.vid
+            ?: item.attrs?.sid
+            ?: item.attrs?.number
+            ?: inheritedVerseId
 
         val triggersHeading = item.attrs?.style?.let { s ->
             // Styles starting with 's' are headings (s1, s2, s3), excluding 'sc' which is inline small-caps.
@@ -37,12 +45,23 @@ internal class AbsChapterParser {
 
         if (item.isBlock()) pendingBreak = true
 
+        if (item.isVerseMarker()) {
+            return currentVerseId
+        }
+
         if (item.type == "text") {
             item.text?.let { handleText(it, style, currentVerseId, currentlyInHeading) }
         }
 
-        item.items?.forEach { process(it, currentVerseId, style, currentlyInHeading) }
+        item.items?.forEach { child ->
+            currentVerseId = process(child, currentVerseId, style, currentlyInHeading)
+        }
+
+        return currentVerseId
     }
+
+    private fun AbsContentItemDto.isVerseMarker(): Boolean =
+        name == "verse" || attrs?.style == "v"
 
     /**
      * Cleans raw text and routes it to either heading or verse text handlers.
