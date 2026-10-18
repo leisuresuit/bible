@@ -311,16 +311,11 @@ class BibleViewModel(
     private fun addToHistory(book: Book, chapter: Int, verse: Int) {
         viewModelScope.launch {
             val currentHistory = _state.value.history
-            val existingIndex = currentHistory.indexOfFirst { it.book == book && it.chapter == chapter }
+            val newItem = HistoryItem(book, chapter, verse)
+            val filteredList = currentHistory.filterNot { it.book == book && it.chapter == chapter }
+            val newList = (listOf(newItem) + filteredList).take(50)
 
-            if (existingIndex != -1) {
-                if (currentHistory[existingIndex].verse != verse) {
-                    val newList = currentHistory.toMutableList()
-                    newList[existingIndex] = HistoryItem(book, chapter, verse)
-                    preferenceStorage.saveHistory(newList)
-                }
-            } else {
-                val newList = (listOf(HistoryItem(book, chapter, verse)) + currentHistory).take(50)
+            if (newList != currentHistory) {
                 preferenceStorage.saveHistory(newList)
             }
         }
