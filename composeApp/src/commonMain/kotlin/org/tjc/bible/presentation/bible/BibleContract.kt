@@ -59,7 +59,7 @@ sealed class BibleIntent {
     data class SelectChapter(val chapter: Int) : BibleIntent()
     data class SelectVerse(val verse: Int) : BibleIntent()
     data class SelectPassage(val book: Book, val chapter: Int, val verse: Int) : BibleIntent()
-    data class UpdateVisiblePassage(val book: Book, val chapter: Int, val verse: Int? = null) : BibleIntent()
+    data class UpdateVisiblePassage(val book: Book, val chapter: Int, val verse: Int = 1) : BibleIntent()
     data class LoadChapterVerses(val book: Book, val chapter: Int, val globalIndex: Int) : BibleIntent()
     data class UpdateSearchQuery(val query: String) : BibleIntent()
     data class UpdateSearchSort(val sort: SearchSort) : BibleIntent()

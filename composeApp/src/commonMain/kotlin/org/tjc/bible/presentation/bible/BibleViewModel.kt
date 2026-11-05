@@ -128,18 +128,17 @@ class BibleViewModel(
         loadVerses()
     }
 
-    private fun handleUpdateVisiblePassage(book: Book, chapter: Int, verse: Int?) {
-        val v = verse ?: 1
+    private fun handleUpdateVisiblePassage(book: Book, chapter: Int, verse: Int) {
         val currentState = _state.value
 
-        if (currentState.currentBook == book && currentState.currentChapter == chapter && currentState.currentVerse == v) return
+        if (currentState.currentBook == book && currentState.currentChapter == chapter && currentState.currentVerse == verse) return
 
-        dispatch(BibleAction.VisiblePassageChanged(book, chapter, v))
+        dispatch(BibleAction.VisiblePassageChanged(book, chapter, verse))
 
         if (currentState.currentBook != book || currentState.currentChapter != chapter) {
             loadVerses()
-            saveLastPassage(book, chapter, v)
-            addToHistory(book, chapter, v)
+            saveLastPassage(book, chapter, verse)
+            addToHistory(book, chapter, verse)
         }
     }
 
