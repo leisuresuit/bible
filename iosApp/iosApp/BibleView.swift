@@ -558,7 +558,7 @@ struct SingleChapterPage: View {
     }
 }
 
-// MARK: - Contiguous Mode Continuous Scroll View
+// MARK: - Contiguous Mode Continuous Scroll View (1,189 Chapter Rows)
 struct ContiguousVerseListView: View {
     let currentBook: Book
     let currentChapter: Int
@@ -572,80 +572,51 @@ struct ContiguousVerseListView: View {
 
     @State private var lastProcessedEventId: Int64 = -1
 
-    init(
-        currentBook: Book,
-        currentChapter: Int,
-        currentVerse: Int,
-        selectionEventId: Int64,
-        chaptersVerses: [Int: [Verse]],
-        showWordsOfJesus: Bool,
-        onUpdateVisiblePassage: @escaping (Book, Int, Int) -> Void,
-        onLoadChapterVerses: @escaping (Book, Int, Int) -> Void,
-        onShowPassageSelection: @escaping () -> Void
-    ) {
-        self.currentBook = currentBook
-        self.currentChapter = currentChapter
-        self.currentVerse = currentVerse
-        self.selectionEventId = selectionEventId
-        self.chaptersVerses = chaptersVerses
-        self.showWordsOfJesus = showWordsOfJesus
-        self.onUpdateVisiblePassage = onUpdateVisiblePassage
-        self.onLoadChapterVerses = onLoadChapterVerses
-        self.onShowPassageSelection = onShowPassageSelection
-    }
-
-    private var targetItemIndex: Int {
-        ContiguousIndex.shared.getItemIndex(book: currentBook, chapter: currentChapter, verse: currentVerse)
+    private var targetGlobalIndex: Int {
+        Book.getGlobalIndex(book: currentBook, chapter: currentChapter)
     }
 
     var body: some View {
         ScrollViewReader { proxy in
             List {
-                ForEach(0..<ContiguousIndex.shared.totalItems, id: \.self) { index in
-                    let location = ContiguousIndex.shared.getItemLocation(index)
-                    let chapterInfo = location.chapterInfo
+                ForEach(0..<1189, id: \.self) { globalIndex in
+                    let (book, chapter) = Book.getPassageFromGlobalIndex(globalIndex)
+                    let verses = chaptersVerses[globalIndex]
                     
-                    if location.isHeader {
-                        ChapterHeaderView(book: chapterInfo.book, chapter: chapterInfo.chapter, onClick: onShowPassageSelection)
-                            .id(index)
-                            .listRowSeparator(.hidden)
-                            .onAppear {
-                                onLoadChapterVerses(chapterInfo.book, chapterInfo.chapter, chapterInfo.globalChapterIndex)
-                                if chapterInfo.book != currentBook || chapterInfo.chapter != currentChapter {
-                                    DispatchQueue.main.async {
-                                        onUpdateVisiblePassage(chapterInfo.book, chapterInfo.chapter, 1)
-                                    }
+                    ContiguousChapterView(
+                        book: book,
+                        chapter: chapter,
+                        globalIndex: globalIndex,
+                        verses: verses,
+                        showWordsOfJesus: showWordsOfJesus,
+                        onLoadChapterVerses: {
+                            onLoadChapterVerses(book, chapter, globalIndex)
+                        },
+                        onVisible: {
+                            if book != currentBook || chapter != currentChapter {
+                                DispatchQueue.main.async {
+                                    onUpdateVisiblePassage(book, chapter, 1)
                                 }
                             }
-                    } else if let vNum = location.verseNumber {
-                        if let verses = chaptersVerses[chapterInfo.globalChapterIndex] {
-                            let verseMatches = verses.filter { Int($0.number) == vNum }
-                            if !verseMatches.isEmpty {
-                                ContiguousVerseRow(verses: verseMatches, showWordsOfJesus: showWordsOfJesus)
-                                    .id(index)
-                                    .listRowSeparator(.hidden)
-                                    .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
-                            }
-                        } else {
-                            ProgressView()
-                                .frame(maxWidth: .infinity, minHeight: 32)
-                                .id(index)
-                                .listRowSeparator(.hidden)
-                        }
-                    }
+                        },
+                        onShowPassageSelection: onShowPassageSelection
+                    )
+                    .id(globalIndex)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
                 }
             }
             .listStyle(.plain)
             .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    proxy.scrollTo(targetItemIndex, anchor: .top)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    proxy.scrollTo(targetGlobalIndex, anchor: .top)
                 }
             }
             .onChange(of: selectionEventId) { _, eventId in
                 if eventId > lastProcessedEventId {
                     lastProcessedEventId = eventId
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        proxy.scrollTo(targetItemIndex, anchor: .top)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        proxy.scrollTo(targetGlobalIndex, anchor: .top)
                     }
                 }
             }
@@ -653,16 +624,33 @@ struct ContiguousVerseListView: View {
     }
 }
 
-// MARK: - Contiguous Verse Row Component
-struct ContiguousVerseRow: View {
-    let verses: [Verse]
+// MARK: - Contiguous Chapter Row View
+struct ContiguousChapterView: View {
+    let book: Book
+    let chapter: Int
+    let globalIndex: Int
+    let verses: [Verse]?
     let showWordsOfJesus: Bool
+    let onLoadChapterVerses: () -> Void
+    let onVisible: () -> Void
+    let onShowPassageSelection: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            ForEach(Array(verses.enumerated()), id: \.offset) { _, verse in
-                VerseItemView(verse: verse, showWordsOfJesus: showWordsOfJesus)
+        VStack(alignment: .leading, spacing: 12) {
+            ChapterHeaderView(book: book, chapter: chapter, onClick: onShowPassageSelection)
+            
+            if let verses = verses {
+                ForEach(verses, id: \.number) { verse in
+                    VerseItemView(verse: verse, showWordsOfJesus: showWordsOfJesus)
+                }
+            } else {
+                ProgressView()
+                    .frame(maxWidth: .infinity, minHeight: 40)
             }
+        }
+        .onAppear {
+            onLoadChapterVerses()
+            onVisible()
         }
     }
 }
