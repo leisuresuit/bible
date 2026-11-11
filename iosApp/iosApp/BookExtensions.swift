@@ -2,6 +2,20 @@ import SwiftUI
 import ComposeApp
 
 extension Book {
+    static var allBooksList: [Book] {
+        return [
+            .genesis, .exodus, .leviticus, .numbers, .deuteronomy, .joshua, .judges, .ruth,
+            .samuel1, .samuel2, .kings1, .kings2, .chronicles1, .chronicles2, .ezra, .nehemiah,
+            .esther, .job, .psalms, .proverbs, .ecclesiastes, .songOfSolomon, .isaiah, .jeremiah,
+            .lamentations, .ezekiel, .daniel, .hosea, .joel, .amos, .obadiah, .jonah, .micah,
+            .nahum, .habakkuk, .zephaniah, .haggai, .zechariah, .malachi, .matthew, .mark,
+            .luke, .john, .acts, .romans, .corinthians1, .corinthians2, .galatians, .ephesians,
+            .philippians, .colossians, .thessalonians1, .thessalonians2, .timothy1, .timothy2,
+            .titus, .philemon, .hebrews, .james, .peter1, .peter2, .john1, .john2, .john3,
+            .jude, .revelation
+        ]
+    }
+
     var localizedName: String {
         let resourceKey: String
         switch self {
@@ -75,5 +89,137 @@ extension Book {
             return self.name
         }
         return NSLocalizedString(resourceKey, comment: "")
+    }
+
+    var isOldTestament: Bool {
+        return self.ordinal < Book.matthew.ordinal
+    }
+
+    static func getGlobalIndex(book: Book, chapter: Int) -> Int {
+        let books = Book.allBooksList
+        var sum = 0
+        for b in books {
+            if b == book { break }
+            sum += Int(b.chaptersCount)
+        }
+        return sum + (chapter - 1)
+    }
+
+    static func getPassageFromGlobalIndex(_ globalIndex: Int) -> (Book, Int) {
+        let books = Book.allBooksList
+        var cumulativeSum = 0
+        var cumulative: [Int] = []
+        for b in books {
+            cumulative.append(cumulativeSum)
+            cumulativeSum += Int(b.chaptersCount)
+        }
+        
+        let clampedIndex = max(0, min(globalIndex, max(0, cumulativeSum - 1)))
+        var bookIndex = 0
+        for (idx, start) in cumulative.enumerated() {
+            if start <= clampedIndex {
+                bookIndex = idx
+            }
+        }
+        let book = books.indices.contains(bookIndex) ? books[bookIndex] : Book.genesis
+        let start = cumulative.indices.contains(bookIndex) ? cumulative[bookIndex] : 0
+        let chapter = clampedIndex - start + 1
+        return (book, chapter)
+    }
+}
+
+struct ContiguousChapterInfo {
+    let book: Book
+    let chapter: Int
+    let globalChapterIndex: Int
+    let startItemIndex: Int
+    let verseCount: Int
+}
+
+struct ContiguousItemLocation {
+    let chapterInfo: ContiguousChapterInfo
+    let verseNumber: Int?
+    let isHeader: Bool
+}
+
+class ContiguousIndex {
+    static let shared = ContiguousIndex()
+    
+    let chapters: [ContiguousChapterInfo]
+    let totalItems: Int
+    
+    private init() {
+        var list: [ContiguousChapterInfo] = []
+        var globalChapterIndex = 0
+        var currentItemIndex = 0
+        
+        let books = Book.allBooksList
+        for book in books {
+            for cIndex in 0..<Int(book.chaptersCount) {
+                let chapterNumber = cIndex + 1
+                let verseCount = Int(truncating: book.versesInChapters[cIndex])
+                let info = ContiguousChapterInfo(
+                    book: book,
+                    chapter: chapterNumber,
+                    globalChapterIndex: globalChapterIndex,
+                    startItemIndex: currentItemIndex,
+                    verseCount: verseCount
+                )
+                list.append(info)
+                globalChapterIndex += 1
+                currentItemIndex += 1 + verseCount
+            }
+        }
+        self.chapters = list
+        self.totalItems = currentItemIndex
+    }
+    
+    func getChapterInfo(_ globalChapterIndex: Int) -> ContiguousChapterInfo {
+        let idx = max(0, min(globalChapterIndex, max(0, chapters.count - 1)))
+        return chapters[idx]
+    }
+    
+    func findChapterForGlobalIndex(book: Book, chapter: Int) -> ContiguousChapterInfo {
+        let globalIndex = Book.getGlobalIndex(book: book, chapter: chapter)
+        return getChapterInfo(globalIndex)
+    }
+    
+    func getItemIndex(book: Book, chapter: Int, verse: Int? = nil) -> Int {
+        let info = findChapterForGlobalIndex(book: book, chapter: chapter)
+        let v = min(max(verse ?? 1, 1), info.verseCount)
+        return info.startItemIndex + v
+    }
+    
+    func getItemLocation(_ itemIndex: Int) -> ContiguousItemLocation {
+        guard !chapters.isEmpty else {
+            return ContiguousItemLocation(
+                chapterInfo: ContiguousChapterInfo(book: .genesis, chapter: 1, globalChapterIndex: 0, startItemIndex: 0, verseCount: 31),
+                verseNumber: 1,
+                isHeader: false
+            )
+        }
+        let clampedIndex = max(0, min(itemIndex, max(0, totalItems - 1)))
+        var low = 0
+        var high = chapters.count - 1
+        var foundChapter = chapters[0]
+        
+        while low <= high {
+            let mid = (low + high) / 2
+            let info = chapters[mid]
+            let endItemIndex = info.startItemIndex + info.verseCount
+            if clampedIndex < info.startItemIndex {
+                high = mid - 1
+            } else if clampedIndex > endItemIndex {
+                low = mid + 1
+            } else {
+                foundChapter = info
+                break
+            }
+        }
+        
+        let offset = clampedIndex - foundChapter.startItemIndex
+        let isHeader = (offset == 0)
+        let verseNumber = isHeader ? nil : offset
+        return ContiguousItemLocation(chapterInfo: foundChapter, verseNumber: verseNumber, isHeader: isHeader)
     }
 }

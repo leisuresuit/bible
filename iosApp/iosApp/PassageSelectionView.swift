@@ -1,6 +1,22 @@
 import SwiftUI
 import ComposeApp
 
+enum PassageStep: Int, CaseIterable, Identifiable {
+    case book = 0
+    case chapter = 1
+    case verse = 2
+    
+    var id: Int { rawValue }
+    
+    var title: String {
+        switch self {
+        case .book: return NSLocalizedString("book", comment: "")
+        case .chapter: return NSLocalizedString("chapters", comment: "")
+        case .verse: return NSLocalizedString("verses", comment: "")
+        }
+    }
+}
+
 struct PassageSelectionView: View {
     let allBooks: [Book]
     let selectedBook: Book?
@@ -10,264 +26,299 @@ struct PassageSelectionView: View {
     let onDismiss: () -> Void
     let isSidePanel: Bool
     
-    @State private var currentPage: Int
-    @State private var internalSelectedBook: Book?
-    @State private var internalSelectedChapter: Int?
-    @State private var internalSelectedVerse: Int?
+    @State private var selectedStep: PassageStep
+    @State private var internalBook: Book
+    @State private var internalChapter: Int
+    @State private var internalVerse: Int
     @State private var searchQuery: String = ""
     
-    var filteredBooks: [Book] {
-        let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespaces)
-        if trimmedQuery.isEmpty {
-            return allBooks
-        } else {
-            return allBooks.filter { $0.localizedName.localizedCaseInsensitiveContains(trimmedQuery) }
-        }
-    }
-    
-    private var navigationTitleText: String {
-        switch currentPage {
-        case 0:
-            return NSLocalizedString("book", comment: "")
-        case 1:
-            return internalSelectedBook?.localizedName ?? NSLocalizedString("chapter", comment: "")
-        case 2:
-            if let bookName = internalSelectedBook?.localizedName {
-                if let chapter = internalSelectedChapter {
-                    return "\(bookName) \(chapter)"
-                }
-                return bookName
-            }
-            return NSLocalizedString("verse", comment: "")
-        default:
-            return ""
-        }
-    }
-
-    private var searchPlaceholder: String {
-        switch currentPage {
-        case 0: return NSLocalizedString("search", comment: "")
-        case 1: return NSLocalizedString("chapter", comment: "")
-        case 2: return NSLocalizedString("verse", comment: "")
-        default: return ""
-        }
-    }
-    
-    init(allBooks: [Book], selectedBook: Book?, selectedChapter: Int, initialPage: Int, onSelectPassage: @escaping (Book, Int, Int) -> Void, onDismiss: @escaping () -> Void, isSidePanel: Bool = false) {
-        self.allBooks = allBooks
+    init(
+        allBooks: [Book],
+        selectedBook: Book?,
+        selectedChapter: Int,
+        initialPage: Int,
+        onSelectPassage: @escaping (Book, Int, Int) -> Void,
+        onDismiss: @escaping () -> Void,
+        isSidePanel: Bool = false
+    ) {
+        self.allBooks = allBooks.isEmpty ? Book.allBooksList : allBooks
         self.selectedBook = selectedBook
         self.selectedChapter = selectedChapter
         self.initialPage = initialPage
         self.onSelectPassage = onSelectPassage
         self.onDismiss = onDismiss
         self.isSidePanel = isSidePanel
-        self._currentPage = State(initialValue: initialPage)
-        self._internalSelectedBook = State(initialValue: selectedBook)
-        self._internalSelectedChapter = State(initialValue: selectedChapter)
-        self._internalSelectedVerse = State(initialValue: 1)
+        
+        let initialStep = PassageStep(rawValue: initialPage) ?? .book
+        let defaultBook = selectedBook ?? .genesis
+        self._selectedStep = State(initialValue: initialStep)
+        self._internalBook = State(initialValue: defaultBook)
+        self._internalChapter = State(initialValue: selectedChapter)
+        self._internalVerse = State(initialValue: 1)
     }
     
+    private var filteredBooks: [Book] {
+        let q = searchQuery.trimmingCharacters(in: .whitespaces)
+        if q.isEmpty {
+            return allBooks
+        } else {
+            return allBooks.filter { $0.localizedName.localizedCaseInsensitiveContains(q) }
+        }
+    }
+    
+    private var oldTestamentBooks: [Book] {
+        filteredBooks.filter { $0.isOldTestament }
+    }
+    
+    private var newTestamentBooks: [Book] {
+        filteredBooks.filter { !$0.isOldTestament }
+    }
+    
+    private var titleText: String {
+        switch selectedStep {
+        case .book:
+            return NSLocalizedString("book", comment: "")
+        case .chapter:
+            return internalBook.localizedName
+        case .verse:
+            return "\(internalBook.localizedName) \(internalChapter)"
+        }
+    }
+
     var body: some View {
         if isSidePanel {
-            content
+            mainContent
         } else {
             NavigationView {
-                content
+                mainContent
             }
         }
     }
     
-    private var content: some View {
+    private var mainContent: some View {
         VStack(spacing: 0) {
             if isSidePanel {
                 HStack {
-                    Text(navigationTitleText)
+                    Text(titleText)
                         .font(.headline)
                     Spacer()
-                    headerActions
+                    stepNavigationButtons
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark")
+                            .font(.body.weight(.semibold))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.leading, 8)
                 }
                 .padding()
+                Divider()
             }
             
-            VStack(spacing: 0) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
-                    TextField(searchPlaceholder, text: Binding(
-                        get: { searchQuery },
-                        set: { newValue in
-                            if currentPage == 0 {
-                                if !newValue.hasSuffix("  ") {
-                                    searchQuery = newValue
-                                }
-                            } else {
-                                searchQuery = newValue.replacingOccurrences(of: " ", with: "")
-                            }
-                        }
-                    ))
-                    if !searchQuery.isEmpty {
-                        Button(action: {
-                            searchQuery = ""
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
-                        }
-                    }
+            // Segmented Step Picker
+            Picker("Step", selection: $selectedStep) {
+                ForEach(PassageStep.allCases) { step in
+                    Text(step.title).tag(step)
                 }
-                .padding(10)
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(10)
-                .padding(.horizontal)
-                .padding(.top, 16)
-                .padding(.bottom, 8)
-                
-                Divider()
-                
-                if currentPage == 0 {
-                    BookGridView(allBooks: filteredBooks, selectedBook: internalSelectedBook) { book in
-                        if internalSelectedBook != book {
-                            internalSelectedBook = book
-                            internalSelectedChapter = 1
-                            internalSelectedVerse = 1
-                        }
-                        if book.chaptersCount == 1 {
-                            currentPage = 2
-                        } else {
-                            currentPage = 1
-                        }
-                    }
-                } else if currentPage == 1 {
-                    ChapterGridView(book: internalSelectedBook ?? .genesis, searchQuery: searchQuery, selectedChapter: internalSelectedChapter) { chapter in
-                        if internalSelectedChapter != chapter {
-                            internalSelectedChapter = chapter
-                            internalSelectedVerse = 1
-                        }
-                        currentPage = 2
-                    }
-                } else {
-                    VerseGridView(book: internalSelectedBook ?? .genesis, chapter: internalSelectedChapter ?? 1, searchQuery: searchQuery, selectedVerse: internalSelectedVerse) { verse in
-                        internalSelectedVerse = verse
-                        if let book = internalSelectedBook, let chapter = internalSelectedChapter {
-                            onSelectPassage(book, chapter, verse)
-                        }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+            
+            // Search / Filter Field
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                TextField(searchPlaceholder, text: $searchQuery)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                if !searchQuery.isEmpty {
+                    Button(action: { searchQuery = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
                     }
                 }
             }
+            .padding(8)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(10)
+            .padding(.horizontal)
+            .padding(.bottom, 8)
+            
+            Divider()
+            
+            // Step Content
+            switch selectedStep {
+            case .book:
+                bookSelectionContent
+            case .chapter:
+                chapterSelectionContent
+            case .verse:
+                verseSelectionContent
+            }
         }
-        .navigationTitle(navigationTitleText)
+        .navigationTitle(titleText)
         .toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 if !isSidePanel {
-                    headerActions
+                    stepNavigationButtons
                 }
             }
         }
-        .onChange(of: currentPage) { _, _ in
+        .onChange(of: selectedStep) { _, _ in
             searchQuery = ""
         }
     }
     
-    private var headerActions: some View {
-        HStack {
+    private var searchPlaceholder: String {
+        switch selectedStep {
+        case .book: return NSLocalizedString("search", comment: "")
+        case .chapter: return NSLocalizedString("chapters", comment: "")
+        case .verse: return NSLocalizedString("verses", comment: "")
+        }
+    }
+    
+    private var stepNavigationButtons: some View {
+        HStack(spacing: 12) {
             Button(action: {
-                if currentPage > 0 {
-                    currentPage -= 1
+                if let prev = PassageStep(rawValue: selectedStep.rawValue - 1) {
+                    selectedStep = prev
                 }
             }) {
                 Image(systemName: "chevron.left")
             }
-            .disabled(currentPage == 0)
+            .disabled(selectedStep == .book)
 
             Button(action: {
-                if currentPage < 2 {
-                    currentPage += 1
+                if let next = PassageStep(rawValue: selectedStep.rawValue + 1) {
+                    selectedStep = next
                 }
             }) {
                 Image(systemName: "chevron.right")
             }
-            .disabled(!((currentPage == 0 && internalSelectedBook != nil) || (currentPage == 1 && internalSelectedChapter != nil)))
+            .disabled(selectedStep == .verse)
         }
     }
-}
-
-struct BookGridView: View {
-    let allBooks: [Book]
-    let selectedBook: Book?
-    let onBookSelect: (Book) -> Void
     
-    let columns = [GridItem(.adaptive(minimum: 100))]
-    
-    var body: some View {
+    // MARK: - Book Selection
+    private var bookSelectionContent: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(allBooks, id: \.name) { book in
-                    Button(action: { onBookSelect(book) }) {
-                        Text(book.localizedName)
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                            .background(selectedBook == book ? Color.accentColor : Color.secondary.opacity(0.1))
-                            .foregroundColor(selectedBook == book ? .white : .primary)
-                            .cornerRadius(8)
+            LazyVStack(alignment: .leading, spacing: 16) {
+                if !oldTestamentBooks.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("OLD TESTAMENT")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
+                        
+                        bookGrid(books: oldTestamentBooks)
+                    }
+                }
+                
+                if !newTestamentBooks.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("NEW TESTAMENT")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
+                        
+                        bookGrid(books: newTestamentBooks)
                     }
                 }
             }
-            .padding()
+            .padding(.vertical)
         }
     }
-}
-
-struct ChapterGridView: View {
-    let book: Book
-    let searchQuery: String
-    let selectedChapter: Int?
-    let onChapterSelect: (Int) -> Void
     
-    let columns = [GridItem(.adaptive(minimum: 50))]
+    private func bookGrid(books: [Book]) -> some View {
+        let columns = [GridItem(.adaptive(minimum: 100, maximum: 160), spacing: 8)]
+        return LazyVGrid(columns: columns, spacing: 8) {
+            ForEach(books, id: \.name) { book in
+                let isSelected = internalBook == book
+                Button(action: {
+                    internalBook = book
+                    internalChapter = 1
+                    internalVerse = 1
+                    if book.chaptersCount == 1 {
+                        selectedStep = .verse
+                    } else {
+                        selectedStep = .chapter
+                    }
+                }) {
+                    Text(book.localizedName)
+                        .font(.subheadline)
+                        .fontWeight(isSelected ? .bold : .regular)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .frame(maxWidth: .infinity, minHeight: 40)
+                        .background(isSelected ? Color.accentColor : Color(.secondarySystemGroupedBackground))
+                        .foregroundColor(isSelected ? .white : .primary)
+                        .cornerRadius(8)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal)
+    }
     
-    var body: some View {
-        let chapters = Array(1...Int(book.chaptersCount))
-        let filteredChapters = searchQuery.isEmpty ? chapters : chapters.filter { "\($0)".contains(searchQuery) }
+    // MARK: - Chapter Selection
+    private var chapterSelectionContent: some View {
+        let totalChapters = Int(internalBook.chaptersCount)
+        let chapters = Array(1...totalChapters)
+        let filtered = searchQuery.isEmpty ? chapters : chapters.filter { "\($0)".contains(searchQuery) }
+        let columns = [GridItem(.adaptive(minimum: 56, maximum: 72), spacing: 8)]
         
-        ScrollView {
-            LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(filteredChapters, id: \.self) { chapter in
-                    Button(action: { onChapterSelect(chapter) }) {
+        return ScrollView {
+            LazyVGrid(columns: columns, spacing: 8) {
+                ForEach(filtered, id: \.self) { chapter in
+                    let isSelected = internalChapter == chapter
+                    Button(action: {
+                        internalChapter = chapter
+                        internalVerse = 1
+                        selectedStep = .verse
+                    }) {
                         Text("\(chapter)")
+                            .font(.callout)
+                            .fontWeight(isSelected ? .bold : .regular)
                             .frame(maxWidth: .infinity, minHeight: 44)
-                            .background(selectedChapter == chapter ? Color.accentColor : Color.secondary.opacity(0.1))
-                            .foregroundColor(selectedChapter == chapter ? .white : .primary)
+                            .background(isSelected ? Color.accentColor : Color(.secondarySystemGroupedBackground))
+                            .foregroundColor(isSelected ? .white : .primary)
                             .cornerRadius(8)
                     }
+                    .buttonStyle(.plain)
                 }
             }
             .padding()
         }
     }
-}
-
-struct VerseGridView: View {
-    let book: Book
-    let chapter: Int
-    let searchQuery: String
-    let selectedVerse: Int?
-    let onVerseSelect: (Int) -> Void
     
-    let columns = [GridItem(.adaptive(minimum: 50))]
-    
-    var body: some View {
-        let versesCount = Int(truncating: book.versesInChapters[chapter - 1])
-        let verses = Array(1...versesCount)
-        let filteredVerses = searchQuery.isEmpty ? verses : verses.filter { "\($0)".contains(searchQuery) }
+    // MARK: - Verse Selection
+    private var verseSelectionContent: some View {
+        let cIdx = max(0, min(internalChapter - 1, Int(internalBook.chaptersCount) - 1))
+        let verseCount = Int(truncating: internalBook.versesInChapters[cIdx])
+        let verses = Array(1...max(1, verseCount))
+        let filtered = searchQuery.isEmpty ? verses : verses.filter { "\($0)".contains(searchQuery) }
+        let columns = [GridItem(.adaptive(minimum: 56, maximum: 72), spacing: 8)]
         
-        ScrollView {
-            LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(filteredVerses, id: \.self) { verse in
-                    Button(action: { onVerseSelect(verse) }) {
+        return ScrollView {
+            LazyVGrid(columns: columns, spacing: 8) {
+                ForEach(filtered, id: \.self) { verse in
+                    let isSelected = internalVerse == verse
+                    Button(action: {
+                        internalVerse = verse
+                        onSelectPassage(internalBook, internalChapter, verse)
+                    }) {
                         Text("\(verse)")
+                            .font(.callout)
+                            .fontWeight(isSelected ? .bold : .regular)
                             .frame(maxWidth: .infinity, minHeight: 44)
-                            .background(selectedVerse == verse ? Color.accentColor : Color.secondary.opacity(0.1))
-                            .foregroundColor(selectedVerse == verse ? .white : .primary)
+                            .background(isSelected ? Color.accentColor : Color(.secondarySystemGroupedBackground))
+                            .foregroundColor(isSelected ? .white : .primary)
                             .cornerRadius(8)
                     }
+                    .buttonStyle(.plain)
                 }
             }
             .padding()

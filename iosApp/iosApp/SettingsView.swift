@@ -34,15 +34,15 @@ struct SettingsView: View {
     
     var body: some View {
         if isSidePanel {
-            content
+            mainContent
         } else {
             NavigationView {
-                content
+                mainContent
             }
         }
     }
     
-    private var content: some View {
+    private var mainContent: some View {
         Form {
             Section(header: Text(NSLocalizedString("appearance", comment: ""))) {
                 Picker(NSLocalizedString("theme", comment: ""), selection: $localTheme) {
@@ -72,6 +72,16 @@ struct SettingsView: View {
             onShowWordsOfJesusChange(newValue)
         }
         .preferredColorScheme(localColorScheme)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if !isSidePanel {
+                    Button(NSLocalizedString("done", comment: "")) {
+                        onDismiss()
+                    }
+                    .bold()
+                }
+            }
+        }
         .overlay(alignment: .top) {
             if isSidePanel {
                 VStack(spacing: 0) {
@@ -79,6 +89,11 @@ struct SettingsView: View {
                         Text(NSLocalizedString("settings", comment: ""))
                             .font(.headline)
                         Spacer()
+                        Button(action: onDismiss) {
+                            Image(systemName: "xmark")
+                                .font(.body.weight(.semibold))
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .padding()
                     Divider()

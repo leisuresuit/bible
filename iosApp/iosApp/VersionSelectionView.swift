@@ -11,22 +11,25 @@ struct VersionSelectionView: View {
     @State private var searchQuery: String = ""
 
     var filteredVersions: [BibleVersion] {
-        if searchQuery.isEmpty {
-            return versions.sorted {
-                $0.abbreviation < $1.abbreviation
-            }
+        let sorted = versions.sorted { $0.abbreviation < $1.abbreviation }
+        let q = searchQuery.trimmingCharacters(in: .whitespaces)
+        if q.isEmpty {
+            return sorted
         } else {
-            return versions.filter {
-                $0.name.localizedCaseInsensitiveContains(searchQuery) ||
-                    $0.abbreviation.localizedCaseInsensitiveContains(searchQuery)
-            }
-            .sorted {
-                $0.abbreviation < $1.abbreviation
+            return sorted.filter {
+                $0.name.localizedCaseInsensitiveContains(q) ||
+                $0.abbreviation.localizedCaseInsensitiveContains(q)
             }
         }
     }
     
-    init(versions: [BibleVersion], selectedVersions: [BibleVersion], onToggleVersion: @escaping (BibleVersion) -> Void, onDismiss: @escaping () -> Void, isSidePanel: Bool = false) {
+    init(
+        versions: [BibleVersion],
+        selectedVersions: [BibleVersion],
+        onToggleVersion: @escaping (BibleVersion) -> Void,
+        onDismiss: @escaping () -> Void,
+        isSidePanel: Bool = false
+    ) {
         self.versions = versions
         self.selectedVersions = selectedVersions
         self.onToggleVersion = onToggleVersion
@@ -36,75 +39,93 @@ struct VersionSelectionView: View {
 
     var body: some View {
         if isSidePanel {
-            content
+            mainContent
         } else {
             NavigationView {
-                content
+                mainContent
             }
         }
     }
     
-    private var content: some View {
+    private var mainContent: some View {
         VStack(spacing: 0) {
             if isSidePanel {
                 HStack {
                     Text(NSLocalizedString("versions", comment: ""))
                         .font(.headline)
                     Spacer()
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark")
+                            .font(.body.weight(.semibold))
+                            .foregroundColor(.secondary)
+                    }
                 }
                 .padding()
+                Divider()
             }
 
-            VStack(spacing: 0) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
-                    TextField(NSLocalizedString("search", comment: ""), text: $searchQuery)
-                    if !searchQuery.isEmpty {
-                        Button(action: {
-                            searchQuery = ""
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
-                        }
+            // Search Bar
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                TextField(NSLocalizedString("search", comment: ""), text: $searchQuery)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                if !searchQuery.isEmpty {
+                    Button(action: { searchQuery = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
                     }
                 }
-                .padding(10)
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(10)
-                .padding()
+            }
+            .padding(8)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(10)
+            .padding(.horizontal)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
 
-                Divider()
+            Divider()
 
-                List {
-                    ForEach(filteredVersions, id: \.id) { version in
-                        let isSelected = selectedVersions.contains(where: { $0.id == version.id })
+            List {
+                ForEach(filteredVersions, id: \.id) { version in
+                    let isSelected = selectedVersions.contains(where: { $0.id == version.id })
 
-                        Button(action: {
-                            onToggleVersion(version)
-                        }) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(version.abbreviation)
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
-                                    Text(version.name)
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
-                                Spacer()
-                                if isSelected {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.accentColor)
-                                        .font(.system(size: 14, weight: .bold))
-                                }
+                    Button(action: {
+                        onToggleVersion(version)
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(version.abbreviation)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                Text(version.name)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
                             }
-                            .contentShape(Rectangle())
+                            Spacer()
+                            if isSelected {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.accentColor)
+                                    .font(.system(size: 14, weight: .bold))
+                            }
                         }
-                        .buttonStyle(.plain)
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                 }
-                .navigationTitle(NSLocalizedString("versions", comment: ""))
+            }
+            .listStyle(.plain)
+        }
+        .navigationTitle(NSLocalizedString("versions", comment: ""))
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if !isSidePanel {
+                    Button(NSLocalizedString("done", comment: "")) {
+                        onDismiss()
+                    }
+                    .bold()
+                }
             }
         }
     }

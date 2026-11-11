@@ -12,7 +12,17 @@ struct SearchView: View {
     let onBack: () -> Void
     let isSidePanel: Bool
 
-    init(searchQuery: Binding<String>, searchResults: [SearchResult], searchSort: SearchSort, isLoading: Bool, onSearchQueryChange: @escaping (String) -> Void, onSearchSortChange: @escaping (SearchSort) -> Void, onResultClick: @escaping (SearchResult) -> Void, onBack: @escaping () -> Void, isSidePanel: Bool = false) {
+    init(
+        searchQuery: Binding<String>,
+        searchResults: [SearchResult],
+        searchSort: SearchSort,
+        isLoading: Bool,
+        onSearchQueryChange: @escaping (String) -> Void,
+        onSearchSortChange: @escaping (SearchSort) -> Void,
+        onResultClick: @escaping (SearchResult) -> Void,
+        onBack: @escaping () -> Void,
+        isSidePanel: Bool = false
+    ) {
         self._searchQuery = searchQuery
         self.searchResults = searchResults
         self.searchSort = searchSort
@@ -26,36 +36,44 @@ struct SearchView: View {
 
     var body: some View {
         if isSidePanel {
-            content
+            mainContent
         } else {
             NavigationView {
-                content
+                mainContent
             }
         }
     }
     
-    private var content: some View {
+    private var mainContent: some View {
         VStack(spacing: 0) {
             if isSidePanel {
                 HStack {
                     Text(NSLocalizedString("search", comment: ""))
                         .font(.headline)
                     Spacer()
+                    Button(action: onBack) {
+                        Image(systemName: "xmark")
+                            .font(.body.weight(.semibold))
+                            .foregroundColor(.secondary)
+                    }
                 }
                 .padding()
+                Divider()
             }
             
-            VStack {
+            VStack(spacing: 8) {
+                // Search Field
                 HStack {
-                    if !isSidePanel {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.gray)
-                    }
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
                     
                     TextField(NSLocalizedString("search", comment: ""), text: $searchQuery)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
                         .onChange(of: searchQuery) { _, newValue in
                             onSearchQueryChange(newValue)
                         }
+                    
                     if isLoading {
                         ProgressView()
                             .scaleEffect(0.8)
@@ -65,17 +83,17 @@ struct SearchView: View {
                             onSearchQueryChange("")
                         }) {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
+                                .foregroundColor(.secondary)
                         }
                     }
                 }
-                .padding(10)
+                .padding(8)
                 .background(Color(.secondarySystemBackground))
                 .cornerRadius(10)
                 .padding(.horizontal)
+                .padding(.top, 12)
 
-                Divider()
-
+                // Sort Segmented Control
                 Picker("Sort", selection: Binding(
                     get: { searchSort },
                     set: { onSearchSortChange($0) }
@@ -86,21 +104,52 @@ struct SearchView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
 
-                List(searchResults, id: \.id) { result in
-                    Button(action: { onResultClick(result) }) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("\(result.book.localizedName) \(result.chapterNumber):\(result.verseNumber)")
-                                .font(.headline)
-                                .foregroundColor(.secondary)
-                            highlightedText(text: result.text, query: searchQuery)
-                                .font(.body)
-                                .lineLimit(5)
-                        }
+                Divider()
+
+                if searchResults.isEmpty && !isLoading && searchQuery.trimmingCharacters(in: .whitespaces).count >= 3 {
+                    VStack(spacing: 12) {
+                        Spacer()
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text(NSLocalizedString("no_results_found", comment: ""))
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        Spacer()
                     }
+                } else {
+                    List(searchResults, id: \.id) { result in
+                        Button(action: { onResultClick(result) }) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("\(result.book.localizedName) \(result.chapterNumber):\(result.verseNumber)")
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.accentColor)
+                                
+                                highlightedText(text: result.text, query: searchQuery)
+                                    .font(.body)
+                                    .lineLimit(5)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .listStyle(.plain)
                 }
             }
         }
         .navigationTitle(NSLocalizedString("search", comment: ""))
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if !isSidePanel {
+                    Button(NSLocalizedString("done", comment: "")) {
+                        onBack()
+                    }
+                    .bold()
+                }
+            }
+        }
     }
     
     private func highlightedText(text: String, query: String) -> Text {

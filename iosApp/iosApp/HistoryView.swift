@@ -16,7 +16,15 @@ struct HistoryView: View {
         })
     }
     
-    init(history: [HistoryItem], currentBook: Book?, currentChapter: Int32, currentVerse: Int32?, onItemClick: @escaping (HistoryItem) -> Void, onClear: @escaping () -> Void, isSidePanel: Bool = false) {
+    init(
+        history: [HistoryItem],
+        currentBook: Book?,
+        currentChapter: Int32,
+        currentVerse: Int32?,
+        onItemClick: @escaping (HistoryItem) -> Void,
+        onClear: @escaping () -> Void,
+        isSidePanel: Bool = false
+    ) {
         self.history = history
         self.currentBook = currentBook
         self.currentChapter = currentChapter
@@ -28,32 +36,64 @@ struct HistoryView: View {
 
     var body: some View {
         if isSidePanel {
-            content
+            mainContent
         } else {
             NavigationView {
-                content
+                mainContent
             }
         }
     }
     
-    private var content: some View {
-        List {
-            ForEach(history, id: \.self) { item in
-                let isSelected = item.book == currentBook && item.chapter == currentChapter && item.verse == currentVerse
-                
-                Button(action: { onItemClick(item) }) {
-                    HStack {
-                        let passage = "\(item.book.localizedName) \(item.chapter):\(item.verse)"
-                        Text(passage)
-                            .fontWeight(isSelected ? .bold : .regular)
-                            .foregroundColor(isSelected ? .accentColor : .primary)
-                        Spacer()
-                        if isSelected {
-                            Image(systemName: "checkmark")
-                                .foregroundColor(.accentColor)
+    private var mainContent: some View {
+        VStack(spacing: 0) {
+            if isSidePanel {
+                HStack {
+                    Text(NSLocalizedString("history", comment: ""))
+                        .font(.headline)
+                    Spacer()
+                    headerActions
+                }
+                .padding()
+                Divider()
+            }
+
+            if history.isEmpty {
+                VStack(spacing: 12) {
+                    Spacer()
+                    Image(systemName: "clock")
+                        .font(.system(size: 48))
+                        .foregroundColor(.secondary)
+                    Text(NSLocalizedString("history", comment: ""))
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+            } else {
+                List {
+                    ForEach(history, id: \.self) { item in
+                        let isSelected = item.book == currentBook && item.chapter == currentChapter && (currentVerse == nil || item.verse == currentVerse)
+                        
+                        Button(action: { onItemClick(item) }) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("\(item.book.localizedName) \(item.chapter):\(item.verse)")
+                                        .font(.body)
+                                        .fontWeight(isSelected ? .bold : .regular)
+                                        .foregroundColor(isSelected ? .accentColor : .primary)
+                                }
+                                Spacer()
+                                if isSelected {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.accentColor)
+                                        .font(.system(size: 14, weight: .bold))
+                                }
+                            }
+                            .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
                     }
                 }
+                .listStyle(.plain)
             }
         }
         .navigationTitle(NSLocalizedString("history", comment: ""))
@@ -64,28 +104,15 @@ struct HistoryView: View {
                 }
             }
         }
-        .overlay(alignment: .top) {
-            if isSidePanel {
-                VStack(spacing: 0) {
-                    HStack {
-                        Text(NSLocalizedString("history", comment: ""))
-                            .font(.headline)
-                        Spacer()
-                        headerActions
-                    }
-                    .padding()
-                    Divider()
-                }
-                .background(Color(.systemBackground))
-            }
-        }
     }
     
     private var headerActions: some View {
-        HStack {
+        HStack(spacing: 12) {
             Button(NSLocalizedString("clear", comment: "")) {
                 onClear()
             }
+            .foregroundColor(.red)
+            .disabled(history.isEmpty)
             
             Button(action: {
                 if let index = currentIndex, index < history.count - 1 {
