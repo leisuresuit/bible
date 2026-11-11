@@ -18,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -174,6 +175,13 @@ internal fun ContiguousVerseList(
             }
     }
 
+    val currentChapterInfo by remember {
+        derivedStateOf {
+            ContiguousIndex.getItemLocation(lazyListState.firstVisibleItemIndex).first
+        }
+    }
+    val chapterVerses = chaptersVerses[currentChapterInfo.globalChapterIndex]
+
     BoxWithConstraints(
         modifier = modifier
             .padding(horizontal = 8.dp)
@@ -181,60 +189,75 @@ internal fun ContiguousVerseList(
     ) {
         val maxColumnWidth = if (maxWidth > 600.dp) 600.dp else maxWidth
 
-        SelectionContainer(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .widthIn(max = maxColumnWidth)
-        ) {
-            LazyColumn(
-                state = lazyListState,
+        if (chapterVerses == null) {
+            Box(
                 modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .widthIn(max = maxColumnWidth)
                     .fillMaxSize()
-                    .then(if (nestedScrollConnection != null) Modifier.nestedScroll(nestedScrollConnection) else Modifier),
-                contentPadding = PaddingValues(
-                    start = 16.dp + contentPadding.calculateStartPadding(LayoutDirection.Ltr),
-                    top = contentPadding.calculateTopPadding(),
-                    end = 16.dp + contentPadding.calculateEndPadding(LayoutDirection.Ltr),
-                    bottom = 256.dp + contentPadding.calculateBottomPadding()
-                ),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(
-                    count = ContiguousIndex.totalItems,
-                    key = { index ->
+                VerseListPlaceholder(
+                    book = currentChapterInfo.book,
+                    chapter = currentChapterInfo.chapter,
+                    onShowPassageSelection = onShowPassageSelection
+                )
+            }
+        } else {
+            SelectionContainer(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .widthIn(max = maxColumnWidth)
+            ) {
+                LazyColumn(
+                    state = lazyListState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(if (nestedScrollConnection != null) Modifier.nestedScroll(nestedScrollConnection) else Modifier),
+                    contentPadding = PaddingValues(
+                        start = 16.dp + contentPadding.calculateStartPadding(LayoutDirection.Ltr),
+                        top = contentPadding.calculateTopPadding(),
+                        end = 16.dp + contentPadding.calculateEndPadding(LayoutDirection.Ltr),
+                        bottom = 256.dp + contentPadding.calculateBottomPadding()
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        count = ContiguousIndex.totalItems,
+                        key = { index ->
+                            val (info, verseNum, isHeader) = ContiguousIndex.getItemLocation(index)
+                            if (isHeader) {
+                                "header_${info.book.name}_${info.chapter}"
+                            } else {
+                                "verse_${info.book.name}_${info.chapter}_$verseNum"
+                            }
+                        }
+                    ) { index ->
                         val (info, verseNum, isHeader) = ContiguousIndex.getItemLocation(index)
+
+                        LaunchedEffect(info.globalChapterIndex) {
+                            onLoadChapterVerses(info.book, info.chapter, info.globalChapterIndex)
+                        }
+
                         if (isHeader) {
-                            "header_${info.book.name}_${info.chapter}"
+                            ChapterHeader(info.book, info.chapter) {
+                                onShowPassageSelection(0)
+                            }
                         } else {
-                            "verse_${info.book.name}_${info.chapter}_$verseNum"
-                        }
-                    }
-                ) { index ->
-                    val (info, verseNum, isHeader) = ContiguousIndex.getItemLocation(index)
-
-                    LaunchedEffect(info.globalChapterIndex) {
-                        onLoadChapterVerses(info.book, info.chapter, info.globalChapterIndex)
-                    }
-
-                    if (isHeader) {
-                        ChapterHeader(info.book, info.chapter) {
-                            onShowPassageSelection(0)
-                        }
-                    } else {
-                        val chapterVerses = chaptersVerses[info.globalChapterIndex]
-                        if (chapterVerses != null && verseNum != null) {
-                            val versesForNumber = chapterVerses.filter { it.number == verseNum }
-                            if (versesForNumber.isNotEmpty()) {
-                                Column {
-                                    versesForNumber.forEach { v ->
-                                        VerseItem(v, showWordsOfJesus)
+                            val cVerses = chaptersVerses[info.globalChapterIndex]
+                            if (cVerses != null && verseNum != null) {
+                                val versesForNumber = cVerses.filter { it.number == verseNum }
+                                if (versesForNumber.isNotEmpty()) {
+                                    Column {
+                                        versesForNumber.forEach { v ->
+                                            VerseItem(v, showWordsOfJesus)
+                                        }
                                     }
+                                } else {
+                                    LoadingVersePlaceholder()
                                 }
                             } else {
                                 LoadingVersePlaceholder()
                             }
-                        } else {
-                            LoadingVersePlaceholder()
                         }
                     }
                 }

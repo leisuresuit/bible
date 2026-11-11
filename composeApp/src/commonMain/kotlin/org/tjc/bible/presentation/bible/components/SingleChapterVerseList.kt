@@ -222,20 +222,3 @@ private fun VerseListContent(
         }
     }
 }
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun VerseListPlaceholder(book: Book, chapter: Int, onShowPassageSelection: (initialPage: Int) -> Unit) {
-    Box(Modifier.fillMaxSize()) {
-        ChapterHeader(
-            book = book,
-            chapter = chapter,
-            onClick = {
-                onShowPassageSelection(0)
-            }
-        )
-        LoadingIndicator(
-            modifier = Modifier.align(Alignment.Center)
-        )
-    }
-}
