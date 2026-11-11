@@ -525,7 +525,7 @@ struct SingleChapterPage: View {
                         ChapterHeaderView(book: book, chapter: chapter, onClick: onShowPassageSelection)
                             .id(0)
                         
-                        ForEach(verses, id: \.number) { verse in
+                        ForEach(Array(verses.enumerated()), id: \.offset) { _, verse in
                             VerseItemView(verse: verse, showWordsOfJesus: showWordsOfJesus)
                                 .id(Int(verse.number))
                                 .listRowSeparator(.hidden)
@@ -640,7 +640,7 @@ struct ContiguousChapterView: View {
             ChapterHeaderView(book: book, chapter: chapter, onClick: onShowPassageSelection)
             
             if let verses = verses {
-                ForEach(verses, id: \.number) { verse in
+                ForEach(Array(verses.enumerated()), id: \.offset) { _, verse in
                     VerseItemView(verse: verse, showWordsOfJesus: showWordsOfJesus)
                 }
             } else {
