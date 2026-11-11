@@ -130,6 +130,8 @@ internal class AbsChapterParser {
         var textToAdd = rawCleaned
         if (lastChar.isWhitespace() && rawCleaned.first().isWhitespace()) {
             textToAdd = rawCleaned.trimStart()
+        } else if (lastChar.isLetterOrDigit() && rawCleaned.first().isLetterOrDigit()) {
+            textToAdd = " " + rawCleaned
         }
         
         if (textToAdd.isEmpty()) return

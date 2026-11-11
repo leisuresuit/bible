@@ -1,5 +1,6 @@
 package org.tjc.bible.data.abs
 
+import org.tjc.bible.domain.model.VerseElement
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -77,5 +78,54 @@ class AbsChapterParserTest {
         assertTrue(verse23.elements.isNotEmpty())
         assertTrue(verse24.elements.isNotEmpty())
         assertTrue(verse25.elements.isNotEmpty())
+    }
+
+    @Test
+    fun parseEzekiel21_30MissingSpace() {
+        val dto = AbsChapterContentDto(
+            id = "EZK.21",
+            number = "21",
+            content = listOf(
+                AbsContentItemDto(
+                    type = "tag",
+                    name = "para",
+                    attrs = AbsContentAttrsDto(style = "p"),
+                    items = listOf(
+                        AbsContentItemDto(
+                            type = "tag",
+                            name = "verse",
+                            attrs = AbsContentAttrsDto(style = "v", number = "30", sid = "EZK 21:30"),
+                            items = listOf(AbsContentItemDto(type = "text", text = "30"))
+                        ),
+                        AbsContentItemDto(
+                            type = "text",
+                            text = "Return",
+                            attrs = AbsContentAttrsDto(verseId = "EZK.21.30")
+                        ),
+                        AbsContentItemDto(
+                            type = "tag",
+                            name = "span",
+                            attrs = AbsContentAttrsDto(style = "wj", verseId = "EZK.21.30"),
+                            items = listOf(AbsContentItemDto(type = "text", text = "it"))
+                        )
+                    )
+                )
+            )
+        )
+
+        val parser = AbsChapterParser()
+        val verses = parser.parse(dto)
+
+        assertEquals(1, verses.size)
+        val verse30 = verses[0]
+        assertEquals(30, verse30.number)
+
+        val textContent = verse30.elements.joinToString("") { element ->
+            when (element) {
+                is VerseElement.Text -> element.spans.joinToString("") { it.text }
+                is VerseElement.Heading -> ""
+            }
+        }
+        assertTrue(textContent.contains("Return it"))
     }
 }
