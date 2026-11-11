@@ -84,8 +84,8 @@
 "theme_dark" = "Dark";
 "reading_experience" = "Reading Experience";
 "display_mode" = "Display Mode";
-"mode_single" = "Single Chapter";
-"mode_contiguous" = "Contiguous";
+"mode_single" = "By Chapter";
+"mode_contiguous" = "Continuous";
 "show_words_of_jesus" = "Red Letter\n(Words of Jesus)";
 "sort_relevance" = "Relevance";
 "sort_canonical" = "Bible Order";

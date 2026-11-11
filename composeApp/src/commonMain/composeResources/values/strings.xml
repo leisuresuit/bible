@@ -14,8 +14,8 @@
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
-    <string name="display_mode_single_chapter">Single Chapter</string>
-    <string name="display_mode_contiguous">Contiguous</string>
+    <string name="display_mode_single_chapter">By Chapter</string>
+    <string name="display_mode_contiguous">Continuous</string>
     <string name="previous">Previous</string>
     <string name="next">Next</string>
     <string name="toggle_sort_order">Toggle sort order</string>
