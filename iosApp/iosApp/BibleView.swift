@@ -1,6 +1,20 @@
 import SwiftUI
 import ComposeApp
 
+struct IdentifiableSheet: Identifiable {
+    let sheet: ActiveSheet
+    var id: String {
+        switch sheet {
+        case is ActiveSheet.VersionSelection: return "version"
+        case let p as ActiveSheet.PassageSelection: return "passage-\(p.initialPage)"
+        case is ActiveSheet.Settings: return "settings"
+        case is ActiveSheet.History: return "history"
+        case is ActiveSheet.Search: return "search"
+        default: return "none"
+        }
+    }
+}
+
 struct BibleView: View {
     @State private var viewModel: BibleViewModel
     @State private var state: BibleState
@@ -64,10 +78,13 @@ struct BibleView: View {
         .preferredColorScheme(colorScheme)
     }
     
+    // MARK: - Portrait Layout
     private var portraitLayout: some View {
         NavigationView {
-            verseList
+            readingAreaContent
+                .padding(.horizontal, 8)
                 .navigationTitle(navigationTitleText)
+                .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         chapterNavigationButtons
@@ -86,16 +103,18 @@ struct BibleView: View {
         }
     }
     
+    // MARK: - Landscape / iPad / Mac Layout
     private var landscapeLayout: some View {
         HStack(spacing: 0) {
-            // Navigation Rail
+            // Navigation Rail / Sidebar
             VStack(spacing: 20) {
                 Button(action: {
                     viewModel.onIntent(intent: BibleIntent.ToggleSheet(sheet: ActiveSheet.PassageSelection(initialPage: 0)))
                 }) {
-                    VStack {
+                    VStack(spacing: 2) {
                         Text(state.currentBook.localizedName)
-                            .font(.caption)
+                            .font(.caption2)
+                            .lineLimit(1)
                         Text("\(state.currentChapter)")
                             .font(.headline)
                             .bold()
@@ -105,21 +124,22 @@ struct BibleView: View {
                 .padding(.top, 40)
                 
                 Button(action: {
-                    viewModel.onIntent(intent: BibleIntent.ToggleSheet(sheet: ActiveSheet.VersionSelection()))
+                    viewModel.onIntent(intent: BibleIntent.ToggleSheet(sheet: ActiveSheet.VersionSelection.shared))
                 }) {
                     Text(selectedVersionAbbreviation)
                         .font(.caption)
                         .bold()
-                        .padding(8)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
                         .background(Color.accentColor.opacity(0.1))
                         .cornerRadius(8)
                 }
 
                 Spacer()
                 
-                railIconButton(systemName: "magnifyingglass", title: NSLocalizedString("search", comment: ""), sheet: ActiveSheet.Search())
-                railIconButton(systemName: "clock", title: NSLocalizedString("history", comment: ""), sheet: ActiveSheet.History())
-                railIconButton(systemName: "gearshape", title: NSLocalizedString("settings", comment: ""), sheet: ActiveSheet.Settings())
+                railIconButton(systemName: "magnifyingglass", title: NSLocalizedString("search", comment: ""), sheet: ActiveSheet.Search.shared)
+                railIconButton(systemName: "clock", title: NSLocalizedString("history", comment: ""), sheet: ActiveSheet.History.shared)
+                railIconButton(systemName: "gearshape", title: NSLocalizedString("settings", comment: ""), sheet: ActiveSheet.Settings.shared)
                 
                 Spacer()
                     .frame(height: 20)
@@ -133,69 +153,76 @@ struct BibleView: View {
             if let activeSheet = state.activeSheet {
                 ZStack(alignment: .topTrailing) {
                     sheetContentView(sheet: activeSheet, isSidePanel: true)
-                        .frame(width: 320)
-                    
-                    Button(action: {
-                        viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: nil))
-                    }) {
-                        Image(systemName: "xmark")
-                            .padding()
-                            .contentShape(Rectangle())
-                    }
-                    .padding(8)
-                    .zIndex(1)
+                        .frame(width: 340)
                 }
                 Divider()
             }
             
-            // Main Content
-            verseList
-                .safeAreaInset(edge: .top) {
-                    VStack(spacing: 0) {
-                        HStack {
-                            Spacer()
-                            Text(navigationTitleText)
-                                .font(.headline)
-                            Spacer()
-                            chapterNavigationButtons
-                        }
-                        .padding(.horizontal)
-                        .frame(height: 50)
-                        .background(.ultraThinMaterial)
-                        
-                        Divider()
-                    }
+            // Main Content Area
+            VStack(spacing: 0) {
+                // Top Navigation Bar for Landscape
+                HStack {
+                    Spacer()
+                    Text(navigationTitleText)
+                        .font(.headline)
+                    Spacer()
+                    chapterNavigationButtons
                 }
-        }
-    }
-    
-    private var verseList: some View {
-        List {
-            ForEach(state.verses, id: \.number) { verse in
-                formatVerse(verse)
-                    .font(.system(.body, design: .serif))
-                    .lineSpacing(4)
-                    .padding(.vertical, 3)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-                    .textSelection(.enabled)
+                .padding(.horizontal)
+                .frame(height: 48)
+                .background(.ultraThinMaterial)
+                
+                Divider()
+                
+                readingAreaContent
+                    .padding(.horizontal, 8)
+                    .frame(maxWidth: 650)
             }
-            
-            Color.clear
-                .frame(height: 150)
-                .listRowSeparator(.hidden)
+            .frame(maxWidth: .infinity)
         }
-        .listStyle(.plain)
-        .environment(\.defaultMinListRowHeight, 0)
     }
-    
+
+    // MARK: - Reading Area (Single Chapter vs Contiguous)
+    @ViewBuilder
+    private var readingAreaContent: some View {
+        if state.displayMode == .singleChapter {
+            SingleChapterHostView(state: state, viewModel: viewModel)
+        } else {
+            contiguousView
+        }
+    }
+
+    // MARK: - Contiguous Mode (Continuous Scroll)
+    private var contiguousView: some View {
+        ContiguousVerseListView(
+            currentBook: state.currentBook,
+            currentChapter: Int(state.currentChapter),
+            currentVerse: Int(state.currentVerse),
+            selectionEventId: state.selectionEventId,
+            chaptersVerses: chaptersVersesMap,
+            showWordsOfJesus: state.showWordsOfJesus,
+            onUpdateVisiblePassage: { book, chapter, verse in
+                viewModel.onIntent(intent: BibleIntent.UpdateVisiblePassage(book: book, chapter: Int32(chapter), verse: Int32(verse)))
+            },
+            onLoadChapterVerses: { book, chapter, globalIndex in
+                viewModel.onIntent(intent: BibleIntent.LoadChapterVerses(book: book, chapter: Int32(chapter), globalIndex: Int32(globalIndex)))
+            },
+            onShowPassageSelection: {
+                viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.PassageSelection(initialPage: 0)))
+            }
+        )
+    }
+
+    // MARK: - Navigation & Bottom Bar Items
     private var chapterNavigationButtons: some View {
-        HStack {
-            Button(action: { viewModel.onIntent(intent: BibleIntent.PreviousChapter()) }) {
+        HStack(spacing: 8) {
+            Button(action: { viewModel.onIntent(intent: BibleIntent.PreviousChapter.shared) }) {
                 Image(systemName: "chevron.left")
+                    .font(.body.weight(.semibold))
             }
-            Button(action: { viewModel.onIntent(intent: BibleIntent.NextChapter()) }) {
+            Button(action: { viewModel.onIntent(intent: BibleIntent.NextChapter.shared) }) {
                 Image(systemName: "chevron.right")
+                    .font(.body.weight(.semibold))
             }
         }
     }
@@ -205,24 +232,29 @@ struct BibleView: View {
             Button(action: {
                 viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.PassageSelection(initialPage: 0)))
             }) {
-                Label(navigationTitleText, systemImage: "chevron.down")
+                HStack(spacing: 4) {
+                    Text(navigationTitleText)
+                        .bold()
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption2)
+                }
             }
             Spacer()
             Button(action: {
-                viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.VersionSelection()))
+                viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.VersionSelection.shared))
             }) {
-                Label(NSLocalizedString("versions", comment: ""), systemImage: "books.vertical")
+                Label(selectedVersionAbbreviation, systemImage: "books.vertical")
             }
             Spacer()
-            Button(action: { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.Search())) }) {
+            Button(action: { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.Search.shared)) }) {
                 Image(systemName: "magnifyingglass")
             }
             Spacer()
-            Button(action: { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.History())) }) {
+            Button(action: { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.History.shared)) }) {
                 Image(systemName: "clock")
             }
             Spacer()
-            Button(action: { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.Settings())) }) {
+            Button(action: { viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.Settings.shared)) }) {
                 Image(systemName: "gearshape")
             }
         }
@@ -242,7 +274,62 @@ struct BibleView: View {
         }
         .accessibilityLabel(title)
     }
+
+    // MARK: - Helper Methods
+    private var chaptersVersesMap: [Int: [Verse]] {
+        var map: [Int: [Verse]] = [:]
+        for (key, value) in state.chaptersVerses {
+            let intKey: Int?
+            if let kInt = key as? KotlinInt {
+                intKey = Int(kInt.intValue)
+            } else if let num = key as? NSNumber {
+                intKey = num.intValue
+            } else {
+                intKey = nil
+            }
+            
+            if let gIdx = intKey {
+                if let vList = value as? [Verse] {
+                    map[gIdx] = vList
+                } else if let nsArray = value as? NSArray {
+                    var verses: [Verse] = []
+                    for item in nsArray {
+                        if let v = item as? Verse {
+                            verses.append(v)
+                        }
+                    }
+                    map[gIdx] = verses
+                } else if let anyArray = value as? [Any] {
+                    var verses: [Verse] = []
+                    for item in anyArray {
+                        if let v = item as? Verse {
+                            verses.append(v)
+                        }
+                    }
+                    map[gIdx] = verses
+                }
+            }
+        }
+        return map
+    }
+
+    private var selectedVersionAbbreviation: String {
+        if state.selectedVersions.count > 1 {
+            return NSLocalizedString("versions", comment: "")
+        } else {
+            return state.selectedVersions.first?.abbreviation ?? NSLocalizedString("versions", comment: "")
+        }
+    }
     
+    private var colorScheme: ColorScheme? {
+        switch state.theme {
+        case .light: return .light
+        case .dark: return .dark
+        default: return nil
+        }
+    }
+
+    // MARK: - Sheet Content View
     @ViewBuilder
     private func sheetContentView(sheet: ActiveSheet, isSidePanel: Bool) -> some View {
         switch sheet {
@@ -282,7 +369,7 @@ struct BibleView: View {
                         viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: nil))
                     }
                 },
-                onClear: { viewModel.onIntent(intent: BibleIntent.ClearHistory()) },
+                onClear: { viewModel.onIntent(intent: BibleIntent.ClearHistory.shared) },
                 isSidePanel: isSidePanel
             )
         case is ActiveSheet.VersionSelection:
@@ -320,25 +407,318 @@ struct BibleView: View {
             EmptyView()
         }
     }
+}
+
+// MARK: - Single Chapter Host View (Synced Paged TabView)
+struct SingleChapterHostView: View {
+    let state: BibleState
+    let viewModel: BibleViewModel
     
-    private var selectedVersionAbbreviation: String {
-        if state.selectedVersions.count > 1 {
-            return NSLocalizedString("versions", comment: "")
-        } else {
-            return state.selectedVersions.first?.abbreviation ?? NSLocalizedString("versions", comment: "")
-        }
+    @State private var selectedIndex: Int
+    @State private var isExternalUpdate = false
+
+    init(state: BibleState, viewModel: BibleViewModel) {
+        self.state = state
+        self.viewModel = viewModel
+        self._selectedIndex = State(initialValue: Book.getGlobalIndex(book: state.currentBook, chapter: Int(state.currentChapter)))
     }
-    
-    private var colorScheme: ColorScheme? {
-        switch state.theme {
-        case .light: return .light
-        case .dark: return .dark
-        default: return nil
+
+    var body: some View {
+        TabView(selection: $selectedIndex) {
+            ForEach(max(0, selectedIndex - 2)...min(1188, selectedIndex + 2), id: \.self) { globalIndex in
+                let (book, chapter) = Book.getPassageFromGlobalIndex(globalIndex)
+                let verses = versesForGlobalIndex(globalIndex)
+                
+                SingleChapterPage(
+                    book: book,
+                    chapter: chapter,
+                    verses: verses,
+                    targetVerse: globalIndex == selectedIndex ? Int(state.currentVerse) : nil,
+                    showWordsOfJesus: state.showWordsOfJesus,
+                    onLoadVerses: {
+                        viewModel.onIntent(intent: BibleIntent.LoadChapterVerses(book: book, chapter: Int32(chapter), globalIndex: Int32(globalIndex)))
+                    },
+                    onShowPassageSelection: {
+                        viewModel.onIntent(intent: BibleIntent.ShowSheet(sheet: ActiveSheet.PassageSelection(initialPage: 0)))
+                    }
+                )
+                .tag(globalIndex)
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .onChange(of: Book.getGlobalIndex(book: state.currentBook, chapter: Int(state.currentChapter))) { _, newIdx in
+            if selectedIndex != newIdx {
+                isExternalUpdate = true
+                selectedIndex = newIdx
+                DispatchQueue.main.async {
+                    isExternalUpdate = false
+                }
+            }
+        }
+        .onChange(of: selectedIndex) { _, newIdx in
+            if !isExternalUpdate {
+                let (b, c) = Book.getPassageFromGlobalIndex(newIdx)
+                if b != state.currentBook || c != Int(state.currentChapter) {
+                    viewModel.onIntent(intent: BibleIntent.UpdateVisiblePassage(book: b, chapter: Int32(c), verse: 1))
+                }
+            }
         }
     }
 
-    private func formatVerse(_ verse: Verse) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+    private var chaptersVersesMap: [Int: [Verse]] {
+        var map: [Int: [Verse]] = [:]
+        for (key, value) in state.chaptersVerses {
+            let intKey: Int?
+            if let kInt = key as? KotlinInt {
+                intKey = Int(kInt.intValue)
+            } else if let num = key as? NSNumber {
+                intKey = num.intValue
+            } else {
+                intKey = nil
+            }
+            
+            if let gIdx = intKey {
+                if let vList = value as? [Verse] {
+                    map[gIdx] = vList
+                } else if let nsArray = value as? NSArray {
+                    var verses: [Verse] = []
+                    for item in nsArray {
+                        if let v = item as? Verse {
+                            verses.append(v)
+                        }
+                    }
+                    map[gIdx] = verses
+                } else if let anyArray = value as? [Any] {
+                    var verses: [Verse] = []
+                    for item in anyArray {
+                        if let v = item as? Verse {
+                            verses.append(v)
+                        }
+                    }
+                    map[gIdx] = verses
+                }
+            }
+        }
+        return map
+    }
+
+    private func versesForGlobalIndex(_ globalIndex: Int) -> [Verse]? {
+        return chaptersVersesMap[globalIndex]
+    }
+}
+
+// MARK: - Single Chapter Page Component
+struct SingleChapterPage: View {
+    let book: Book
+    let chapter: Int
+    let verses: [Verse]?
+    let targetVerse: Int?
+    let showWordsOfJesus: Bool
+    let onLoadVerses: () -> Void
+    let onShowPassageSelection: () -> Void
+
+    var body: some View {
+        Group {
+            if let verses = verses {
+                ScrollViewReader { proxy in
+                    List {
+                        ChapterHeaderView(book: book, chapter: chapter, onClick: onShowPassageSelection)
+                            .id(0)
+                        
+                        ForEach(verses, id: \.number) { verse in
+                            VerseItemView(verse: verse, showWordsOfJesus: showWordsOfJesus)
+                                .id(Int(verse.number))
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
+                        }
+                    }
+                    .listStyle(.plain)
+                    .onAppear {
+                        if let target = targetVerse, target > 1 {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                                proxy.scrollTo(target, anchor: .top)
+                            }
+                        }
+                    }
+                    .onChange(of: targetVerse) { _, newTarget in
+                        if let target = newTarget, target > 1 {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                                proxy.scrollTo(target, anchor: .top)
+                            }
+                        }
+                    }
+                }
+            } else {
+                ChapterPlaceholderView(book: book, chapter: chapter, onClick: onShowPassageSelection)
+            }
+        }
+        .onAppear {
+            onLoadVerses()
+        }
+    }
+}
+
+// MARK: - Contiguous Mode Continuous Scroll View
+struct ContiguousVerseListView: View {
+    let currentBook: Book
+    let currentChapter: Int
+    let currentVerse: Int
+    let selectionEventId: Int64
+    let chaptersVerses: [Int: [Verse]]
+    let showWordsOfJesus: Bool
+    let onUpdateVisiblePassage: (Book, Int, Int) -> Void
+    let onLoadChapterVerses: (Book, Int, Int) -> Void
+    let onShowPassageSelection: () -> Void
+
+    @State private var visibleChapterInfo: ContiguousChapterInfo
+    @State private var lastProcessedEventId: Int64 = -1
+
+    init(
+        currentBook: Book,
+        currentChapter: Int,
+        currentVerse: Int,
+        selectionEventId: Int64,
+        chaptersVerses: [Int: [Verse]],
+        showWordsOfJesus: Bool,
+        onUpdateVisiblePassage: @escaping (Book, Int, Int) -> Void,
+        onLoadChapterVerses: @escaping (Book, Int, Int) -> Void,
+        onShowPassageSelection: @escaping () -> Void
+    ) {
+        self.currentBook = currentBook
+        self.currentChapter = currentChapter
+        self.currentVerse = currentVerse
+        self.selectionEventId = selectionEventId
+        self.chaptersVerses = chaptersVerses
+        self.showWordsOfJesus = showWordsOfJesus
+        self.onUpdateVisiblePassage = onUpdateVisiblePassage
+        self.onLoadChapterVerses = onLoadChapterVerses
+        self.onShowPassageSelection = onShowPassageSelection
+        
+        let initialInfo = ContiguousIndex.shared.findChapterForGlobalIndex(book: currentBook, chapter: currentChapter)
+        self._visibleChapterInfo = State(initialValue: initialInfo)
+    }
+
+    private var targetItemIndex: Int {
+        ContiguousIndex.shared.getItemIndex(book: currentBook, chapter: currentChapter, verse: currentVerse)
+    }
+
+    var body: some View {
+        let globalIdx = visibleChapterInfo.globalChapterIndex
+        let isCurrentChapterLoading = chaptersVerses[globalIdx] == nil
+
+        ZStack {
+            if isCurrentChapterLoading {
+                ChapterPlaceholderView(
+                    book: visibleChapterInfo.book,
+                    chapter: visibleChapterInfo.chapter,
+                    onClick: onShowPassageSelection
+                )
+                .onAppear {
+                    onLoadChapterVerses(visibleChapterInfo.book, visibleChapterInfo.chapter, globalIdx)
+                }
+            }
+            
+            ScrollViewReader { proxy in
+                List {
+                    ForEach(0..<ContiguousIndex.shared.totalItems, id: \.self) { index in
+                        let location = ContiguousIndex.shared.getItemLocation(index)
+                        let chapterInfo = location.chapterInfo
+                        
+                        if location.isHeader {
+                            ChapterHeaderView(book: chapterInfo.book, chapter: chapterInfo.chapter, onClick: onShowPassageSelection)
+                                .id(index)
+                                .listRowSeparator(.hidden)
+                                .onAppear {
+                                    onLoadChapterVerses(chapterInfo.book, chapterInfo.chapter, chapterInfo.globalChapterIndex)
+                                    if chapterInfo.book != currentBook || chapterInfo.chapter != currentChapter {
+                                        DispatchQueue.main.async {
+                                            visibleChapterInfo = chapterInfo
+                                            onUpdateVisiblePassage(chapterInfo.book, chapterInfo.chapter, 1)
+                                        }
+                                    }
+                                }
+                        } else if let vNum = location.verseNumber {
+                            let verses = chaptersVerses[chapterInfo.globalChapterIndex]
+                            if let verses = verses {
+                                let matchingVerses = verses.filter { Int($0.number) == vNum }
+                                ForEach(Array(matchingVerses.enumerated()), id: \.offset) { _, v in
+                                    VerseItemView(verse: v, showWordsOfJesus: showWordsOfJesus)
+                                        .id(index)
+                                        .listRowSeparator(.hidden)
+                                        .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
+                                }
+                            }
+                        }
+                    }
+                }
+                .listStyle(.plain)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        proxy.scrollTo(targetItemIndex, anchor: .top)
+                    }
+                }
+                .onChange(of: selectionEventId) { _, eventId in
+                    if eventId > lastProcessedEventId {
+                        lastProcessedEventId = eventId
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            proxy.scrollTo(targetItemIndex, anchor: .top)
+                        }
+                    }
+                }
+            }
+            .opacity(isCurrentChapterLoading ? 0 : 1)
+        }
+    }
+}
+
+// MARK: - Chapter Header View
+struct ChapterHeaderView: View {
+    let book: Book
+    let chapter: Int
+    let onClick: () -> Void
+
+    var body: some View {
+        Button(action: onClick) {
+            Text("\(book.localizedName) \(chapter)")
+                .font(.system(.title, design: .serif))
+                .bold()
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 12)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Single Spinner Chapter Placeholder View (Matches KMP VerseListPlaceholder)
+struct ChapterPlaceholderView: View {
+    let book: Book
+    let chapter: Int
+    let onClick: () -> Void
+
+    var body: some View {
+        VStack {
+            ChapterHeaderView(book: book, chapter: chapter, onClick: onClick)
+            Spacer()
+            ProgressView()
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - Verse Item View
+struct VerseItemView: View {
+    let verse: Verse
+    let showWordsOfJesus: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            if let abbr = verse.versionAbbreviation, !abbr.isEmpty {
+                Text(abbr)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+
             ForEach(Array(verse.elements.enumerated()), id: \.offset) { index, element in
                 if let textElement = element as? VerseElementText {
                     let combinedText = textElement.spans.reduce(Text("")) { result, span in
@@ -355,41 +735,32 @@ struct BibleView: View {
                         let isJesus = style == .wordsOfJesus || style == .wordsOfJesusBold ||
                                      style == .wordsOfJesusItalic || style == .wordsOfJesusItalicBold
                         
-                        if isJesus && state.showWordsOfJesus {
+                        if isJesus && showWordsOfJesus {
                             t = t.foregroundColor(.red)
                         }
                         return result + t
                     }
                     
-                    // Show verse number only on the first Text element
                     if index == verse.elements.firstIndex(where: { $0 is VerseElementText }) {
-                        (Text("\(verse.number)   ").bold() + combinedText)
+                        (Text("\(verse.number)  ").bold() + combinedText)
+                            .font(.system(.body, design: .serif))
+                            .lineSpacing(4)
+                            .textSelection(.enabled)
                     } else {
                         combinedText
+                            .font(.system(.body, design: .serif))
+                            .lineSpacing(4)
+                            .textSelection(.enabled)
                     }
                 } else if let headingElement = element as? VerseElementHeading {
                     let headingText = headingElement.spans.map { $0.text }.joined()
                     Text(headingText)
                         .bold()
                         .font(.headline)
-                        .padding(.top, index == 0 ? 0 : 8)
+                        .padding(.top, index == 0 ? 4 : 16)
+                        .padding(.bottom, 6)
                 }
             }
-        }
-    }
-}
-
-// Wrapper to avoid extension-of-imported-type Identifiable conformance error
-struct IdentifiableSheet: Identifiable {
-    let sheet: ActiveSheet
-    var id: String {
-        switch sheet {
-        case is ActiveSheet.VersionSelection: return "version"
-        case let p as ActiveSheet.PassageSelection: return "passage-\(p.initialPage)"
-        case is ActiveSheet.Settings: return "settings"
-        case is ActiveSheet.History: return "history"
-        case is ActiveSheet.Search: return "search"
-        default: return "none"
         }
     }
 }
