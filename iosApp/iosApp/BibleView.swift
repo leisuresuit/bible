@@ -570,7 +570,6 @@ struct ContiguousVerseListView: View {
     let onLoadChapterVerses: (Book, Int, Int) -> Void
     let onShowPassageSelection: () -> Void
 
-    @State private var visibleChapterInfo: ContiguousChapterInfo
     @State private var lastProcessedEventId: Int64 = -1
 
     init(
@@ -593,9 +592,6 @@ struct ContiguousVerseListView: View {
         self.onUpdateVisiblePassage = onUpdateVisiblePassage
         self.onLoadChapterVerses = onLoadChapterVerses
         self.onShowPassageSelection = onShowPassageSelection
-        
-        let initialInfo = ContiguousIndex.shared.findChapterForGlobalIndex(book: currentBook, chapter: currentChapter)
-        self._visibleChapterInfo = State(initialValue: initialInfo)
     }
 
     private var targetItemIndex: Int {
@@ -603,70 +599,70 @@ struct ContiguousVerseListView: View {
     }
 
     var body: some View {
-        let globalIdx = visibleChapterInfo.globalChapterIndex
-        let isCurrentChapterLoading = chaptersVerses[globalIdx] == nil
-
-        ZStack {
-            if isCurrentChapterLoading {
-                ChapterPlaceholderView(
-                    book: visibleChapterInfo.book,
-                    chapter: visibleChapterInfo.chapter,
-                    onClick: onShowPassageSelection
-                )
-                .onAppear {
-                    onLoadChapterVerses(visibleChapterInfo.book, visibleChapterInfo.chapter, globalIdx)
-                }
-            }
-            
-            ScrollViewReader { proxy in
-                List {
-                    ForEach(0..<ContiguousIndex.shared.totalItems, id: \.self) { index in
-                        let location = ContiguousIndex.shared.getItemLocation(index)
-                        let chapterInfo = location.chapterInfo
-                        
-                        if location.isHeader {
-                            ChapterHeaderView(book: chapterInfo.book, chapter: chapterInfo.chapter, onClick: onShowPassageSelection)
-                                .id(index)
-                                .listRowSeparator(.hidden)
-                                .onAppear {
-                                    onLoadChapterVerses(chapterInfo.book, chapterInfo.chapter, chapterInfo.globalChapterIndex)
-                                    if chapterInfo.book != currentBook || chapterInfo.chapter != currentChapter {
-                                        DispatchQueue.main.async {
-                                            visibleChapterInfo = chapterInfo
-                                            onUpdateVisiblePassage(chapterInfo.book, chapterInfo.chapter, 1)
-                                        }
+        ScrollViewReader { proxy in
+            List {
+                ForEach(0..<ContiguousIndex.shared.totalItems, id: \.self) { index in
+                    let location = ContiguousIndex.shared.getItemLocation(index)
+                    let chapterInfo = location.chapterInfo
+                    
+                    if location.isHeader {
+                        ChapterHeaderView(book: chapterInfo.book, chapter: chapterInfo.chapter, onClick: onShowPassageSelection)
+                            .id(index)
+                            .listRowSeparator(.hidden)
+                            .onAppear {
+                                onLoadChapterVerses(chapterInfo.book, chapterInfo.chapter, chapterInfo.globalChapterIndex)
+                                if chapterInfo.book != currentBook || chapterInfo.chapter != currentChapter {
+                                    DispatchQueue.main.async {
+                                        onUpdateVisiblePassage(chapterInfo.book, chapterInfo.chapter, 1)
                                     }
                                 }
-                        } else if let vNum = location.verseNumber {
-                            let verses = chaptersVerses[chapterInfo.globalChapterIndex]
-                            if let verses = verses {
-                                let matchingVerses = verses.filter { Int($0.number) == vNum }
-                                ForEach(Array(matchingVerses.enumerated()), id: \.offset) { _, v in
-                                    VerseItemView(verse: v, showWordsOfJesus: showWordsOfJesus)
-                                        .id(index)
-                                        .listRowSeparator(.hidden)
-                                        .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
-                                }
                             }
+                    } else if let vNum = location.verseNumber {
+                        if let verses = chaptersVerses[chapterInfo.globalChapterIndex] {
+                            let verseMatches = verses.filter { Int($0.number) == vNum }
+                            if !verseMatches.isEmpty {
+                                ContiguousVerseRow(verses: verseMatches, showWordsOfJesus: showWordsOfJesus)
+                                    .id(index)
+                                    .listRowSeparator(.hidden)
+                                    .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
+                            }
+                        } else {
+                            ProgressView()
+                                .frame(maxWidth: .infinity, minHeight: 32)
+                                .id(index)
+                                .listRowSeparator(.hidden)
                         }
                     }
                 }
-                .listStyle(.plain)
-                .onAppear {
+            }
+            .listStyle(.plain)
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    proxy.scrollTo(targetItemIndex, anchor: .top)
+                }
+            }
+            .onChange(of: selectionEventId) { _, eventId in
+                if eventId > lastProcessedEventId {
+                    lastProcessedEventId = eventId
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         proxy.scrollTo(targetItemIndex, anchor: .top)
                     }
                 }
-                .onChange(of: selectionEventId) { _, eventId in
-                    if eventId > lastProcessedEventId {
-                        lastProcessedEventId = eventId
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            proxy.scrollTo(targetItemIndex, anchor: .top)
-                        }
-                    }
-                }
             }
-            .opacity(isCurrentChapterLoading ? 0 : 1)
+        }
+    }
+}
+
+// MARK: - Contiguous Verse Row Component
+struct ContiguousVerseRow: View {
+    let verses: [Verse]
+    let showWordsOfJesus: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(Array(verses.enumerated()), id: \.offset) { _, verse in
+                VerseItemView(verse: verse, showWordsOfJesus: showWordsOfJesus)
+            }
         }
     }
 }
